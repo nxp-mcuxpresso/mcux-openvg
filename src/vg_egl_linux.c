@@ -1765,7 +1765,7 @@ fbGetDisplayInfo(
     )
 {
     fbGetBackends(&fbBackend);
-    fbBackend->GetDisplayInfo(Display, Width, Height,(size_t)Physical, Stride, BitsPerPixel);
+    fbBackend->GetDisplayInfo(Display, Width, Height,(size_t*)Physical, Stride, BitsPerPixel);
 }
 
 void
