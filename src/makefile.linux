@@ -13,6 +13,7 @@ SOURCES += vg_egl_linux.c
 endif
 
 CFLAGS += -I$(SYSROOT_DIR)/usr/include -I../include -I../include/Vivante -I../include/EGL -I../include/VG -I$(VG_LITE_SDK)/inc
+CFLAGS += -Wno-int-to-pointer-cast -Wno-pointer-to-int-cast -Wno-pointer-sign -Wno-int-conversion
 
 LDFLAGS += $(addprefix -l,$(LIBS))
 LDFLAGS += -fPIC -shared -Wl,-z,defs
