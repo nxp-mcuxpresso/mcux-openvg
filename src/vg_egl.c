@@ -123,7 +123,7 @@ static void destroyVgEglContext(VGEGLContext* vgeglctx)
     free(vgeglctx);
 }
 
-VG_INLINE void setEGLConfig(VGEGLConfig *vgEglConfig, int r, int g, int b, int a, int l, int bpp, int samples, int maskBits, int ID)
+static VG_INLINE void setEGLConfig(VGEGLConfig *vgEglConfig, int r, int g, int b, int a, int l, int bpp, int samples, int maskBits, int ID)
 {
     vgEglConfig->m_desc.redBits = r;
     vgEglConfig->m_desc.greenBits = g;
@@ -169,7 +169,7 @@ VG_INLINE void setEGLConfig(VGEGLConfig *vgEglConfig, int r, int g, int b, int a
     vgEglConfig->m_maskAlpha = 8;
 }
 
-VG_INLINE ColorDescriptor configToDescriptor(VGEGLConfig* vgEglConfig, VGboolean sRGB, VGboolean premultiplied)
+static VG_INLINE ColorDescriptor configToDescriptor(VGEGLConfig* vgEglConfig, VGboolean sRGB, VGboolean premultiplied)
 {
     ColorDescriptor desc = vgEglConfig->m_desc;
     VGuint f = vgEglConfig->m_desc.luminanceBits ? LUMINANCE : 0;
@@ -239,13 +239,13 @@ void destroyVgEglSurface(VGEGLSurface* surf)
     free(surf);
 }
 
-VG_INLINE VGEGLConfig* getDisplayConfig(VGEGLDisplay* dpy, int i)
+static VG_INLINE VGEGLConfig* getDisplayConfig(VGEGLDisplay* dpy, int i)
 { 
     VG_ASSERT(i >= 0 && i < VIV_EGL_NUMCONFIGS);
     return &dpy->m_configs[i];
 }
 
-VG_INLINE VGEGLConfig* findDisplayConfig(VGEGLDisplay* dpy, const EGLConfig config)
+static VG_INLINE VGEGLConfig* findDisplayConfig(VGEGLDisplay* dpy, const EGLConfig config)
 {
     for (int i = 0; i < VIV_EGL_NUMCONFIGS; i++)
     {

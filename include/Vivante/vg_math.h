@@ -32,7 +32,7 @@
 
 #define    PI  3.141592654f
 
-VG_INLINE VGint VG_ISNAN(float a)
+static VG_INLINE VGint VG_ISNAN(float a)
 {
     VGfloatInt p;
     p.f = a;
@@ -45,19 +45,19 @@ VG_INLINE VGint VG_ISNAN(float a)
 
 typedef float VGfloat;
 
-VG_INLINE VGfloat   VG_MAX(VGfloat a, VGfloat b)                { return (a > b) ? a : b; }
-VG_INLINE VGfloat   VG_MIN(VGfloat a, VGfloat b)                { return (a < b) ? a : b; }
-VG_INLINE VGfloat   VG_CLAMP(VGfloat a, VGfloat l, VGfloat h)   { if (VG_ISNAN(a)) return l; VG_ASSERT(l <= h); return (a < l) ? l : (a > h) ? h : a; }
-VG_INLINE VGfloat   VG_ABS(VGfloat a)                           { return (a < 0.0f) ? -a : a; }
-VG_INLINE VGfloat   VG_SQR(VGfloat a)                           { return a * a; }
-VG_INLINE VGfloat   VG_DEG_TO_RAD(VGfloat a)                    { return a * PI / 180.0f; }
-VG_INLINE VGfloat   VG_RAD_TO_DEG(VGfloat a)                    { return a * 180.0f/ PI; }
-VG_INLINE VGfloat   VG_MOD(VGfloat a, VGfloat b)                { if (VG_ISNAN(a) || VG_ISNAN(b)) return 0.0f; VG_ASSERT(b >= 0.0f); if (b == 0.0f) return 0.0f; VGfloat f = (VGfloat)fmod(a, b); if (f < 0.0f) f += b; VG_ASSERT(f >= 0.0f && f <= b); return f; }
+static VG_INLINE VGfloat   VG_MAX(VGfloat a, VGfloat b)                { return (a > b) ? a : b; }
+static VG_INLINE VGfloat   VG_MIN(VGfloat a, VGfloat b)                { return (a < b) ? a : b; }
+static VG_INLINE VGfloat   VG_CLAMP(VGfloat a, VGfloat l, VGfloat h)   { if (VG_ISNAN(a)) return l; VG_ASSERT(l <= h); return (a < l) ? l : (a > h) ? h : a; }
+static VG_INLINE VGfloat   VG_ABS(VGfloat a)                           { return (a < 0.0f) ? -a : a; }
+static VG_INLINE VGfloat   VG_SQR(VGfloat a)                           { return a * a; }
+static VG_INLINE VGfloat   VG_DEG_TO_RAD(VGfloat a)                    { return a * PI / 180.0f; }
+static VG_INLINE VGfloat   VG_RAD_TO_DEG(VGfloat a)                    { return a * 180.0f/ PI; }
+static VG_INLINE VGfloat   VG_MOD(VGfloat a, VGfloat b)                { if (VG_ISNAN(a) || VG_ISNAN(b)) return 0.0f; VG_ASSERT(b >= 0.0f); if (b == 0.0f) return 0.0f; VGfloat f = (VGfloat)fmod(a, b); if (f < 0.0f) f += b; VG_ASSERT(f >= 0.0f && f <= b); return f; }
 
-VG_INLINE VGint     VG_INT_MAX(VGint a, VGint b)                { return (a > b) ? a : b; }
-VG_INLINE VGint     VG_INT_MIN(VGint a, VGint b)                { return (a < b) ? a : b; }
-VG_INLINE VGint     VG_INT_MOD(VGint a, VGint b)                { VG_ASSERT(b >= 0); if (!b) return 0; VGint i = a % b; if (i < 0) i += b; VG_ASSERT(i >= 0 && i < b); return i; }
-VG_INLINE VGint     VG_INT_ADDSATURATE(VGint a, VGint b)        { VG_ASSERT(b >= 0); VGint r = a + b; return (r >= a) ? r : VIV_INT32_MAX; }
+static VG_INLINE VGint     VG_INT_MAX(VGint a, VGint b)                { return (a > b) ? a : b; }
+static VG_INLINE VGint     VG_INT_MIN(VGint a, VGint b)                { return (a < b) ? a : b; }
+static VG_INLINE VGint     VG_INT_MOD(VGint a, VGint b)                { VG_ASSERT(b >= 0); if (!b) return 0; VGint i = a % b; if (i < 0) i += b; VG_ASSERT(i >= 0 && i < b); return i; }
+static VG_INLINE VGint     VG_INT_ADDSATURATE(VGint a, VGint b)        { VG_ASSERT(b >= 0); VGint r = a + b; return (r >= a) ? r : VIV_INT32_MAX; }
 
 
 typedef struct {
