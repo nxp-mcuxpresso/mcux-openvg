@@ -269,14 +269,14 @@ VGErrorCode VG_APIENTRY vgGetError(void)
     VG_RETURN(error);
 }
 
-VG_INLINE VGfloat inputFloat(VGfloat f)
+static VG_INLINE VGfloat inputFloat(VGfloat f)
 {
     //this function is used for all floating point input values
     if (VG_ISNAN(f)) return 0.0f;    //convert NaN to zero
     return VG_CLAMP(f, -VIV_FLOAT_MAX, VIV_FLOAT_MAX);    //clamp +-inf to +-VGfloat max
 }
 
-VG_INLINE Vector2 inputVector2(const Vector2 v)
+static VG_INLINE Vector2 inputVector2(const Vector2 v)
 {
     Vector2 outV2;
     outV2.x = inputFloat(v.x);
@@ -284,7 +284,7 @@ VG_INLINE Vector2 inputVector2(const Vector2 v)
     return outV2;
 }
 
-VG_INLINE Color inputColor(const Color c)
+static VG_INLINE Color inputColor(const Color c)
 {
     Color r = c;
     r.r = inputFloat(r.r);
@@ -9500,9 +9500,7 @@ void VG_APIENTRY vgConvolve(VGImage dst, VGImage src, VGint kernelWidth, VGint k
     VG_IF_ERROR(tilingMode < VG_TILE_FILL || tilingMode > VG_TILE_REFLECT, VG_ILLEGAL_ARGUMENT_ERROR, VG_NO_RETVAL);
     unsigned int channelMask = context->m_filterChannelMask & (VG_RED|VG_GREEN|VG_BLUE|VG_ALPHA);    //undefined bits are ignored
 
- //   VGfloat inscale = inputFloat(scale);
- //   VGfloat inbias = inputFloat(bias);
-    convolve(d, s, kernelWidth, kernelHeight, shiftX, shiftY, (const VGshort*)kernel, scale, bias,
+    convolve(d, s, kernelWidth, kernelHeight, shiftX, shiftY, (const VGshort*)kernel, inputFloat(scale), inputFloat(bias),
         tilingMode, &context->m_tileFillColor, context->m_filterFormatLinear ? VG_TRUE : VG_FALSE,
         context->m_filterFormatPremultiplied ? VG_TRUE : VG_FALSE, channelMask);
 
@@ -9522,10 +9520,8 @@ void VG_APIENTRY vgSeparableConvolve(VGImage dst, VGImage src, VGint kernelWidth
     VG_IF_ERROR(tilingMode < VG_TILE_FILL || tilingMode > VG_TILE_REFLECT, VG_ILLEGAL_ARGUMENT_ERROR, VG_NO_RETVAL);
     unsigned int channelMask = context->m_filterChannelMask & (VG_RED|VG_GREEN|VG_BLUE|VG_ALPHA);    //undefined bits are ignored
 
- //   VGfloat inscale = inputFloat(scale);
-  //  VGfloat inbias = inputFloat(bias);
     separableConvolve(d, s, kernelWidth, kernelHeight, shiftX, shiftY, (const VGshort*)kernelX, (const VGshort*)kernelY,
-        scale, bias, tilingMode, &context->m_tileFillColor, context->m_filterFormatLinear ? VG_TRUE : VG_FALSE,
+        inputFloat(scale), inputFloat(bias), tilingMode, &context->m_tileFillColor, context->m_filterFormatLinear ? VG_TRUE : VG_FALSE,
         context->m_filterFormatPremultiplied ? VG_TRUE : VG_FALSE, channelMask);
 
     VG_RETURN(VG_NO_RETVAL);
