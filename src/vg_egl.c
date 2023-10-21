@@ -876,7 +876,7 @@ EGLAPI EGLDisplay EGLAPIENTRY eglGetDisplay(EGLNativeDisplayType display_id)
 {
     EGL_GET_EGL(EGL_FALSE);
     //Currently, we suppose display_id is a valid display device context handle, althought it can be a NULL value.
-    EGL_IF_ERROR((display_id == NULL), EGL_BAD_DISPLAY, EGL_FALSE);
+    //EGL_IF_ERROR((display_id == NULL), EGL_BAD_DISPLAY, EGL_FALSE);
 
     //create the current display
     //if a context and a surface are bound by the time of eglTerminate, they remain bound until eglMakeCurrent is called
