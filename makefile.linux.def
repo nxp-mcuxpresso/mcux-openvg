@@ -14,7 +14,7 @@ ifneq ($(FLOAT_ABI),)
   CFLAGS += -mfloat-abi=$(FLOAT_ABI)
 endif
 
-CFLAGS += -fPIC -std=c99 -fno-strict-aliasing
+CFLAGS += -fPIC -std=c99 -fno-strict-aliasing -Werror
 
 LDFLAGS += -L$(SYSROOT_DIR)
 
