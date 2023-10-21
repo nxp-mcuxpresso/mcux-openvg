@@ -2178,7 +2178,9 @@ void OSBlitToWindow(void* context, const Drawable* drawable)
 
 VGuint OSGetPixmapInfo(NativePixmapType pixmap, VGuint* width, VGuint* height, VGImageFormat* format, VGuint* bitsPerPixel, VGuint* stride, VGubyte** bits)
 {
-    fbGetPixmapInfo(pixmap, width,height, format, bitsPerPixel, stride, bits);
+    fbGetPixmapInfo(pixmap, width,height, format, bitsPerPixel, stride, (void**)bits);
+
+    return 0;
 }
 
 VGuint OSGetFrameBufferCount(NativeWindowType window)

@@ -747,7 +747,7 @@ VGboolean isEglSurfaceBind(VGEGLSurface * Surface)
     {
         if (vthread->m_surface == Surface)
             return VG_TRUE;
-        if (vthread != vthread)
+        if (vthread->next)
             vthread = vthread->next;
         else
             break;
@@ -765,7 +765,7 @@ VGboolean isEglContextBind(VGEGLContext *Context)
     {
         if (vthread->m_context == Context)
             return VG_TRUE;
-        if (vthread != vthread)
+        if (vthread->next)
             vthread = vthread->next;
         else
             break;

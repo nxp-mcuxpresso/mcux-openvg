@@ -2989,6 +2989,9 @@ static void pathTransformImpl(Path* d, VGint startIndex, VGint numSegments, Matr
         }
         break;
     }
+
+    default:
+        break;
     }
 #undef convert_to_s8
 #undef convert_to_s16
@@ -3079,6 +3082,9 @@ static void appendPathImpl(Path* dst, Path* src) {
                 }
             }
             break;
+
+        default:
+            break;
         }
         break;
 
@@ -3135,6 +3141,9 @@ static void appendPathImpl(Path* dst, Path* src) {
                     *dst_data_s16_ptr++ = (int16_t)(*src_data_fp32_ptr++);
                 }
             }
+            break;
+
+        default:
             break;
         }
         break;
@@ -3193,6 +3202,9 @@ static void appendPathImpl(Path* dst, Path* src) {
                 }
             }
             break;
+
+        default:
+            break;
         }
         break;
 
@@ -3250,7 +3262,13 @@ static void appendPathImpl(Path* dst, Path* src) {
                 memcpy(*dst_data_list_ptr++, *src_data_list_ptr++, bytes);
             }
             break;
+
+        default:
+            break;
         }
+        break;
+
+    default:
         break;
     }
 
@@ -6771,7 +6789,7 @@ void VG_APIENTRY vgPointAlongPath(VGPath path, VGint startSegment, VGint numSegm
                 is_relative = VG_TRUE;;
             }
 
-            if (x0 == ox && y0 == oy)
+            if (x0 == ox && y0 == oy) {
                 if (i == endSegment) {
                     if (x) *x = x0;
                     if (y) *y = y0;
@@ -6782,6 +6800,7 @@ void VG_APIENTRY vgPointAlongPath(VGPath path, VGint startSegment, VGint numSegm
                 }
                 else
                     break;
+            }
 
             switch (CMD_TO_SEGMENT(cmd))
             {
@@ -7700,8 +7719,8 @@ VGboolean VG_APIENTRY vgInterpolatePath(VGPath dstPath, VGPath startPath, VGPath
     }
 
     /* Linear lnterpolate. */
-    VGubyte* seg_ptr = (amount < 0.5) ? s_fp32->m_segments : e_fp32->m_segments;
-    VGbyte** data_list = (amount < 0.5) ? s_fp32->m_data : e_fp32->m_data;
+    VGubyte* seg_ptr = (VGubyte*)((amount < 0.5) ? s_fp32->m_segments : e_fp32->m_segments);
+    VGbyte** data_list = (VGbyte**)((amount < 0.5) ? s_fp32->m_data : e_fp32->m_data);
     VGubyte** s_data_list = s_fp32->m_data;
     VGubyte** e_data_list = e_fp32->m_data;
     float* data_ptr, * s_data_ptr, * e_data_ptr;
@@ -8921,6 +8940,8 @@ static VGboolean drawImage(VGContext* context, VGImage image, const Matrix3x3 us
         break;
     case VG_IMAGE_QUALITY_BETTER:
         filter = VG_LITE_FILTER_BI_LINEAR;
+        break;
+    default:
         break;
     }
 
