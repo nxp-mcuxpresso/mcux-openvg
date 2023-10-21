@@ -8154,16 +8154,8 @@ void VG_APIENTRY vgClearImage(VGImage image, VGint x, VGint y, VGint width, VGin
         vg_lite_uint8_t r = VG_FLOAT_TO_UB(c.r);
         VGuint rgba = (a << 24) | (b << 16) | (g << 8) | (r << 0);
 
-        if (img->m_desc.internalFormat & 0x2) {
-            dstbuf->premultiplied = 1;
-        }
-        else{
-            dstbuf->premultiplied = 0;
-        }
-
         vg_lite_clear(dstbuf, &rect, rgba);
         vg_lite_finish();
-        dstbuf->premultiplied = 0;
     }
     VG_RETURN(VG_NO_RETVAL);
 }
@@ -8685,24 +8677,9 @@ void VG_APIENTRY vgImageSubData(VGImage image, const void* data, VGint dataStrid
     if (context->m_masking == VG_TRUE) {
         vg_lite_disable_masklayer();
     }
-
-    srcbuf.copy_image = 1;
-    if (img->m_desc.internalFormat & 0x2) {
-        dstbuf->premultiplied = 1;
-    }
-    else {
-        dstbuf->premultiplied = 0;
-    }
-    if (formatToDescriptor(dataFormat).internalFormat & 0x2) {
-       srcbuf.premultiplied = 1;
-    }
-    else {
-        srcbuf.premultiplied = 0;
-    }
     vg_lite_blit_rect(dstbuf, &srcbuf, &rect, (vg_lite_matrix_t*)&n, blend, 0, filter);
     vg_lite_finish();
-    srcbuf.copy_image = 0;
-    dstbuf->premultiplied = srcbuf.premultiplied = 0;
+
     vg_lite_free(&srcbuf);
 
     VG_RETURN(VG_NO_RETVAL);
@@ -8763,24 +8740,8 @@ void VG_APIENTRY vgGetImageSubData(VGImage image, void* data, VGint dataStride, 
         vg_lite_identity(&n);
         vg_lite_translate((VGfloat)0, (VGfloat)0, &n);
         vg_lite_rectangle_t rect = { tmp_sx + img->m_storageOffsetX, tmp_sy + img->m_storageOffsetY, tmp_w, tmp_h };
-        srcbuf->copy_image = 1;
-
-        if (img->m_desc.internalFormat & 0x2) {
-            srcbuf->premultiplied = 1;
-        }
-        else {
-            srcbuf->premultiplied = 0;
-        }
-        if (formatToDescriptor(dataFormat).internalFormat & 0x2) {
-            dstbuf.premultiplied = 1;
-        }
-        else {
-            dstbuf.premultiplied = 0;
-        }
         vg_lite_blit_rect(&dstbuf, srcbuf, &rect, &n, blend, 0, filter);
         vg_lite_finish();
-        srcbuf->copy_image = 0;
-        dstbuf.premultiplied = srcbuf->premultiplied = 0;
         for (int i = 0; i < dstbuf.height; i++) {
             memcpy((uint8_t*)data + i*dataStride, (uint8_t*)dstbuf.memory + i*dstbuf.stride, dstbuf.width* mul / div);
         }
@@ -8889,24 +8850,8 @@ void VG_APIENTRY vgCopyImage(VGImage dst, VGint dx, VGint dy, VGImage src, VGint
             rect.width = tmp_w;
             rect.height = tmp_h;
         }
-        srcbuf->copy_image = 1;
-        if (((Image*)dst)->m_desc.internalFormat & 0x2) {
-            dstbuf->premultiplied = 1;
-        }
-        else {
-            dstbuf->premultiplied = 0;
-        }
-        if (((Image*)src)->m_desc.internalFormat & 0x2) {
-            srcbuf->premultiplied = 1;
-        }
-        else {
-            srcbuf->premultiplied = 0;
-        }
-
         vg_lite_blit_rect(dstbuf, srcbuf, &rect, (vg_lite_matrix_t*)&n, blend, 0, filter);
         vg_lite_finish();
-        srcbuf->copy_image = 0;
-        dstbuf->premultiplied = srcbuf->premultiplied = 0;
     }
 
     VG_RETURN(VG_NO_RETVAL);
@@ -9177,23 +9122,8 @@ static VGboolean drawImage(VGContext* context, VGImage image, const Matrix3x3 us
                 source->paintType = tmp_paintType;
             }
         }
-        srcbuf->copy_image = 0;
-        if (drawable->m_color->m_image->m_desc.internalFormat & 0x2) {
-            dstbuf->premultiplied = 1;
-        }
-        else {
-            dstbuf->premultiplied = 0;
-        }
-        if (img->m_desc.internalFormat & 0x2) {
-            srcbuf->premultiplied = 1;
-        }
-        else {
-            srcbuf->premultiplied = 0;
-        }
         vg_lite_blit(dstbuf, srcbuf, (vg_lite_matrix_t*)&userToSurfaceMatrix_temp, blend, srcColor, filter);
         vg_lite_finish();
-        srcbuf->copy_image = 0;
-        dstbuf->premultiplied = srcbuf->premultiplied = 0;
     }
 
     context->m_image = VG_FALSE;
@@ -9267,23 +9197,8 @@ void VG_APIENTRY vgSetPixels(VGint dx, VGint dy, VGImage src, VGint sx, VGint sy
     initMatrix3x3(&n, 1, 0, (VGfloat)tmp_dx, 0, 1, (VGfloat)tmp_dy, 0, 0, 1);
     vg_lite_rectangle_t rect = { tmp_sx + img->m_storageOffsetX, tmp_sy + img->m_storageOffsetY, tmp_w, tmp_h };
     vg_lite_disable_masklayer();
-    srcbuf->copy_image = 1;
-    if (drawable->m_color->m_image->m_desc.internalFormat & 0x2) {
-        dstbuf->premultiplied = 1;
-    }
-    else {
-        dstbuf->premultiplied = 0;
-    }
-    if (((Image*)src)->m_desc.internalFormat & 0x2) {
-        srcbuf->premultiplied = 1;
-    }
-    else {
-        srcbuf->premultiplied = 0;
-    }
     vg_lite_blit_rect(dstbuf, srcbuf, &rect, (vg_lite_matrix_t*)&n, blend, 0, filter);
     vg_lite_finish();
-    srcbuf->copy_image = 0;
-    dstbuf->premultiplied = srcbuf->premultiplied = 0;
     if (context->m_masking) {
         vg_lite_enable_masklayer();
     }
@@ -9351,24 +9266,9 @@ void VG_APIENTRY vgWritePixels(const void * data, VGint dataStride, VGImageForma
     vg_lite_rectangle_t rect = { tmp_sx, tmp_sy, tmp_w, tmp_h };
     vg_lite_identity(&n);
     vg_lite_translate((VGfloat)(tmp_dx + drawable->m_color->m_image->m_storageOffsetX), (VGfloat)(tmp_dy + drawable->m_color->m_image->m_storageOffsetY), &n);
-    srcbuf.copy_image = 1;
-    if (drawable->m_color->m_image->m_desc.internalFormat & 0x2) {
-        dstbuf->premultiplied = 1;
-    }
-    else {
-        dstbuf->premultiplied = 0;
-    }
-    if (formatToDescriptor(dataFormat).internalFormat & 0x2) {
-        srcbuf.premultiplied = 1;
-    }
-    else {
-        srcbuf.premultiplied = 0;
-    }
 
     vg_lite_blit_rect(dstbuf, &srcbuf, &rect, &n, blend, 0, filter);
     vg_lite_finish();
-    srcbuf.copy_image = 0;
-    dstbuf->premultiplied = srcbuf.premultiplied = 0;
     if (context->m_masking) {
         vg_lite_enable_masklayer();
     }
@@ -9416,23 +9316,9 @@ void VG_APIENTRY vgGetPixels(VGImage dst, VGint dx, VGint dy, VGint sx, VGint sy
 
     vg_lite_identity(&n);
     vg_lite_translate((VGfloat)(tmp_dx + img->m_storageOffsetX), (VGfloat)(tmp_dy + img->m_storageOffsetY), &n);
-    srcbuf->copy_image = 1;
-    if (((Image*)dst)->m_desc.internalFormat & 0x2) {
-        dstbuf->premultiplied = 1;
-    }
-    else {
-        dstbuf->premultiplied = 0;
-    }
-    if (drawable->m_color->m_image->m_desc.internalFormat & 0x2) {
-        srcbuf->premultiplied = 1;
-    }
-    else {
-        srcbuf->premultiplied = 0;
-    }
     vg_lite_blit_rect(dstbuf, srcbuf, &rect, &n, blend, 0, filter);
     vg_lite_finish();
-    srcbuf->copy_image = 0;
-    dstbuf->premultiplied = srcbuf->premultiplied = 0;
+
     VG_RETURN(VG_NO_RETVAL);
 }
 
@@ -9494,25 +9380,9 @@ void VG_APIENTRY vgReadPixels(void* data, VGint dataStride, VGImageFormat dataFo
     vg_lite_rectangle_t rect = { tmp_sx + drawable->m_color->m_image->m_storageOffsetX, tmp_sy + drawable->m_color->m_image->m_storageOffsetY, tmp_w, tmp_h };
     vg_lite_identity(&n);
     vg_lite_translate((VGfloat)(tmp_dx), (VGfloat)(tmp_dy), &n);
-    srcbuf->transparency_mode = 0;
-    srcbuf->copy_image = 1;
-
-    if (drawable->m_color->m_image->m_desc.internalFormat & 0x2) {
-        srcbuf->premultiplied = 1;
-    }
-    else {
-        srcbuf->premultiplied = 0;
-    }
-    if (formatToDescriptor(dataFormat).internalFormat & 0x2) {
-        dstbuf.premultiplied = 1;
-    }
-    else {
-        dstbuf.premultiplied = 0;
-    }
     vg_lite_blit_rect(&dstbuf, srcbuf, &rect, &n, blend, 0, filter);
     vg_lite_finish();
-    srcbuf->copy_image = 0;
-    dstbuf.premultiplied = srcbuf->premultiplied = 0;
+    srcbuf->transparency_mode = 0;
     for (int j = 0; j < height; j++) {
         memcpy((uint8_t*)data + j * dataStride, (uint8_t*)dstbuf.memory + j * dstbuf.stride, byteOneLine);
     }
@@ -9566,15 +9436,7 @@ void VG_APIENTRY vgCopyPixels(VGint dx, VGint dy, VGint sx, VGint sy, VGint widt
     vg_lite_rectangle_t rect = { tmp_sx + drawable->m_color->m_image->m_storageOffsetX, tmp_sy + drawable->m_color->m_image->m_storageOffsetY, tmp_w, tmp_h };
     vg_lite_identity(&n);
     vg_lite_translate((VGfloat)(tmp_dx + drawable->m_color->m_image->m_storageOffsetX), (VGfloat)(tmp_dy + drawable->m_color->m_image->m_storageOffsetY), &n);
-    srcbuf->copy_image = 1;
-    dstbuf.copy_image = 1;
-    if (drawable->m_color->m_image->m_desc.internalFormat & 0x2) {
-        srcbuf->premultiplied = 1;
-    }
-    else {
-        srcbuf->premultiplied = 0;
-    }
-    dstbuf.premultiplied = srcbuf->premultiplied;
+
     vg_lite_blit_rect(&dstbuf, srcbuf, &rect, &n, blend, 0, filter);
     vg_lite_finish();
 
@@ -9584,8 +9446,6 @@ void VG_APIENTRY vgCopyPixels(VGint dx, VGint dy, VGint sx, VGint sy, VGint widt
     vg_lite_blit_rect(srcbuf, &dstbuf, &rect1, &n, blend, 0, filter);
 
     vg_lite_finish();
-    srcbuf->copy_image = dstbuf.copy_image = 0;
-    dstbuf.premultiplied = srcbuf->premultiplied = 0;
     if (context->m_masking) {
         vg_lite_enable_masklayer();
     }
