@@ -1,11 +1,9 @@
-QAROOT ?= $(shell pwd)
-SDK_DIR ?= $(AQROOT)/build
+
+SDK_DIR ?= build
 
 .phony: all install clean
 
 all:
-#	@$(MAKE) -C src -f makefile.linux all
-#	@$(MAKE) -C vdk -f makefile.linux all
 
 clean:
 	@rm -rf $(SDK_DIR)
