@@ -142,7 +142,7 @@ VG_INLINE void setEGLConfig(VGEGLConfig *vgEglConfig, int r, int g, int b, int a
     vgEglConfig->m_samples = samples;
     vgEglConfig->m_maskBits = maskBits;
     vgEglConfig->m_configID = ID;
-    vgEglConfig->m_config = (EGLConfig)ID;
+    vgEglConfig->m_config = (EGLConfig)((size_t)ID);
     vgEglConfig->m_depth = 0;
     if (r == 8 && g == 8 && b == 8 && a == 8){
         vgEglConfig->m_desc.format = VG_sRGBA_8888;
@@ -1977,8 +1977,8 @@ EGLAPI EGLBoolean EGLAPIENTRY eglMakeCurrent(EGLDisplay dpy, EGLSurface draw, EG
         //-both have RGB or LUMINANCE configs
         //-buffer bit depths match
         //-configs support OpenVG
-        EGL_IF_ERROR(!(display->m_configs[(EGLint)(c->m_config)].m_renderType | EGL_OPENVG_BIT), EGL_BAD_CONTEXT, EGL_FALSE);
-        EGL_IF_ERROR(!(display->m_configs[(EGLint)(s->m_config)].m_renderType | EGL_OPENVG_BIT), EGL_BAD_CURRENT_SURFACE, EGL_FALSE);
+        EGL_IF_ERROR(!(display->m_configs[(EGLint)((size_t)(c->m_config))].m_renderType | EGL_OPENVG_BIT), EGL_BAD_CONTEXT, EGL_FALSE);
+        EGL_IF_ERROR(!(display->m_configs[(EGLint)((size_t)(s->m_config))].m_renderType | EGL_OPENVG_BIT), EGL_BAD_CURRENT_SURFACE, EGL_FALSE);
 
         //-both have the same display
         EGL_IF_ERROR(s->m_config != c->m_config, EGL_BAD_MATCH, EGL_FALSE);
