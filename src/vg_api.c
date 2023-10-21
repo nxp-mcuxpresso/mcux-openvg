@@ -4133,21 +4133,6 @@ static void updateLinearGrad(VGContext* context, vg_lite_ext_linear_gradient_t* 
             color[1] /= color[3];
             color[0] /= color[3];
         }
-        if (context->m_image && (context->m_imageMode == VG_DRAW_IMAGE_STENCIL))
-        {
-            Paint* paint = (Paint*)context->m_fillPaint;
-            Color dstColor;
-            dstColor.r = color[0];
-            dstColor.g = color[1];
-            dstColor.b = color[2];
-            dstColor.a = color[3];
-            dstColor.m_format = paint->m_paintColor.m_format;
-            convert(paint->m_paintColor.m_format, context->m_eglDrawable->m_color->m_image->m_desc.internalFormat, &dstColor);
-            color[0] = dstColor.r;
-            color[1] = dstColor.g;
-            color[2] = dstColor.b;
-            color[3] = dstColor.a;
-        }
         *bits++ = PackColorComponent(color[3]);
         *bits++ = PackColorComponent(color[2]);
         *bits++ = PackColorComponent(color[1]);
@@ -4500,22 +4485,6 @@ static void updateRadialGrad(VGContext* context, vg_lite_radial_gradient_t* grad
             color[1] /= color[3];
             color[0] /= color[3];
         }
-        if (context->m_image && (context->m_imageMode == VG_DRAW_IMAGE_STENCIL))
-        {
-            Paint* paint = (Paint*)context->m_fillPaint;
-            Color dstColor;
-            dstColor.r = color[0];
-            dstColor.g = color[1];
-            dstColor.b = color[2];
-            dstColor.a = color[3];
-            dstColor.m_format = paint->m_paintColor.m_format;
-            convert(paint->m_paintColor.m_format, context->m_eglDrawable->m_color->m_image->m_desc.internalFormat, &dstColor);
-            color[0] = dstColor.r;
-            color[1] = dstColor.g;
-            color[2] = dstColor.b;
-            color[3] = dstColor.a;
-        }
-      
         *bits++ = PackColorComponent(color[3]);
         *bits++ = PackColorComponent(color[2]);
         *bits++ = PackColorComponent(color[1]);
@@ -8918,10 +8887,6 @@ static VGboolean drawImage(VGContext* context, VGImage image, const Matrix3x3 us
         dstColor.b = paint->m_paintColor.b;
         dstColor.a = paint->m_paintColor.a;
         dstColor.m_format = paint->m_paintColor.m_format;
-        if (context->m_imageMode == VG_DRAW_IMAGE_STENCIL)
-        {
-            convert(dstColor.m_format, drawable->m_color->m_image->m_desc.internalFormat, &dstColor);
-        }
         vg_lite_uint8_t a = VG_FLOAT_TO_UB(dstColor.a);
         vg_lite_uint8_t b = VG_FLOAT_TO_UB(dstColor.b);
         vg_lite_uint8_t g = VG_FLOAT_TO_UB(dstColor.g);
@@ -9066,6 +9031,7 @@ static VGboolean drawImage(VGContext* context, VGImage image, const Matrix3x3 us
                     path_data, // path data
                     1
                 };
+                tmpbuf.image_mode = srcbuf->image_mode;
                 vg_lite_draw_linear_grad(&tmpbuf, &vglpath, VG_LITE_FILL_EVEN_ODD, (vg_lite_matrix_t*)&userToSurfaceMatrix_temp, &grad, 0, blend, VG_LITE_FILTER_LINEAR);
             }
             else if (srcbuf->paintType == VG_PAINT_TYPE_RADIAL_GRADIENT) {
@@ -9107,6 +9073,7 @@ static VGboolean drawImage(VGContext* context, VGImage image, const Matrix3x3 us
                     path_data, // path data
                     1
                 };
+                tmpbuf.image_mode = srcbuf->image_mode;
                 vg_lite_draw_radial_grad(&tmpbuf, &vglpath, VG_LITE_FILL_EVEN_ODD, (vg_lite_matrix_t*)&userToSurfaceMatrix_temp, &grad, 0, blend, VG_LITE_FILTER_LINEAR);
             }
             else if (srcbuf->paintType == VG_PAINT_TYPE_PATTERN)
