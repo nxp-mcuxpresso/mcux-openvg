@@ -77,4 +77,6 @@ BUILD_OPTIONS="$BUILD_OPTIONS EGL_API_FBDEV=$EGL_API_FBDEV"
 cd $AQROOT; make -f makefile.linux $BUILD_OPTIONS $1 2>&1 |tee $AQROOT/linux_build.log
 
 cp $VG_LITE_SDK/drivers/*  $SDK_DIR/drivers
+cp $VG_LITE_SDK/inc/*      $SDK_DIR/inc
+
 
