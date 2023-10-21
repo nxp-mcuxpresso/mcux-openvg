@@ -13,7 +13,8 @@ clean:
 install: all $(SDK_DIR)
 	@$(MAKE) -C src -f makefile.linux install
 	@$(MAKE) -C vdk -f makefile.linux install
+	@cp -rf include/* $(SDK_DIR)/inc
 
 $(SDK_DIR):
 	@mkdir -p $(SDK_DIR)/drivers
-	@mkdir -p $(SDK_DIR)/include
+	@mkdir -p $(SDK_DIR)/inc

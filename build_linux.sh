@@ -3,10 +3,10 @@
 usage()
 {
     echo
-    echo "Usage: ./$0 install/clean BOARD"
+    echo "Usage: $0 install/clean BOARD"
     echo
     echo "    BOARD:"
-    echo "       X86 PCIE-GEN6 ZC702"
+    echo "       X86 ZC702 IMX6_Q35"
     echo
 }
 
@@ -29,17 +29,6 @@ ZC702)
     export ARCH=arm
     export ENABLE_PCIE=0
     export EGL_API_FBDEV=1
-    export VG_LITE_SDK=$AQROOT/../Hubi.dev/build
-;;
-
-PCIE-GEN6)
-    export TOOLCHAIN=/usr
-    export CROSS_COMPILE=""
-    export KERNEL_DIR=/home/software/Linux/x86_pcie/linux-headers-4.8.0-41-generic/
-    export ENABLE_PCIE=1
-    export EGL_API_FBDEV=1
-    export CPU_ARCH=0
-    export ARCH=x86_64
     export VG_LITE_SDK=$AQROOT/../Hubi.dev/build
 ;;
 
@@ -86,3 +75,6 @@ BUILD_OPTIONS="EGL_API_WL=$EGL_API_WL"
 BUILD_OPTIONS="$BUILD_OPTIONS EGL_API_FBDEV=$EGL_API_FBDEV"
 
 cd $AQROOT; make -f makefile.linux $BUILD_OPTIONS $1 2>&1 |tee $AQROOT/linux_build.log
+
+cp $VG_LITE_SDK/drivers/*  $SDK_DIR/drivers
+
