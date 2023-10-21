@@ -306,12 +306,12 @@ Image_kernel_allocate_t;
 * \note
 *//*-------------------------------------------------------------------*/
 
-VG_INLINE VGuint bitsToMask(VGuint bits, VGuint shift)
+static VG_INLINE VGuint bitsToMask(VGuint bits, VGuint shift)
 {
     return ((1 << bits) - 1) << shift;
 }
 
-VG_INLINE VGboolean isValidImageFormat(int f)
+static VG_INLINE VGboolean isValidImageFormat(int f)
 {
     if (f < VG_sRGBX_8888 || f > VG_lABGR_8888_PRE)
         return VG_FALSE;

@@ -3,14 +3,14 @@
 usage()
 {
     echo
-    echo "Usage: $0 install/clean BOARD"
+    echo "Usage: $0 BOARD"
     echo
     echo "    BOARD:"
     echo "       X86 ZC702 IMX6_Q35"
     echo
 }
 
-if [ $# -lt 2 ]; then
+if [ $# -lt 1 ]; then
     usage
     exit 1
 fi
@@ -18,7 +18,7 @@ fi
 export AQROOT=`pwd`
 export SDK_DIR=$AQROOT/build
 
-BOARD=$2
+BOARD=$1
 case "$BOARD" in
 
 ZC702)
@@ -68,13 +68,13 @@ IMX6_Q35)
     echo
     echo "ERROR: Unknown [ $BOARD ], or not support so far."
     usage
+    exit
 ;;
 esac;
 
-BUILD_OPTIONS="EGL_API_WL=$EGL_API_WL"
-BUILD_OPTIONS="$BUILD_OPTIONS EGL_API_FBDEV=$EGL_API_FBDEV"
-
-cd $AQROOT; make -f makefile.linux $BUILD_OPTIONS $1 2>&1 |tee $AQROOT/linux_build.log
+cd $AQROOT
+make -f makefile.linux clean
+make -f makefile.linux install
 
 cp $VG_LITE_SDK/drivers/*  $SDK_DIR/drivers
 cp $VG_LITE_SDK/inc/*      $SDK_DIR/inc

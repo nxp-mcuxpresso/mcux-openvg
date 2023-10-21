@@ -38,7 +38,6 @@
 #include <math.h>
 #include <assert.h>
 
-
 #if defined (_MSC_VER)
 #    define VG_INLINE __forceinline
 #elif defined __APPLE__ || defined (__GNUC__) || defined (__GCC32__)
@@ -69,7 +68,7 @@ typedef union
     VGuint      i;
 } VGfloatInt;
 
-VG_INLINE float getFloatMax()
+static VG_INLINE float getFloatMax()
 {
     VGfloatInt v;
     v.i = (((1<<(VIV_EXPONENT_BITS-1))-1+127) << 23) | (((1<<VIV_MANTISSA_BITS)-1) << (23-VIV_MANTISSA_BITS));
