@@ -887,11 +887,14 @@ EGLAPI EGLDisplay EGLAPIENTRY eglGetDisplay(EGLNativeDisplayType display_id)
     if (newDisplay == NULL && display_id == (void *) EGL_DEFAULT_DISPLAY)
     {
         newDisplay= OSGetDisplay(display_id);
+
         // init display eglconfigs
         initEGLDisplayConfigs(newDisplay);
         addEglDisplay(newDisplay);
-    }
 
+        return (EGLDisplay)newDisplay;
+    }
+    
     if (newDisplay == NULL)
     {
         newDisplay = (VGEGLDisplay*)malloc(sizeof(VGEGLDisplay));
@@ -904,10 +907,6 @@ EGLAPI EGLDisplay EGLAPIENTRY eglGetDisplay(EGLNativeDisplayType display_id)
         // init display eglconfigs
         initEGLDisplayConfigs(newDisplay);
         addEglDisplay(newDisplay);
-    }
-    else
-    {
-        EGL_RETURN(EGL_BAD_ALLOC, EGL_FALSE);
     }
 
     return (EGLDisplay)newDisplay;
