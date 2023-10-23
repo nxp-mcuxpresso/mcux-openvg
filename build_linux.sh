@@ -54,7 +54,7 @@ X86_51510)
     export VG_LITE_SDK=$AQROOT/../Hubi.dev/build
 ;;
 
-IMX6_Q35)
+IMX6Q35)
     export KERNEL_DIR=/home/software/Linux/freescale/L5.15.52_RC2_20220919/Kernel/32/linux-lts-nxp
     export TOOLCHAIN=/home/software/Linux/freescale/L5.15.52_RC2_20220919/Toolchain/32/sysroots/x86_64-pokysdk-linux
     export CROSS_COMPILE=/home/software/Linux/freescale/L5.15.52_RC2_20220919/Toolchain/32/sysroots/x86_64-pokysdk-linux/usr/bin/arm-poky-linux-gnueabi/arm-poky-linux-gnueabi-
@@ -65,7 +65,7 @@ IMX6_Q35)
     export ARCH=arm
     export VG_LITE_SDK=$AQROOT/../Hubi.dev/build
     export ENABLE_PCIE=0
-    export EGL_API_WL=1
+    export EGL_API_FBDEV=1
     export CFLAGS="--sysroot=$SYSROOT_DIR"
     export LDFLAGS="--sysroot=$SYSROOT_DIR"
     export PFLAGS="--sysroot=$SYSROOT_DIR" 
