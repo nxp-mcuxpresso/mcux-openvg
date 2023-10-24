@@ -163,8 +163,6 @@ vdkSetupEGL(
 #else
 #if defined(VDK_X11)
         Egl->eglDisplay = eglGetPlatformDisplay(EGL_PLATFORM_X11_KHR, Egl->display, NULL);
-#elif defined(EGL_API_WL)
-        Egl->eglDisplay = eglGetDisplay(Egl->display);
 #else
         Egl->eglDisplay = eglGetDisplay(Egl->display);
 #endif

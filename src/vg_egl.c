@@ -44,21 +44,12 @@ void OSReleaseMutex(void);
 void OSDeinitMutex(void);
 
 EGLDisplay OSGetDisplay(EGLNativeDisplayType display_id);
-#if defined(EGL_API_WL)
-void* OSCreateWindowContext(EGLNativeWindowType window, VGEGLDisplay display);
-#else
 void* OSCreateWindowContext(EGLNativeWindowType window);
-#endif
 void OSDestroyWindowContext(void* context);
 VGboolean OSIsWindow(const void* context);
 void OSGetWindowSize(const void* context, int* width, int* height);
 void OSBlitToWindow(void* context, const Drawable* drawable);
 VGuint OSGetPixmapInfo(EGLNativePixmapType pixmap, VGuint* width, VGuint* height, VGImageFormat* format, VGuint* bitsPerPixel, VGuint* stride, VGubyte** bits);
-#if defined(EGL_API_FBDEV)
-Drawable* OSFbCreateWindowDrawable(EGLNativeWindowType win, ColorDescriptor desc, VGint samples , VGint maskbits, VGint index);
-VGuint OSGetFrameBufferCount(EGLNativeWindowType window);
-#endif
-
 
 #define VIV_EGL_NUMTHREAD 64
 #define VIV_EGL_NUMCURTHREAD 16
@@ -1444,11 +1435,8 @@ EGLAPI EGLSurface EGLAPIENTRY eglCreateWindowSurface(EGLDisplay dpy, EGLConfig c
     int count = 0;
 
     {
-    #if defined(EGL_API_WL)
-        wc = OSCreateWindowContext(win, *display);
-    #else
         wc = OSCreateWindowContext(win);
-    #endif
+
         VG_ASSERT(wc);
         //TODO what should happen if window width or height is zero?
         int windowWidth = 0, windowHeight = 0;
@@ -1472,25 +1460,12 @@ EGLAPI EGLSurface EGLAPIENTRY eglCreateWindowSurface(EGLDisplay dpy, EGLConfig c
         VGEGLConfig* ec = findDisplayConfig(display, config);
         ColorDescriptor desc = configToDescriptor(ec, (colorSpace == EGL_VG_COLORSPACE_LINEAR) ? VG_FALSE : VG_TRUE,
             (alphaFormat == EGL_VG_ALPHA_FORMAT_PRE) ? VG_TRUE : VG_FALSE);
-#if defined(WIN32 ) || defined (EGL_API_WL)
+
         for (count = 0; count < VG_FRAMEBUFFER_COUNT; count++)
         {
             d[count] = createDrawable(&desc, windowWidth, windowHeight, ec->m_samples, ec->m_maskBits);
-        }
-#elif defined(EGL_API_FBDEV)
-        count = OSGetFrameBufferCount(win);
-        for (; count > 0; count--)
-        {
-            d[count - 1] = OSFbCreateWindowDrawable(win, desc, ec->m_samples, ec->m_maskBits, count - 1);
         }
 
-        count = OSGetFrameBufferCount(win);
-#else
-        for (count = 0; count < VG_FRAMEBUFFER_COUNT; count++)
-        {
-            d[count] = createDrawable(&desc, windowWidth, windowHeight, ec->m_samples, ec->m_maskBits);
-        }
-#endif
         if (d[0])
         {
             //s = RI_NEW(VGEGLSurface,(wc, config, d, false, renderBuffer));    //throws bad_alloc
