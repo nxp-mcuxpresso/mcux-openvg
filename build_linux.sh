@@ -66,7 +66,7 @@ IMX6Q35)
     export VG_LITE_SDK=$AQROOT/../Hubi.dev/build
     export ENABLE_PCIE=0
     export EGL_API_FBDEV=1
-    export CFLAGS="--sysroot=$SYSROOT_DIR"
+    export CFLAGS="--sysroot=$SYSROOT_DIR -D__ARM_PCS_VFP"
     export LDFLAGS="--sysroot=$SYSROOT_DIR"
     export PFLAGS="--sysroot=$SYSROOT_DIR" 
 
