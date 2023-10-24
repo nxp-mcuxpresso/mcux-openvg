@@ -59,8 +59,6 @@ struct _FBDisplay
     struct fb_fix_screeninfo    fixInfo;
     struct fb_var_screeninfo    varInfo;
     struct fb_var_screeninfo    orgVarInfo;
-    VGint                    backBufferY;
-    VGint                    multiBuffer;
     pthread_cond_t          cond;
     pthread_mutex_t         condMutex;
     VGuint                  alphaLength;
@@ -1164,32 +1162,6 @@ int fbdev_GetDisplayByIndex(int display_id, NativeDisplayType* display_type)
         display->orgVarInfo = display->varInfo;
         display->alignedHeight = display->varInfo.yres;
 
-        p =getenv("FB_MULTI_BUFFER");
-        if (p == NULL)
-        {
-            display->multiBuffer = display->varInfo.yres_virtual / display->alignedHeight;
-        }
-        else
-        {
-            display->multiBuffer = atoi(p);
-
-            if (display->multiBuffer < 1)
-            {
-                display->multiBuffer = 1;
-            }
-        }
-
-        for (i = display->multiBuffer; i >= 1; i--)
-        {
-            display->varInfo.yres_virtual = display->alignedHeight * i;
-
-            error = display->functions.SetVar(display->file, &display->varInfo);
-            if (error >= 0)
-            {
-                break;
-            }
-        }
-
         error = display->functions.GetVar(display->file, &display->varInfo);
         if (error < 0)
         {
@@ -1208,28 +1180,6 @@ int fbdev_GetDisplayByIndex(int display_id, NativeDisplayType* display_type)
         display->width    = display->varInfo.xres;
         display->height   = display->varInfo.yres;
         display->bpp      = display->varInfo.bits_per_pixel;
-
-        if (display->multiBuffer > 1)
-        {
-            display->multiBuffer = display->varInfo.yres_virtual / display->alignedHeight;
-        }
-
-        display->alignedHeight = display->varInfo.yres_virtual / display->multiBuffer;
-
-        if (display->varInfo.yoffset % display->alignedHeight == 0)
-        {
-            display->backBufferY = display->varInfo.yoffset + display->alignedHeight;
-        }
-        else
-        {
-            display->varInfo.yoffset = 0;
-            display->backBufferY = display->alignedHeight;
-        }
-
-        if (display->backBufferY >= (int)(display->varInfo.yres_virtual))
-        {
-            display->backBufferY = 0;
-        }
 
         switch (display->varInfo.green.length)
         {
@@ -2145,14 +2095,14 @@ void OSBlitToWindow(void* context, const Drawable* drawable)
     struct _FBDisplay* display = ctx->display;
 
     pthread_mutex_lock(&displayMutex);
-    if (display->multiBuffer > 1)
+
     {
        int swapInterval = win->swapInterval;
         if (swapInterval != 0 || !display->panVsync)
         {
             pthread_mutex_lock(&display->condMutex);
 
-        #ifdef FBIO_WAITFORVSYNC
+#ifdef FBIO_WAITFORVSYNC
             if (display->panVsync)
             {
                 swapInterval--;
@@ -2162,8 +2112,7 @@ void OSBlitToWindow(void* context, const Drawable* drawable)
             {
                 display->functions.WaitForVsync(display->file, (void *)0);
             }
-        #endif
-
+#endif
             display->varInfo.xoffset = im->m_storageOffsetX;
             display->varInfo.yoffset = im->m_storageOffsetY;
             display->varInfo.activate = FB_ACTIVATE_VBL;
@@ -2182,12 +2131,3 @@ VGuint OSGetPixmapInfo(NativePixmapType pixmap, VGuint* width, VGuint* height, V
 
     return 0;
 }
-
-VGuint OSGetFrameBufferCount(NativeWindowType window)
-{
-    struct _FBWindow *win = (struct _FBWindow *)window;
-    struct _FBDisplay* dpy = win->display;
-
-    return dpy->multiBuffer > VG_FRAMEBUFFER_COUNT ? VG_FRAMEBUFFER_COUNT : dpy->multiBuffer;
-}
-

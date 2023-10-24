@@ -100,7 +100,7 @@ static VG_INLINE float getFloatMax()
 #define VIV_MAX_SAMPLES                     32
 #define VIV_NUM_TESSELLATED_SEGMENTS        256
 
-#define VG_FRAMEBUFFER_COUNT 2
+#define VG_FRAMEBUFFER_COUNT                1
 
 #define EGL_ASSERT(a)
 #define EGL_UNREF(a)
