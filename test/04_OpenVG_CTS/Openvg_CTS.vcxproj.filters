@@ -1,0 +1,1275 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Source Files\functions">
+      <UniqueIdentifier>{82de07e0-b505-4b43-a919-5621e81277dc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\functions\A">
+      <UniqueIdentifier>{aca69c36-0228-4b80-82eb-0c66c325f840}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="util">
+      <UniqueIdentifier>{d6c2a3ff-a14f-4b84-a3a5-0945f75fcf9d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\functions\B">
+      <UniqueIdentifier>{526af288-838b-41f3-b109-7011bffba0df}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="static">
+      <UniqueIdentifier>{3f84414e-5131-46d3-a72d-b9563fe66bcd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Platform">
+      <UniqueIdentifier>{5936d8ed-cc08-4bda-a331-00a29170bedc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\functions\C">
+      <UniqueIdentifier>{b4146241-b65d-451a-a506-e7bd32ab6a98}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\functions\D">
+      <UniqueIdentifier>{9cb89800-26cc-4bc0-94ab-bae4ef342640}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\functions\E">
+      <UniqueIdentifier>{61237186-0a92-443b-b26b-04cabe2d22e1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\functions\F">
+      <UniqueIdentifier>{ebb673eb-d40a-4838-ae37-9f6c30635ac5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\functions\G">
+      <UniqueIdentifier>{e07a0a89-ecdd-44bc-8a6b-446963b080a3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\functions\H">
+      <UniqueIdentifier>{03d8b246-cc4d-4c08-9b39-af5305443ef1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\functions\I">
+      <UniqueIdentifier>{95cb62b7-91cb-495d-a17f-5b1f9a44b3fc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\functions\J">
+      <UniqueIdentifier>{95fb7bc8-e689-4755-9f1b-1300a406e098}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\functions\K">
+      <UniqueIdentifier>{857ae7de-00bf-41f2-abe9-f9599a713c84}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\functions\L">
+      <UniqueIdentifier>{022f543a-c1c0-4573-b074-1daaebf98def}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\functions\M">
+      <UniqueIdentifier>{4f9218f1-f516-4966-a7f9-1cfa7e0b8169}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\functions\N">
+      <UniqueIdentifier>{299fef53-e357-4e7a-8f1a-c58abd88be64}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="functions\A10101.c">
+      <Filter>Source Files\functions\A</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\A10102.c">
+      <Filter>Source Files\functions\A</Filter>
+    </ClCompile>
+    <ClCompile Include="util\huone.c">
+      <Filter>util</Filter>
+    </ClCompile>
+    <ClCompile Include="util\hybrid.c">
+      <Filter>util</Filter>
+    </ClCompile>
+    <ClCompile Include="util\st.c">
+      <Filter>util</Filter>
+    </ClCompile>
+    <ClCompile Include="util\util.c">
+      <Filter>util</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\A20101.c">
+      <Filter>Source Files\functions\A</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\A20201.c">
+      <Filter>Source Files\functions\A</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\A20301.c">
+      <Filter>Source Files\functions\A</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\A30101.c">
+      <Filter>Source Files\functions\A</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\A30201.c">
+      <Filter>Source Files\functions\A</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\A30301.c">
+      <Filter>Source Files\functions\A</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\A40101.c">
+      <Filter>Source Files\functions\A</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\A40102.c">
+      <Filter>Source Files\functions\A</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\B10101.c">
+      <Filter>Source Files\functions\B</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\B10102.c">
+      <Filter>Source Files\functions\B</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\B10103.c">
+      <Filter>Source Files\functions\B</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\B10104.c">
+      <Filter>Source Files\functions\B</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\B10105.c">
+      <Filter>Source Files\functions\B</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\B10106.c">
+      <Filter>Source Files\functions\B</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\B10108.c">
+      <Filter>Source Files\functions\B</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\B10109.c">
+      <Filter>Source Files\functions\B</Filter>
+    </ClCompile>
+    <ClCompile Include="Openvg_CTS.c" />
+    <ClCompile Include="driver.c" />
+    <ClCompile Include="functions\C10101.c">
+      <Filter>Source Files\functions\C</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\C10201.c">
+      <Filter>Source Files\functions\C</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\C10202.c">
+      <Filter>Source Files\functions\C</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\C10203.c">
+      <Filter>Source Files\functions\C</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\C10301.c">
+      <Filter>Source Files\functions\C</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\C10401.c">
+      <Filter>Source Files\functions\C</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\C10402.c">
+      <Filter>Source Files\functions\C</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\C10403.c">
+      <Filter>Source Files\functions\C</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\C10501.c">
+      <Filter>Source Files\functions\C</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\C10601.c">
+      <Filter>Source Files\functions\C</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\C10701.c">
+      <Filter>Source Files\functions\C</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\C10801.c">
+      <Filter>Source Files\functions\C</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\C10802.c">
+      <Filter>Source Files\functions\C</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\C20101.c">
+      <Filter>Source Files\functions\C</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\D10101.c">
+      <Filter>Source Files\functions\D</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\D10201.c">
+      <Filter>Source Files\functions\D</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\D10301.c">
+      <Filter>Source Files\functions\D</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\E10101.c">
+      <Filter>Source Files\functions\E</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\E10102.c">
+      <Filter>Source Files\functions\E</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\E10103.c">
+      <Filter>Source Files\functions\E</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\E10104.c">
+      <Filter>Source Files\functions\E</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\E10201.c">
+      <Filter>Source Files\functions\E</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\E10301.c">
+      <Filter>Source Files\functions\E</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\E10302.c">
+      <Filter>Source Files\functions\E</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\F10101.c">
+      <Filter>Source Files\functions\F</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\F10201.c">
+      <Filter>Source Files\functions\F</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\F10202.c">
+      <Filter>Source Files\functions\F</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\F10203.c">
+      <Filter>Source Files\functions\F</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\F10204.c">
+      <Filter>Source Files\functions\F</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\F20101.c">
+      <Filter>Source Files\functions\F</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\F20102.c">
+      <Filter>Source Files\functions\F</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\F20103.c">
+      <Filter>Source Files\functions\F</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\F20104.c">
+      <Filter>Source Files\functions\F</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\F20105.c">
+      <Filter>Source Files\functions\F</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\F20106.c">
+      <Filter>Source Files\functions\F</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\F20107.c">
+      <Filter>Source Files\functions\F</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G10101.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G10102.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G10103.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G10201.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G10202.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G10203.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G10204.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G10205.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G10206.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G10301.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G10302.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G10303.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G10304.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G20101.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G20102.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G20201.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G20301.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G20302.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G20303.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G20304.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G20401.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G20402.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G20501.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G20502.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G20503.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G20601.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G20602.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G20603.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G20604.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G20605.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G20606.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G20607.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G20608.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G20609.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G20610.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G20701.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G20702.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G20703.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G20704.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G20801.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G20802.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G20803.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G20804.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G20901.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G20902.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G20903.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G20904.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G21001.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G21002.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G21003.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G21004.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30101.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30102.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30103.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30104.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30106.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30107.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30108.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30110.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30111.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30112.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30114.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30115.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30116.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30117.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30118.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30119.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30120.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30122.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30123.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30124.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30125.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30126.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30127.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30128.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30201.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30203.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30204.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30205.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30206.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30207.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30208.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30209.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30210.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30211.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30212.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30213.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30214.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30215.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30216.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30217.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30218.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30219.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30220.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30221.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30222.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30223.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30224.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30225.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30226.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30228.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30229.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30230.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30231.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30232.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30233.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30234.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30235.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30236.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30237.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30238.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30239.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30240.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30241.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30242.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30243.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30244.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30245.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30246.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30247.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30248.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30249.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30250.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30251.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30252.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30253.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30254.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30255.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30256.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30257.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30258.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30259.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30260.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30261.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30262.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30263.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30264.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30265.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30266.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30267.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30268.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30269.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30270.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30271.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30272.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30273.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30274.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30275.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30276.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30277.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30278.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30279.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30301.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30302.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30303.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30304.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30305.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30306.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30307.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30308.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G30309.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G40101.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G40102.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G40103.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G50101.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G50102.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G50103.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G50104.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G50105.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G50106.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G50107.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G50108.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G50109.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G50110.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G50111.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G50112.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G50113.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G60101.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G70101.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G70102.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G70103.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G70104.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G70105.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G70106.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G70107.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G70108.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\G70109.c">
+      <Filter>Source Files\functions\G</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\H10101.c">
+      <Filter>Source Files\functions\H</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\H10201.c">
+      <Filter>Source Files\functions\H</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\H10202.c">
+      <Filter>Source Files\functions\H</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\H10203.c">
+      <Filter>Source Files\functions\H</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\H10301.c">
+      <Filter>Source Files\functions\H</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\H10302.c">
+      <Filter>Source Files\functions\H</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\H10316.c">
+      <Filter>Source Files\functions\H</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\H10317.c">
+      <Filter>Source Files\functions\H</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\H10318.c">
+      <Filter>Source Files\functions\H</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\H10319.c">
+      <Filter>Source Files\functions\H</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\H10320.c">
+      <Filter>Source Files\functions\H</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\H10321.c">
+      <Filter>Source Files\functions\H</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\H10322.c">
+      <Filter>Source Files\functions\H</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\H10323.c">
+      <Filter>Source Files\functions\H</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\H10324.c">
+      <Filter>Source Files\functions\H</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\H10325.c">
+      <Filter>Source Files\functions\H</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\H10326.c">
+      <Filter>Source Files\functions\H</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\H10327.c">
+      <Filter>Source Files\functions\H</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\H10328.c">
+      <Filter>Source Files\functions\H</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\H10329.c">
+      <Filter>Source Files\functions\H</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\H10330.c">
+      <Filter>Source Files\functions\H</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\H10331.c">
+      <Filter>Source Files\functions\H</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\H10401.c">
+      <Filter>Source Files\functions\H</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\H10402.c">
+      <Filter>Source Files\functions\H</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\H10403.c">
+      <Filter>Source Files\functions\H</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\H10501.c">
+      <Filter>Source Files\functions\H</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\H10601.c">
+      <Filter>Source Files\functions\H</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\H10701.c">
+      <Filter>Source Files\functions\H</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\H10702.c">
+      <Filter>Source Files\functions\H</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\H10801.c">
+      <Filter>Source Files\functions\H</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\H10901.c">
+      <Filter>Source Files\functions\H</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\H10902.c">
+      <Filter>Source Files\functions\H</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\H20101.c">
+      <Filter>Source Files\functions\H</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\H30101.c">
+      <Filter>Source Files\functions\H</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\H30201.c">
+      <Filter>Source Files\functions\H</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\H30202.c">
+      <Filter>Source Files\functions\H</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\H30203.c">
+      <Filter>Source Files\functions\H</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\H30204.c">
+      <Filter>Source Files\functions\H</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\H30205.c">
+      <Filter>Source Files\functions\H</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\H30206.c">
+      <Filter>Source Files\functions\H</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\I10101.c">
+      <Filter>Source Files\functions\I</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\I10102.c">
+      <Filter>Source Files\functions\I</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\I10103.c">
+      <Filter>Source Files\functions\I</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\I10104.c">
+      <Filter>Source Files\functions\I</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\I10201.c">
+      <Filter>Source Files\functions\I</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\I10202.c">
+      <Filter>Source Files\functions\I</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\I20101.c">
+      <Filter>Source Files\functions\I</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\I30101.c">
+      <Filter>Source Files\functions\I</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\I30102.c">
+      <Filter>Source Files\functions\I</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\I30103.c">
+      <Filter>Source Files\functions\I</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\I30104.c">
+      <Filter>Source Files\functions\I</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\I30201.c">
+      <Filter>Source Files\functions\I</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\I30202.c">
+      <Filter>Source Files\functions\I</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\I30203.c">
+      <Filter>Source Files\functions\I</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\I30204.c">
+      <Filter>Source Files\functions\I</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\I30205.c">
+      <Filter>Source Files\functions\I</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\I30206.c">
+      <Filter>Source Files\functions\I</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\I30207.c">
+      <Filter>Source Files\functions\I</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\I30208.c">
+      <Filter>Source Files\functions\I</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\I30209.c">
+      <Filter>Source Files\functions\I</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\I30301.c">
+      <Filter>Source Files\functions\I</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\I30302.c">
+      <Filter>Source Files\functions\I</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\I30303.c">
+      <Filter>Source Files\functions\I</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\I30304.c">
+      <Filter>Source Files\functions\I</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\I30305.c">
+      <Filter>Source Files\functions\I</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\I30306.c">
+      <Filter>Source Files\functions\I</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\I30307.c">
+      <Filter>Source Files\functions\I</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\I30308.c">
+      <Filter>Source Files\functions\I</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\I30309.c">
+      <Filter>Source Files\functions\I</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\I40101.c">
+      <Filter>Source Files\functions\I</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\I40102.c">
+      <Filter>Source Files\functions\I</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\I40103.c">
+      <Filter>Source Files\functions\I</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\I40104.c">
+      <Filter>Source Files\functions\I</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\I40105.c">
+      <Filter>Source Files\functions\I</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\I40106.c">
+      <Filter>Source Files\functions\I</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\J10101.c">
+      <Filter>Source Files\functions\J</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\J20101.c">
+      <Filter>Source Files\functions\J</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\J20102.c">
+      <Filter>Source Files\functions\J</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\J20103.c">
+      <Filter>Source Files\functions\J</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\J20104.c">
+      <Filter>Source Files\functions\J</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\J20201.c">
+      <Filter>Source Files\functions\J</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\J20202.c">
+      <Filter>Source Files\functions\J</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\J20203.c">
+      <Filter>Source Files\functions\J</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\J20204.c">
+      <Filter>Source Files\functions\J</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\J20301.c">
+      <Filter>Source Files\functions\J</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\J20302.c">
+      <Filter>Source Files\functions\J</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\J20303.c">
+      <Filter>Source Files\functions\J</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\J20304.c">
+      <Filter>Source Files\functions\J</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\J20305.c">
+      <Filter>Source Files\functions\J</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\J20306.c">
+      <Filter>Source Files\functions\J</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\J20307.c">
+      <Filter>Source Files\functions\J</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\J20308.c">
+      <Filter>Source Files\functions\J</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\J20309.c">
+      <Filter>Source Files\functions\J</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\J20310.c">
+      <Filter>Source Files\functions\J</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\J20311.c">
+      <Filter>Source Files\functions\J</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\J20312.c">
+      <Filter>Source Files\functions\J</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\J30101.c">
+      <Filter>Source Files\functions\J</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\J30201.c">
+      <Filter>Source Files\functions\J</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\J40101.c">
+      <Filter>Source Files\functions\J</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\J40102.c">
+      <Filter>Source Files\functions\J</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\J40103.c">
+      <Filter>Source Files\functions\J</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\J40104.c">
+      <Filter>Source Files\functions\J</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\J40105.c">
+      <Filter>Source Files\functions\J</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\J40106.c">
+      <Filter>Source Files\functions\J</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\J40107.c">
+      <Filter>Source Files\functions\J</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\J40108.c">
+      <Filter>Source Files\functions\J</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\J40109.c">
+      <Filter>Source Files\functions\J</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\J40110.c">
+      <Filter>Source Files\functions\J</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\K10101.c">
+      <Filter>Source Files\functions\K</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\K10102.c">
+      <Filter>Source Files\functions\K</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\K10201.c">
+      <Filter>Source Files\functions\K</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\K10301.c">
+      <Filter>Source Files\functions\K</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\K20101.c">
+      <Filter>Source Files\functions\K</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\K20102.c">
+      <Filter>Source Files\functions\K</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\K20103.c">
+      <Filter>Source Files\functions\K</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\K20104.c">
+      <Filter>Source Files\functions\K</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\K20105.c">
+      <Filter>Source Files\functions\K</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\K20106.c">
+      <Filter>Source Files\functions\K</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\K20201.c">
+      <Filter>Source Files\functions\K</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\K20202.c">
+      <Filter>Source Files\functions\K</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\K20203.c">
+      <Filter>Source Files\functions\K</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\K20204.c">
+      <Filter>Source Files\functions\K</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\K20205.c">
+      <Filter>Source Files\functions\K</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\K20301.c">
+      <Filter>Source Files\functions\K</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\K20401.c">
+      <Filter>Source Files\functions\K</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\L10101.c">
+      <Filter>Source Files\functions\L</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\L10102.c">
+      <Filter>Source Files\functions\L</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\L10201.c">
+      <Filter>Source Files\functions\L</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\L10301.c">
+      <Filter>Source Files\functions\L</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\L10302.c">
+      <Filter>Source Files\functions\L</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\L10401.c">
+      <Filter>Source Files\functions\L</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\L10402.c">
+      <Filter>Source Files\functions\L</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\L10403.c">
+      <Filter>Source Files\functions\L</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\M10101.c">
+      <Filter>Source Files\functions\M</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\M10102.c">
+      <Filter>Source Files\functions\M</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\M20101.c">
+      <Filter>Source Files\functions\M</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\M20201.c">
+      <Filter>Source Files\functions\M</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\M20202.c">
+      <Filter>Source Files\functions\M</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\M20301.c">
+      <Filter>Source Files\functions\M</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\M20401.c">
+      <Filter>Source Files\functions\M</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\M20501.c">
+      <Filter>Source Files\functions\M</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\M20601.c">
+      <Filter>Source Files\functions\M</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\M20602.c">
+      <Filter>Source Files\functions\M</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\M20603.c">
+      <Filter>Source Files\functions\M</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\M30101.c">
+      <Filter>Source Files\functions\M</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\M30201.c">
+      <Filter>Source Files\functions\M</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\M30301.c">
+      <Filter>Source Files\functions\M</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\N10101.c">
+      <Filter>Source Files\functions\N</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\N10201.c">
+      <Filter>Source Files\functions\N</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="main.h" />
+    <ClInclude Include="util\huone.h">
+      <Filter>util</Filter>
+    </ClInclude>
+    <ClInclude Include="util\hybrid.h">
+      <Filter>util</Filter>
+    </ClInclude>
+    <ClInclude Include="util\st.h">
+      <Filter>util</Filter>
+    </ClInclude>
+    <ClInclude Include="util\util.h">
+      <Filter>util</Filter>
+    </ClInclude>
+    <ClInclude Include="app.h" />
+    <ClInclude Include="static\tests.h">
+      <Filter>static</Filter>
+    </ClInclude>
+    <ClInclude Include="static\vgapi.h">
+      <Filter>static</Filter>
+    </ClInclude>
+    <ClInclude Include="static\vguapi.h">
+      <Filter>static</Filter>
+    </ClInclude>
+    <ClInclude Include="platform_stdlib.h" />
+  </ItemGroup>
+</Project>

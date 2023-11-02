@@ -1,0 +1,50 @@
+include $(AQROOT)/makefile.linux.def
+
+OBJDIR ?= ./build
+
+INSTALL_DIR ?=$(SDK_DIR)/drivers
+
+NAME = libOpenVG.so
+
+SOURCES = vg_api.c vg_context.c vg_egl.c vg_image.c vg_vgu.c
+
+ifeq ($(EGL_API_FBDEV), 1)
+SOURCES += vg_egl_linux.c
+endif
+
+ifeq ($(EGL_API_WL), 1)
+SOURCES += vg_egl_wayland.c
+endif
+
+CFLAGS += -I$(AQROOT)/../build.s2c/sdk/inc 
+
+CFLAGS += -I$(SYSROOT_DIR)/usr/include -I../include -I../include/Vivante -I../include/EGL -I../include/VG -I$(VG_LITE_SDK)/inc
+
+LIBS += m
+
+ifeq ($(EGL_API_WL), 1)
+LDFLAGS += -L$(SYSROOT_DIR)/usr/lib -lwayland-server -lwayland-client -lweston-10
+endif
+
+LDFLAGS += $(addprefix -l,$(LIBS))
+LDFLAGS += -fPIC -shared -Wl,-z,defs
+LDFLAGS += -L$(AQROOT)/../build.s2c/sdk/drivers -lvg_lite
+LDFLAGS += -lpthread -lrt
+
+all: $(OBJDIR)/$(NAME)
+
+clean:
+	@rm -rvf $(OBJDIR)
+
+install: all $(INSTALL_DIR)
+	@cp -rvf $(OBJDIR)/$(NAME) $(INSTALL_DIR)
+
+$(OBJDIR):
+	@mkdir -p $(OBJDIR)
+
+$(INSTALL_DIR):
+	@mkdir -p $(INSTALL_DIR)
+
+$(OBJDIR)/$(NAME): $(OBJDIR) $(SOURCES)
+	@echo $(CC) $(CFLAGS) -o $@ $(SOURCES) $(LDFLAGS)
+	@$(CC) $(CFLAGS) -o $@ $(SOURCES) $(LDFLAGS)

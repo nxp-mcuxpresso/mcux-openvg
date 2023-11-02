@@ -1,0 +1,58 @@
+#ifndef PLATFORM_MATH_H
+#define PLATFORM_MATH_H
+
+#ifdef __cplusplus 
+extern "C" { 
+#endif
+
+#include <stdlib.h>
+#include <math.h>
+
+#ifdef  M_PI
+#define PI          ((float)M_PI)
+#else
+#define PI          ((float)3.14159265358979323846)
+#endif
+
+#ifdef  M_LN2
+#define LN2         ((float)M_LN2)
+#else
+#define LN2         ((float)0.69314718)
+#endif
+
+#define MIN(x, y)   (((x) < (y)) ? (x) : (y))
+#define MAX(x, y)   (((x) < (y)) ? (y) : (x))
+
+#define XTOF(x)     (LDEXP((float)(x), -16))
+
+/* stdlib */
+#define ITOF(i)     ((float)(VGint)(i))
+#define FTOI(x)     ((int) (x))
+#define ATOF(s)     ((float) atof((s)))
+#define ATOI(s)     (atoi((s)))
+
+/* math */
+#define ABS(x)      ((float) fabs((x)))
+#define ADD(x, y)   ((x) + (y))
+#define COS(x)      ((float) cos((x)))
+#define COSD(x)     (COS((PI/180.0f)*(x)))
+#define DIV(x, y)   ((x) / (y))
+#define EXP(x)      ((float) exp((x)))
+#define FLOOR(x)    ((float) floor((x)))
+#define LDEXP(x, y) ((float) ldexp((x), (y)))
+#define LOG(x)      ((float) log((x)))
+#define LOG2(x)     ((float) (log((x))/LN2))
+#define MUL(x, y)   ((x) * (y))
+#define POW(x, y)   ((float) pow((x), (y)))
+#define SIN(x)      ((float) sin((x)))
+#define SIND(x)     (SIN((PI/180.0f)*(x)))
+#define SUB(x, y)   ((x) - (y))
+#define SQRT(x)     ((float) sqrt((x)))
+#define RAND()      (rand())
+#define SRAND(x)    (srand(x))
+
+#ifdef __cplusplus 
+} /* extern "C" */
+#endif
+
+#endif /* PLATFORM_MATH */

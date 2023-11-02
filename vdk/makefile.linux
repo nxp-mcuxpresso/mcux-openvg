@@ -1,0 +1,237 @@
+#
+# This file is a part of Vivante software stack build environment for Linux.
+# It defines the rules necessary to build Vivante SDK.
+#
+
+################################################################################
+# Include the global definitions.
+
+include $(AQROOT)/makefile.linux.def
+OBJ_DIR :=./build
+
+################################################################################
+# Define a shortcut for the main target.
+
+ifeq ($(gcdSTATIC_LINK), 1)
+  STATIC            := 1
+  TARGET_MODULE     := $(OBJ_DIR)/libVDK.a
+else
+  DYNAMIC           := 1
+  TARGET_MODULE     := $(OBJ_DIR)/libVDK.so.1.2.0
+  TARGET_SONAME     := libVDK.so.1
+  TARGET_LINKS      := libVDK.so.1 libVDK.so
+endif
+
+################################################################################
+
+INSTALL_DIR         := $(SDK_DIR)
+
+# User can overwrite the VDK_X11 setting through environment variable.
+ifeq ($(EGL_API_WL),1)
+ # VDK uses Wayland backend by default on Wayland platform.
+ VDK_X11 ?= 0
+else ifneq ($(filter 1,$(EGL_API_X) $(EGL_API_DRI) $(X11_DRI3)),)
+ # VDK uses X11 backend for X, DRI, DRI3 build.
+ VDK_X11 ?= 1
+else
+ VDK_X11 := 0
+endif
+
+################################################################################
+# Supply additional include directories.
+
+INCLUDE += -I../include/VDK \
+           -I../include/EGL \
+           -I../include/VG \
+           -I../include
+
+ifeq ($(EGL_API_X),1)
+  INCLUDE += -I$(ROOTFS)/usr/include
+endif
+
+ifeq ($(EGL_API_WL),1)
+  INCLUDE += -I$(AQROOT)/driver/wl \
+             -I$(WAYLAND_DIR)/include \
+             -I$(WAYLAND_DIR)/include/wayland-viv
+endif
+
+ifeq ($(EGL_API_DRI),1)
+  INCLUDE += -I$(ROOTFS)/usr/include \
+             -I$(ROOTFS)/usr/include/X11/extensions \
+             -I$(ROOTFS)/usr/include/libdrm \
+             -I$(AQROOT)/driver/X/DRI/src \
+             -I$(LIBDRM_DIR)/include/drm
+endif
+
+ifeq ($(X11_DRI3),1)
+  INCLUDE += -I$(ROOTFS)/usr/include \
+             -I$(ROOTFS)/usr/include/X11/extensions \
+             -I$(ROOTFS)/usr/include/libdrm \
+             -I$(LIBDRM_DIR)/include/drm
+endif
+
+ifeq ($(EGL_API_GBM),1)
+  ifneq ($(GBM_LIBS),)
+    INCLUDE += $(GBM_CFLAGS)
+  else
+    INCLUDE += -I$(AQROOT)/driver/gbm/main
+  endif
+endif
+
+ifeq ($(EGL_API_DFB), 1)
+  INCLUDE += -I$(DFB_DIR)/usr/include
+  INCLUDE += -I$(DFB_DIR)/include
+  INCLUDE += -I$(DFB_DIR)/include/directfb-internal
+  INCLUDE += -I$(DFB_DIR)/include/directfb
+endif
+
+CFLAGS += $(INCLUDE)
+
+################################################################################
+# Supply additional include directories.
+
+ifneq ($(USE_ARMCC), 1)
+  CFLAGS  += -fPIC -Werror
+
+  ifeq ($(VDK_X11),1)
+    CFLAGS  += -DVDK_X11
+  endif
+
+  # These header files don't follow ansi.
+  ifeq ($(filter 1,$(EGL_API_WL) $(EGL_API_DFB) $(EGL_API_GBM)),)
+    CFLAGS += -ansi
+  endif
+endif
+
+################################################################################
+# Define flags for the linker.
+
+ifneq ($(USE_ARMCC),1)
+  ifeq ($(EGL_APPENDIX),)
+    LDFLAGS += -Wl,--version-script=libVDK.map
+  endif
+endif
+
+ifeq ($(USE_ARMCC),1)
+  LDFLAGS += --shared -L--soname=,$(TARGET_SONAME)
+else
+  LDFLAGS += -Wall -Wl,-z,defs -shared -Wl,-soname,$(TARGET_SONAME)
+endif
+
+LDFLAGS += -ldl
+################################################################################
+# Supply necessary libraries.
+
+LDLIBS := -L$(INSTALL_DIR)/drivers -lOpenVG
+
+ifeq ($(EGL_API_WL),1)
+  LDLIBS += -L$(WAYLAND_DIR)/lib -lwayland-client -lwayland-cursor -lwayland-egl -lpthread
+endif
+
+ifeq ($(EGL_API_DRI), 1)
+  LDLIBS += -L$(ROOTFS)/usr/lib -lXdamage -lXfixes -lXext -lXau -lXdmcp -lX11
+endif
+
+ifeq ($(X11_DRI3), 1)
+  LDLIBS += -L$(ROOTFS)/usr/lib -lXdamage -lXfixes -lXext -lXau -lXdmcp -lX11 -lX11-xcb -lxcb -lxcb-dri3
+endif
+
+ifeq ($(EGL_API_X),1)
+  LDLIBS += -L$(ROOTFS)/usr/lib -lXau -lXdmcp -lX11
+endif
+
+ifeq ($(EGL_API_GBM),1)
+  ifneq ($(GBM_LIBS),)
+    LDLIBS += $(GBM_LIBS)
+  else
+    LDLIBS += -lgbm
+  endif
+endif
+
+ifeq ($(EGL_API_WL), 1)
+CFLAGS += -DWL_EGL_PLATFORM=1
+endif
+
+ifeq ($(EGL_API_FBDEV), 1)
+CFLAGS += -DEGL_API_FBDEV=1
+endif
+
+################################################################################
+# Describe object files.
+# Make sure choose default platform when multiple option exist
+
+OBJECTS := $(OBJ_DIR)/gc_vdk_egl.o
+
+ifeq ($(VDK_X11),1)
+  PLATFORM_OBJECT := $(OBJ_DIR)/gc_vdk_x11.o
+else ifeq ($(EGL_API_WL),1)
+  PLATFORM_OBJECT := $(OBJ_DIR)/gc_vdk_wayland.o $(OBJ_DIR)/ivi-application-protocol.o $(OBJ_DIR)/xdg-shell-protocol.o $(OBJ_DIR)/fullscreen-shell-unstable-v1-protocol.o
+else ifeq ($(EGL_API_FB),1)
+  PLATFORM_OBJECT := $(OBJ_DIR)/gc_vdk_fbdev.o
+else ifeq ($(EGL_API_GBM),1)
+  PLATFORM_OBJECT := $(OBJ_DIR)/gc_vdk_gbm.o
+else ifeq ($(EGL_API_DFB),1)
+  PLATFORM_OBJECT := $(OBJ_DIR)/gc_vdk_dfb.o
+else ifeq ($(EGL_API_NULLWS),1)
+  PLATFORM_OBJECT := $(OBJ_DIR)/gc_vdk_nullws.o
+endif
+ifeq ($(EGL_API_DRI),1)
+  PLATFORM_OBJECT += $(OBJ_DIR)/XF86dri.o
+endif
+
+OBJECTS += $(PLATFORM_OBJECT)
+
+################################################################################
+# Define targets.
+
+.PHONY: all clean install
+
+all: $(TARGET_MODULE)
+
+clean:
+    @rm -rf $(OBJ_DIR)
+
+install: all
+    @mkdir -p $(INSTALL_DIR)
+    @-cp $(TARGET_MODULE) $(INSTALL_DIR)/drivers
+    @mkdir -p $(INSTALL_DIR)/include
+    @-cp -f  ../include/VDK/gc_vdk.h $(INSTALL_DIR)/include
+    @-cp -f  ../include/VDK/gc_vdk_types.h $(INSTALL_DIR)/include
+    @-cd $(INSTALL_DIR)/include; echo "#include \"gc_vdk.h\"" >vdk.h
+    @for lib in $(TARGET_LINKS); do \
+        ln -sf $(notdir $(TARGET_MODULE)) $(INSTALL_DIR)/drivers/$$lib; \
+    done
+
+################################################################################
+# Module rules.
+
+ifeq ($(STATIC),1)
+$(TARGET_MODULE): $(OBJECTS)
+    @echo "  ARCHIVE \033[1m$(notdir $@)\033[0m"
+    @$(AR) -r -c $@ $(OBJECTS)
+ifneq ($(USE_ARMCC),1)
+    @$(RANLIB) $@
+endif
+endif
+
+ifeq ($(DYNAMIC),1)
+
+$(TARGET_MODULE): $(OBJECTS)
+    @$(CC) $(LDFLAGS) -o $@ $(OBJECTS) $(LDLIBS) -ldl
+endif
+
+################################################################################
+# Object rules.
+
+ifeq ($(EGL_API_DRI),1)
+  vpath %.c ../../driver/X/DRI/src
+endif
+
+$(OBJ_DIR)/%.o: %.c
+    @echo "  COMPILE $(abspath $<)"
+    @mkdir -p $(OBJ_DIR)
+    @$(CC) -c $(CFLAGS) -MMD -o $@ $<
+
+# object dependencies.
+-include $(OBJECTS:.o=.d)
+

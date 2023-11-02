@@ -1,0 +1,59 @@
+#
+# Linux build file for OpenVG 1.1 test.
+#
+ifeq ($(gcdSTATIC_LINK), 1)
+# Default appendix for GL name collision.
+GL_11_APPENDIX ?= _es11
+GL_2_APPENDIX  ?= _es2
+endif
+
+################################################################################
+# Include common definitions.
+
+include $(AQROOT)/makefile.linux.def.emulator
+
+################################################################################
+# Supply additional include directories.
+
+INCLUDE += -I$(AQROOT)/hal/inc
+INCLUDE += -I$(AQROOT)/sdk/inc
+
+ifeq ($(EGL_API_FB), 0)
+INCLUDE	+= -I$(X11_ARM_DIR)/include
+endif
+
+CFLAGS += $(INCLUDE)
+
+################################################################################
+# Supply necessary libraries.
+
+LIBS += -l m -l pthread -l dl
+LIBS += -L $(VDK_DIR)/$(OBJ_DIR) -l VDK
+LIBS += -L $(OVG11_DIR)/$(OBJ_DIR) -l OpenVG
+LIBS += -L $(AQROOT)/driver/openGL/egl/source/$(OBJ_DIR) -l EGL
+LIBS += -L $(AQROOT)/hal/user/$(OBJ_DIR) -l GAL
+
+################################################################################
+# Describe object files.
+
+OBJECTS = $(OBJ_DIR)/TSOverflow.o
+
+################################################################################
+# Define a shortcut for the main target.
+
+PROGRAM		:= 1
+TARGET_NAME	:= TSOverflow
+
+################################################################################
+# Define the macros used in common makefile.
+
+# installation directory
+INSTALL_DIR	:= $(SDK_DIR)/samples/TSOverflow
+
+# link using CXX
+SRC_CXX		:= 1
+
+################################################################################
+# Include the common makefile.
+
+include $(AQROOT)/common.target

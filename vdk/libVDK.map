@@ -1,0 +1,45 @@
+{
+	global:
+		vdkInitialize;
+		vdkExit;
+		
+		vdkGetDisplayByIndex;
+		vdkGetDisplay;
+		vdkGetDisplayInfo;
+		vdkDestroyDisplay;
+		
+		vdkCreateWindow;
+		vdkGetWindowInfo;
+		vdkDestroyWindow;
+		vdkSetWindowTitle;
+		vdkShowWindow;
+		vdkHideWindow;
+		vdkCapturePointer;
+		
+		vdkCreatePixmap;
+		vdkGetPixmapInfo;
+		vdkDestroyPixmap;
+		
+		vdkCreateClientBuffer;
+		vdkGetClientBufferInfo;
+		vdkDestroyClientBuffer;
+		
+		vdkGetEvent;
+		vdkGetTicks;
+		
+		vdkGetAddress;
+		
+		vdkSetupEGL;
+		vdkSwapEGL;
+		vdkFinishEGL;
+		vdkSetSwapIntervalEGL;
+		
+		vdkLoadTexture;
+		
+		vdkMakeProgram;
+		vdkDeleteProgram;
+
+	local:
+		*;
+};
+
