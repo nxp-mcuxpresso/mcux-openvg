@@ -5318,20 +5318,15 @@ void VG_APIENTRY vgCopyMask(VGMaskLayer maskLayer, VGint dx, VGint dy, VGint sx,
     if (context->m_scissoring == VG_TRUE) {
         vg_lite_disable_scissor();
     }
-    vg_lite_filter_t filter = VG_LITE_FILTER_POINT;
-    vg_lite_blend_t blend = VG_LITE_BLEND_NONE;
-    Matrix3x3 n;
     dx = dx > 0 ? dx : 0;
     dy = dy > 0 ? dy : 0;
     sx = sx > 0 ? sx : 0;
     sy = sy > 0 ? sy : 0;
-    initMatrix3x3(&n, 1, 0, (VGfloat)dx, 0, 1, (VGfloat)dy, 0, 0, 1);
-    vg_lite_rectangle_t rect = { sx, sy, width, height };
 
     vg_lite_buffer_t* srcbuf = drawable->m_mask->m_image->m_vglbuf;
     vg_lite_buffer_t* dstbuf = (vg_lite_buffer_t*)((Surface*)maskLayer)->m_image->m_vglbuf;
 
-    vg_lite_blit_rect(dstbuf, srcbuf, &rect, (vg_lite_matrix_t*)&n, blend, 0, filter);
+    vg_lite_copy_image(dstbuf, srcbuf, dx, dy, sx, sy, width, height);
     vg_lite_finish();
     if (context->m_masking == VG_TRUE) {
         vg_lite_enable_masklayer();
@@ -8005,7 +8000,8 @@ void writePixel(Image* dst, int x, int y, Color c, VGboolean display)
     int as = dst->m_desc.alphaShift;
     int ls = dst->m_desc.luminanceShift;
     unsigned int p;
-    if (dst->m_desc.format == VG_lRGBX_8888 || dst->m_desc.format == VG_sRGBX_8888) {
+    if (dst->m_desc.format == VG_lRGBX_8888 || dst->m_desc.format == VG_sRGBX_8888 ||
+        dst->m_desc.format == VG_lRGBX_8888_PRE || dst->m_desc.format == VG_sRGBX_8888_PRE) {
         ab = 8;
         lb = dst->m_desc.luminanceBits;
         rs = 24;
@@ -8610,12 +8606,9 @@ void VG_APIENTRY vgImageSubData(VGImage image, const void* data, VGint dataStrid
 
     vg_lite_buffer_t srcbuf;
     memset(&srcbuf, 0, sizeof(vg_lite_buffer_t));
-    vg_lite_matrix_t n;
     vg_lite_buffer_t* dstbuf ;
     uint32_t mul, div, align;
     dstbuf = (vg_lite_buffer_t*)(img->m_vglbuf);
-    vg_lite_filter_t filter = VG_LITE_FILTER_POINT;
-    vg_lite_blend_t blend = VG_LITE_BLEND_NONE;
 
     VGint byteOneLine;
     uint8_t* temp_memory = NULL;
@@ -8659,13 +8652,10 @@ void VG_APIENTRY vgImageSubData(VGImage image, const void* data, VGint dataStrid
         memcpy((uint8_t*)temp_memory + j * srcbuf.stride, (uint8_t*)data + tmp_sx * mul / div + tmp_sy * dataStride + j * dataStride, byteOneLine);
     }
     /* Adjust the coordinate position of blit according to tmp_sx, tmp_sy, tmp_w, tmp_h. */
-    vg_lite_rectangle_t rect = { 0, 0, tmp_w, tmp_h };
-    vg_lite_identity(&n);
-    vg_lite_translate((VGfloat)(tmp_dx + img->m_storageOffsetX), (VGfloat)(tmp_dy + img->m_storageOffsetY), &n);
     if (context->m_masking == VG_TRUE) {
         vg_lite_disable_masklayer();
     }
-    vg_lite_blit_rect(dstbuf, &srcbuf, &rect, (vg_lite_matrix_t*)&n, blend, 0, filter);
+    vg_lite_copy_image(dstbuf, &srcbuf, (VGint)(tmp_dx + img->m_storageOffsetX), (VGint)(tmp_dy + img->m_storageOffsetY), 0, 0, tmp_w, tmp_h);
     vg_lite_finish();
 
     vg_lite_free(&srcbuf);
@@ -8791,8 +8781,6 @@ void VG_APIENTRY vgCopyImage(VGImage dst, VGint dx, VGint dy, VGImage src, VGint
 
     vg_lite_buffer_t* dstbuf = (vg_lite_buffer_t*)((Image*)dst)->m_vglbuf;
     vg_lite_buffer_t* srcbuf = (vg_lite_buffer_t*)((Image*)src)->m_vglbuf;
-    vg_lite_filter_t filter = VG_LITE_FILTER_POINT;
-    vg_lite_blend_t blend = VG_LITE_BLEND_NONE;
     vg_lite_matrix_t n;
     vg_lite_identity(&n);
     vg_lite_translate((VGfloat)dx, (VGfloat)dy, &n);
@@ -8823,8 +8811,7 @@ void VG_APIENTRY vgCopyImage(VGImage dst, VGint dx, VGint dy, VGImage src, VGint
         if (tmp_w <= 0 || tmp_h <= 0) {
             VG_RETURN(VG_NO_RETVAL);
         }
-        vg_lite_identity(&n);
-        vg_lite_translate((VGfloat)(tmp_dx + ((Image*)dst)->m_storageOffsetX), (VGfloat)(tmp_dy + ((Image*)dst)->m_storageOffsetX), &n);
+     
         vg_lite_rectangle_t rect;
         if (((Image*)src)->m_storageOffsetX || ((Image*)src)->m_storageOffsetY) {
             rect.x = tmp_sx + ((Image*)src)->m_storageOffsetX;
@@ -8838,7 +8825,7 @@ void VG_APIENTRY vgCopyImage(VGImage dst, VGint dx, VGint dy, VGImage src, VGint
             rect.width = tmp_w;
             rect.height = tmp_h;
         }
-        vg_lite_blit_rect(dstbuf, srcbuf, &rect, (vg_lite_matrix_t*)&n, blend, 0, filter);
+        vg_lite_copy_image(dstbuf, srcbuf, (VGint)(tmp_dx + ((Image*)dst)->m_storageOffsetX), (VGint)(tmp_dy + ((Image*)dst)->m_storageOffsetX), rect.x, rect.y, rect.width, rect.height);
         vg_lite_finish();
     }
 
@@ -9171,9 +9158,6 @@ void VG_APIENTRY vgSetPixels(VGint dx, VGint dy, VGImage src, VGint sx, VGint sy
         VG_RETURN(VG_NO_RETVAL);
     }
 
-    vg_lite_filter_t filter = VG_LITE_FILTER_POINT;
-    vg_lite_blend_t blend = VG_LITE_BLEND_NONE;
-    Matrix3x3 n;
     int tmp_sx = sx;
     int tmp_sy = sy;
     int tmp_dx = dx;
@@ -9182,10 +9166,9 @@ void VG_APIENTRY vgSetPixels(VGint dx, VGint dy, VGImage src, VGint sx, VGint sy
     int tmp_h = height;
 
     computeBlitRegion(&tmp_sx, &tmp_sy, &tmp_dx, &tmp_dy, &tmp_w, &tmp_h, ((Image*)src)->m_width, ((Image*)src)->m_height, dstbuf->width, dstbuf->height);
-    initMatrix3x3(&n, 1, 0, (VGfloat)tmp_dx, 0, 1, (VGfloat)tmp_dy, 0, 0, 1);
     vg_lite_rectangle_t rect = { tmp_sx + img->m_storageOffsetX, tmp_sy + img->m_storageOffsetY, tmp_w, tmp_h };
     vg_lite_disable_masklayer();
-    vg_lite_blit_rect(dstbuf, srcbuf, &rect, (vg_lite_matrix_t*)&n, blend, 0, filter);
+    vg_lite_copy_image(dstbuf, srcbuf, (VGint)tmp_dx, (VGint)tmp_dy, rect.x, rect.y, rect.width, rect.height);
     vg_lite_finish();
     if (context->m_masking) {
         vg_lite_enable_masklayer();
@@ -9209,9 +9192,6 @@ void VG_APIENTRY vgWritePixels(const void * data, VGint dataStride, VGImageForma
 
     vg_lite_buffer_t srcbuf;
     memset(&srcbuf, 0, sizeof(vg_lite_buffer_t));
-    vg_lite_filter_t filter = VG_LITE_FILTER_POINT;
-    vg_lite_blend_t blend = VG_LITE_BLEND_NONE;
-    vg_lite_matrix_t n;
     uint32_t mul, div, align, byteOneLine;
 
     /* Special format not support blit, so cpu operation. Currently only support start at (0,0). */
@@ -9252,10 +9232,8 @@ void VG_APIENTRY vgWritePixels(const void * data, VGint dataStride, VGImageForma
     vg_lite_disable_masklayer();
     /* Adjust the coordinate position of blit according to tmp_sx, tmp_sy, tmp_w, tmp_h. */
     vg_lite_rectangle_t rect = { tmp_sx, tmp_sy, tmp_w, tmp_h };
-    vg_lite_identity(&n);
-    vg_lite_translate((VGfloat)(tmp_dx + drawable->m_color->m_image->m_storageOffsetX), (VGfloat)(tmp_dy + drawable->m_color->m_image->m_storageOffsetY), &n);
 
-    vg_lite_blit_rect(dstbuf, &srcbuf, &rect, &n, blend, 0, filter);
+    vg_lite_copy_image(dstbuf, &srcbuf, (VGint)(tmp_dx + drawable->m_color->m_image->m_storageOffsetX), (VGint)(tmp_dy + drawable->m_color->m_image->m_storageOffsetY), rect.x, rect.y, rect.width, rect.height);
     vg_lite_finish();
     if (context->m_masking) {
         vg_lite_enable_masklayer();
@@ -9288,10 +9266,6 @@ void VG_APIENTRY vgGetPixels(VGImage dst, VGint dx, VGint dy, VGint sx, VGint sy
         VG_RETURN(VG_NO_RETVAL);
     }
 
-    vg_lite_blend_t blend = VG_LITE_BLEND_NONE;
-    vg_lite_filter_t filter = VG_LITE_FILTER_POINT;
-    vg_lite_matrix_t n;
-
     int tmp_sx = sx;
     int tmp_sy = sy;
     int tmp_dx = dx;
@@ -9302,9 +9276,7 @@ void VG_APIENTRY vgGetPixels(VGImage dst, VGint dx, VGint dy, VGint sx, VGint sy
 
     vg_lite_rectangle_t rect = { tmp_sx, tmp_sy, tmp_w, tmp_h };
 
-    vg_lite_identity(&n);
-    vg_lite_translate((VGfloat)(tmp_dx + img->m_storageOffsetX), (VGfloat)(tmp_dy + img->m_storageOffsetY), &n);
-    vg_lite_blit_rect(dstbuf, srcbuf, &rect, &n, blend, 0, filter);
+    vg_lite_copy_image(dstbuf, srcbuf, (VGint)(tmp_dx + img->m_storageOffsetX), (VGint)(tmp_dy + img->m_storageOffsetY), rect.x, rect.y, rect.width, rect.height);
     vg_lite_finish();
 
     VG_RETURN(VG_NO_RETVAL);
@@ -9325,9 +9297,6 @@ void VG_APIENTRY vgReadPixels(void* data, VGint dataStride, VGImageFormat dataFo
     vg_lite_buffer_t* srcbuf = (vg_lite_buffer_t*)drawable->m_color->m_image->m_vglbuf;
     vg_lite_buffer_t dstbuf;
     memset(&dstbuf, 0, sizeof(vg_lite_buffer_t));
-    vg_lite_filter_t filter = VG_LITE_FILTER_POINT;
-    vg_lite_blend_t blend = VG_LITE_BLEND_NONE;
-    vg_lite_matrix_t n;
     /* Special format not support blit, so cpu operation. Currently only support start at (0,0). */
     if ((!isSupportFormat(context, srcbuf->format)) || (!isSupportFormat(context, dataFormat))) {
         Image dstimg = { 0 };
@@ -9366,9 +9335,7 @@ void VG_APIENTRY vgReadPixels(void* data, VGint dataStride, VGImageFormat dataFo
     }
     /* Adjust the coordinate position of blit according to tmp_sx, tmp_sy, tmp_w, tmp_h. */
     vg_lite_rectangle_t rect = { tmp_sx + drawable->m_color->m_image->m_storageOffsetX, tmp_sy + drawable->m_color->m_image->m_storageOffsetY, tmp_w, tmp_h };
-    vg_lite_identity(&n);
-    vg_lite_translate((VGfloat)(tmp_dx), (VGfloat)(tmp_dy), &n);
-    vg_lite_blit_rect(&dstbuf, srcbuf, &rect, &n, blend, 0, filter);
+    vg_lite_copy_image(&dstbuf, srcbuf, (VGint)(tmp_dx), (VGint)(tmp_dy), rect.x, rect.y, rect.width, rect.height);
     vg_lite_finish();
     srcbuf->transparency_mode = 0;
     for (int j = 0; j < height; j++) {
@@ -9454,12 +9421,7 @@ void VG_APIENTRY vgColorMatrix(VGImage dst, VGImage src, const VGfloat * matrix)
     unsigned int channelMask = context->m_filterChannelMask & (VG_RED|VG_GREEN|VG_BLUE|VG_ALPHA);    //undefined bits are ignored
     vg_lite_buffer_t* dstbuf = (vg_lite_buffer_t*)d->m_vglbuf;
     vg_lite_buffer_t* srcbuf = (vg_lite_buffer_t*)s->m_vglbuf;
-    vg_lite_filter_t filter = VG_LITE_FILTER_POINT;
-    vg_lite_blend_t blend = VG_LITE_BLEND_NONE;
-    vg_lite_color_t color = 0;
     vg_lite_error_t state;
-    Matrix3x3 n;
-    initMatrix3x3(&n, 1, 0, 0, 0, 1, 0, 0, 0, 1);
     VGfloat m[20];
     for (int i=0;i<20;i++)
     {
@@ -9471,7 +9433,8 @@ void VG_APIENTRY vgColorMatrix(VGImage dst, VGImage src, const VGfloat * matrix)
         colorMatrix(m, s, d, context->m_filterFormatLinear ? VG_TRUE : VG_FALSE, context->m_filterFormatPremultiplied ? VG_TRUE : VG_FALSE, channelMask);
         VG_RETURN(VG_NO_RETVAL);
     }
-    vg_lite_blit(dstbuf, srcbuf, (vg_lite_matrix_t*)&n, blend, color, filter);
+    vg_lite_rectangle_t rect = { 0, 0, srcbuf->width, srcbuf->height };
+    vg_lite_copy_image(dstbuf, srcbuf, 0, 0, rect.x, rect.y, rect.width, rect.height);
     VG_RETURN(VG_NO_RETVAL);
 }
 
