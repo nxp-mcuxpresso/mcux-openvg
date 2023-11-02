@@ -1,0 +1,21 @@
+QAROOT ?= $(shell pwd)
+SDK_DIR ?= $(AQROOT)/build
+
+.phony: all install clean
+
+all:
+#	@$(MAKE) -C src -f makefile.linux all
+#	@$(MAKE) -C vdk -f makefile.linux all
+
+clean:
+	@rm -rf $(SDK_DIR)
+	@$(MAKE) -C src -f makefile.linux clean
+	@$(MAKE) -C vdk -f makefile.linux clean
+
+install: all $(SDK_DIR)
+	@$(MAKE) -C src -f makefile.linux install
+	@$(MAKE) -C vdk -f makefile.linux install
+
+$(SDK_DIR):
+	@mkdir -p $(SDK_DIR)/drivers
+	@mkdir -p $(SDK_DIR)/include

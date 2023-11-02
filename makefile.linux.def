@@ -1,0 +1,32 @@
+VG_LITE_SDK   ?= /home/ubuser/xingyong/OpenVG/build.s2c/sdk
+KERNEL_DIR    ?= /home/software/Linux/zync/git/linux-s2c
+SYSROOT_DIR   ?= /home/software/Linux/zync/arm-vivante-linux-gnueabihf/arm-vivante-linux-gnueabihf/sysroot
+CROSS_COMPILE ?= /home/software/Linux/zync/arm-vivante-linux-gnueabihf/bin/arm-vivante-linux-gnueabihf-
+#CC            := $(CROSS_COMPILE)gcc
+
+DEBUG       ?= 0
+CPU_ARCH    ?= armv7-a
+FLOAT_ABI   ?=
+ENABLE_PCIE ?= 0
+EGL_API_FB   = 1
+
+ifneq ($(CPU_ARCH),0)
+CFLAGS += -march=$(CPU_ARCH)
+endif
+ifneq ($(FPU),)
+  CFLAGS += -mfpu=$(FPU)
+endif
+ifneq ($(FLOAT_ABI),)
+  CFLAGS += -mfloat-abi=$(FLOAT_ABI)
+endif
+
+CFLAGS += -std=c99 -Wall -fno-strict-aliasing -D__ARM_PCS_VFP
+
+LDFLAGS += -L$(SYSROOT_DIR)
+
+ifeq ($(DEBUG), 1)
+CFLAGS += -g -g -O0 -DDEBUG -D_DEBUG
+else
+CFLAGS += -O2
+endif
+
