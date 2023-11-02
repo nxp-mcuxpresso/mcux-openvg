@@ -337,40 +337,51 @@ ColorDescriptor formatToDescriptor(VGImageFormat format)
     VG_BW_1                                     = 12,
     VG_A_1                                      = 13,
     VG_A_4                                      = 14,
+    VG_sRGBX_8888_PRE                           = 15,
+    VG_sRGB_565_PRE                             = 16,
+    VG_sRGBA_5551_PRE                           = 17,
+    VG_sRGBA_4444_PRE                           = 18,
+    VG_lRGBX_8888_PRE                           = 19,
+    VG_lRGB_565                                 = 20,
+    VG_lRGB_565_PRE                             = 21,
+    VG_lRGBA_5551                               = 22,
+    VG_lRGBA_5551_PRE                           = 23,
+    VG_lRGBA_4444                               = 24,
+    VG_lRGBA_4444_PRE                           = 25,
     */
-    static const int redBits[15] = { 8, 8, 8, 5, 5, 4, 0, 8, 8, 8, 0, 0, 0, 0, 0 };
-    static const int greenBits[15] = { 8, 8, 8, 6, 5, 4, 0, 8, 8, 8, 0, 0, 0, 0, 0 };
-    static const int blueBits[15] = { 8, 8, 8, 5, 5, 4, 0, 8, 8, 8, 0, 0, 0, 0, 0 };
-    static const int alphaBits[15] = { 0, 8, 8, 0, 1, 4, 0, 0, 8, 8, 0, 8, 0, 1, 4 };
-    static const int luminanceBits[15] = { 0, 0, 0, 0, 0, 0, 8, 0, 0, 0, 8, 0, 1, 0, 0 };
+    static const int redBits[26] = { 8, 8, 8, 5, 5, 4, 0, 8, 8, 8, 0, 0, 0, 0, 0, 8, 5, 5, 4, 8, 5, 5, 5, 5, 4, 4 };
+    static const int greenBits[26] = { 8, 8, 8, 6, 5, 4, 0, 8, 8, 8, 0, 0, 0, 0, 0, 8, 6, 5, 4, 8, 6, 6, 5, 5, 4, 4 };
+    static const int blueBits[26] = { 8, 8, 8, 5, 5, 4, 0, 8, 8, 8, 0, 0, 0, 0, 0, 8, 5, 5, 4, 8, 5, 5, 5, 5, 4, 4 };
+    static const int alphaBits[26] = { 0, 8, 8, 0, 1, 4, 0, 0, 8, 8, 0, 8, 0, 1, 4, 0, 0, 1, 4, 0, 0, 0, 1, 1, 4, 4 };
+    static const int luminanceBits[26] = { 0, 0, 0, 0, 0, 0, 8, 0, 0, 0, 8, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
-    static const int redShifts[4 * 15] = { 16, 24, 24, 11, 11, 12, 0, 16, 24, 24, 0, 0, 0, 0, 0,    //RGBA
-                                                    16, 16, 16, 11, 10, 8,  0, 16, 16, 16, 0, 0, 0, 0, 0,    //ARGB
-                                                    8,  8,  8,  0,  1,  4,  0, 8,  8,  8,  0, 0, 0, 0, 0,    //BGRA
-                                                    0,  0,  0,  0,  0,  0,  0, 0,  0,  0,  0, 0, 0, 0, 0 };    //ABGR
+    static const int redShifts[4 * 26] = { 16, 24, 24, 11, 11, 12, 0, 16, 24, 24, 0, 0, 0, 0, 0, 16, 11, 11, 12, 16, 11, 11, 11, 11, 12, 12,    //RGBA
+                                                   16, 16, 16, 11, 10, 8,  0, 16, 16, 16, 0, 0, 0, 0, 0, 16, 11, 10, 8, 16, 11, 11, 10, 10, 8, 8,   //ARGB
+                                                   8,  8,  8,  0,  1,  4,  0, 8,  8,  8,  0, 0, 0, 0, 0, 8, 0, 1, 4, 8, 0, 0, 1, 1, 4, 4,    //BGRA
+                                                   0,  0,  0,  0,  0,  0,  0, 0,  0,  0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };    //ABGR
 
-    static const int greenShifts[4 * 15] = { 8, 16, 16, 5,  6,  8,  0, 8, 16, 16, 0, 0, 0, 0, 0,    //RGBA
-                                                      8,  8,  8,  5,  5,  4,  0, 8,  8,  8,  0, 0, 0, 0, 0,    //ARGB
-                                                      16, 16, 16, 5,  6,  8,  0, 16, 16, 16, 0, 0, 0, 0, 0,    //BGRA
-                                                      8,  8,  8,  5,  5,  4,  0, 8,  8,  8,  0, 0, 0, 0, 0 };//ABGR
+    static const int greenShifts[4 * 26] = { 8, 16, 16, 5,  6,  8,  0, 8, 16, 16, 0, 0, 0, 0, 0, 8, 5, 6, 8, 8, 5, 5, 6, 6, 8, 8,    //RGBA
+                                                     8,  8,  8, 5,  5,  4,  0, 8,  8,  8, 0, 0, 0, 0, 0, 8, 5, 5, 4, 8, 5, 5, 5, 5, 4, 4,   //ARGB
+                                                     16, 16, 16, 5,  6,  8,  0, 16, 16, 16, 0, 0, 0, 0, 0, 16, 8, 6, 8, 16, 5, 5, 6, 6, 8, 8,    //BGRA
+                                                     8,  8,  8,  5,  5,  4,  0, 8,  8,  8,  0, 0, 0, 0, 0, 8, 5, 5, 4, 8, 5, 5, 5, 5, 4, 4 };//ABGR
 
-    static const int blueShifts[4 * 15] = { 0,  8,  8,  0,  1,  4,  0, 0,  8,  8,  0, 0, 0, 0, 0,    //RGBA
-                                                      0,  0,  0,  0,  0,  0,  0, 0,  0,  0,  0, 0, 0, 0, 0,    //ARGB
-                                                      24, 24, 24, 11, 11, 12, 0, 24, 24, 24, 0, 0, 0, 0, 0,    //BGRA
-                                                      16, 16, 16, 11, 10, 8,  0, 16, 16, 16, 0, 0, 0, 0, 0 };//ABGR
+    static const int blueShifts[4 * 26] = { 0,  8,  8,  0,  1,  4,  0, 0,  8,  8,  0, 0, 0, 0, 0, 0, 0, 1, 4, 0, 0, 0, 1, 1, 4, 4,    //RGBA
+                                                     0,  0,  0,  0,  0,  0,  0, 0,  0,  0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,   //ARGB
+                                                     24, 24, 24, 11, 11, 12, 0, 24, 24, 24, 0, 0, 0, 0, 0, 24, 11, 11, 12, 24, 11, 11, 10, 10, 8, 8,    //BGRA
+                                                     16, 16, 16, 11, 10, 8,  0, 16, 16, 16, 0, 0, 0, 0, 0, 16, 11, 10, 8, 16, 11, 11, 10, 10, 8, 8 };//ABGR
 
-    static const int alphaShifts[4 * 15] = { 0,  0,  0,  0,  0,  0,  0, 0,  0,  0,  0, 0, 0, 0, 0,    //RGBA
-                                                      0,  24, 24, 0,  15, 12, 0, 0,  24, 24, 0, 0, 0, 0, 0,    //ARGB
-                                                      0,  0,  0,  0,  0,  0,  0, 0,  0,  0,  0, 0, 0, 0, 0,    //BGRA
-                                                      0,  24, 24, 0,  15, 12, 0, 0,  24, 24, 0, 0, 0, 0, 0 };//ABGR
+    static const int alphaShifts[4 * 26] = { 0,  0,  0,  0,  0,  0,  0, 0,  0,  0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,   //RGBA
+                                                      0,  24, 24, 0,  15, 12, 0, 0,  24, 24, 0, 0, 0, 0, 0, 0, 0, 15, 12, 0, 0, 0, 15, 15, 12, 12,   //ARGB
+                                                      0,  0,  0,  0,  0,  0,  0, 0,  0,  0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,    //BGRA
+                                                      0,  24, 24, 0,  15, 12, 0, 0,  24, 24, 0, 0, 0, 0, 0, 0, 0, 15, 12, 0, 0, 0, 15, 15, 12, 12 };//ABGR
 
-    static const int bpps[15] = { 32, 32, 32, 16, 16, 16, 8, 32, 32, 32, 8, 8, 1, 1, 4 };
+    static const int bpps[26] = { 32, 32, 32, 16, 16, 16, 8, 32, 32, 32, 8, 8, 1, 1, 4, 32, 16, 16, 16, 32, 16, 16, 16, 16, 16, 16 };
 
-    static const InternalFormat internalFormats[15] = { sRGBA, sRGBA, sRGBA_PRE, sRGBA, sRGBA, sRGBA, sLA, lRGBA, lRGBA, lRGBA_PRE, lLA, lRGBA, lLA, lRGBA, lRGBA };
+    static const InternalFormat internalFormats[26] = { sRGBA, sRGBA, sRGBA_PRE, sRGBA, sRGBA, sRGBA, sLA, lRGBA, lRGBA, lRGBA_PRE, lLA, lRGBA, lLA, lRGBA, lRGBA, sRGBA_PRE, sRGBA_PRE, sRGBA_PRE, sRGBA_PRE, lRGBA_PRE, lRGBA, lRGBA_PRE, lRGBA, lRGBA_PRE, lRGBA, lRGBA_PRE };
 
     ColorDescriptor desc;
-    VGint baseFormat = (VGint)format & 15;
-    const int numBaseFormats = 15;
+    VGint baseFormat = (VGint)format & 31;
+    const int numBaseFormats = 26;
     int swizzleBits = ((int)format >> 6) & 3;
 
     memset(&desc, 0, sizeof(ColorDescriptor));
@@ -1355,7 +1366,8 @@ void colorUnpack(Color* color, unsigned int inputData, const ColorDescriptor* in
     int as = inputDesc->alphaShift;
     int ls = inputDesc->luminanceShift;
 
-    if (inputDesc->format == VG_lRGBX_8888 || inputDesc->format == VG_sRGBX_8888) {
+    if (inputDesc->format == VG_lRGBX_8888 || inputDesc->format == VG_sRGBX_8888 ||
+        inputDesc->format == VG_lRGBX_8888_PRE || inputDesc->format == VG_sRGBX_8888_PRE) {
         ab = 8;
         lb = inputDesc->luminanceBits;
         rs = 24;
@@ -1402,7 +1414,8 @@ unsigned int colorPack(Color* color, const ColorDescriptor* outputDesc)
     int as = outputDesc->alphaShift;
     int ls = outputDesc->luminanceShift;
 
-    if (outputDesc->format == VG_lRGBX_8888 || outputDesc->format == VG_sRGBX_8888) {
+    if (outputDesc->format == VG_lRGBX_8888 || outputDesc->format == VG_sRGBX_8888 ||
+        outputDesc->format == VG_lRGBX_8888_PRE || outputDesc->format == VG_sRGBX_8888_PRE) {
         ab = 8;
         lb = outputDesc->luminanceBits;
         rs = 24;
