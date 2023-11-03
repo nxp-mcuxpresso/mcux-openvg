@@ -9592,7 +9592,7 @@ VGHardwareQueryResult VG_APIENTRY vgHardwareQuery(VGHardwareQueryType key, VGint
 const VGubyte * VG_APIENTRY vgGetString(VGStringID name)
 {
     static const VGubyte vendor[] = "Vivante Corporation";
-    static const VGubyte renderer[] = {"OpenVG 1.1 Implementation Oct 4, 2022"};
+    static const VGubyte renderer[] = {"OpenVG 1.1 Implementation Oct, 2023"};
     static const VGubyte version[] = "1.1";
     static const VGubyte extensions[] = "";
     const VGubyte* r = NULL;

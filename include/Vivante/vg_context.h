@@ -54,6 +54,8 @@
 extern void  OSAcquireMutex(void);
 extern void  OSReleaseMutex(void);
 
+#define VIV_EGL_NUMCONFIGS  10
+
 #define VG_NO_RETVAL
 
 //this must be the first line in an API function
@@ -77,7 +79,6 @@ typedef struct
     VGImageEntry*                   m_resources;
     VGint                           m_referenceCount;
 } VGImageManager;
-
 
 typedef struct VGMaskLayerEntryRec
 {
@@ -205,11 +206,6 @@ typedef struct __VGcontextRec
     Drawable*                       m_eglDrawable;
 
 } VGContext;
-
-
-#define VIV_EGL_NUMCONTEXT          16
-#define VIV_EGL_NUMSURFACE          32
-#define VIV_EGL_NUMCONFIGS          60
 
 typedef struct
 {
