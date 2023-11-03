@@ -925,7 +925,7 @@ EGLAPI EGLDisplay EGLAPIENTRY eglGetDisplay(EGLNativeDisplayType display_id)
         initEGLDisplayConfigs(newDisplay);
         addEglDisplay(newDisplay);
 
-        return (EGLDisplay)newDisplay;
+        EGL_RETURN(EGL_SUCCESS, (EGLDisplay)newDisplay);
     }
     
     if (newDisplay == NULL)
@@ -942,7 +942,7 @@ EGLAPI EGLDisplay EGLAPIENTRY eglGetDisplay(EGLNativeDisplayType display_id)
         addEglDisplay(newDisplay);
     }
 
-    return (EGLDisplay)newDisplay;
+    EGL_RETURN(EGL_SUCCESS, (EGLDisplay)newDisplay);
 }
 
 /*-------------------------------------------------------------------*//*!
@@ -1595,6 +1595,13 @@ EGLAPI EGLSurface EGLAPIENTRY eglCreatePbufferSurface(EGLDisplay dpy, EGLConfig 
     EGL_IF_ERROR(width <= 0 || height <= 0, EGL_BAD_ATTRIBUTE, EGL_NO_SURFACE);
     VGEGLSurface* s = NULL;
     Drawable* d = NULL;
+
+    /* Initialize VGLite API here */
+    if (vg_lite_init(width, height) != VG_LITE_SUCCESS)
+    {
+        printf("OpenVG driver fails to initialize VGLite API!\n");
+        EGL_RETURN(EGL_NOT_INITIALIZED, EGL_NO_SURFACE);
+    }
 
     {
         //d = RI_NEW(Drawable, (display->getConfig(config).configToDescriptor((colorSpace == EGL_VG_COLORSPACE_LINEAR) ? false : true, (alphaFormat == EGL_VG_ALPHA_FORMAT_PRE) ? true : false), width, height, display->getConfig(config).m_samples, display->getConfig(config).m_maskBits));    //throws bad_alloc
