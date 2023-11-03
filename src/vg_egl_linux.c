@@ -230,7 +230,7 @@ struct eglFbPlatform
 
 #define gcmALIGN(n, align) (((n) + ((align) - 1)) & ~((align) - 1))
 
-pthread_mutex_t* mutex;
+pthread_mutex_t* mutex = NULL;
 int mutex_locked = 0;
 static pthread_mutex_t displayMutex;
 static pthread_once_t onceControl = PTHREAD_ONCE_INIT;
@@ -1866,7 +1866,7 @@ void OSAcquireMutex(void)
     switch (error)
     {
         case 0:
-            mutex_locked = 1;
+            mutex_locked += 1;
             break;
 
         case EBUSY:
@@ -1883,11 +1883,11 @@ void OSAcquireMutex(void)
             mutex_locked = 0;
             printf("deadlock situation \n");
             break;
+
         default:
             mutex_locked = 0;
             printf("acqure mutex error:%d \n", error);
     }
-
 }
 
 void OSReleaseMutex(void)
@@ -1899,33 +1899,30 @@ void OSReleaseMutex(void)
         return;
     }
 
-    if (mutex_locked)
+    error = pthread_mutex_unlock(mutex);
+
+    switch (error)
     {
-        error = pthread_mutex_unlock(mutex);
+        case 0:
+            mutex_locked -= 1;
+            break;
 
-        switch (error)
-        {
-            case 0:
-                mutex_locked = 0;
-                break;
+        case EINVAL:
+            printf("Trying to free a invalid mutex value. \n");
+            break;
 
-            case EINVAL:
-                printf("Trying to free a invalid mutex value. \n");
-                break;
+        case EPERM:
+            printf("Trying to free a mutex not locked by itself \n");
+            break;
 
-            case EPERM:
-                printf("Trying to free a mutex not locked by itself \n");
-                break;
-
-            default:
-                printf("mutex unlock error:%d \n", error);
-        }
+        default:
+            printf("mutex unlock error:%d \n", error);
     }
-    else
+
+    if (mutex_locked < 0)
     {
         printf("Tring fo free a mutex not locked! \n");
     }
-    
 }
 
 void OSDeinitMutex(void)

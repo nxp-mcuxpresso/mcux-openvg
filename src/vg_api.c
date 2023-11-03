@@ -8403,7 +8403,7 @@ Color readPixel(Image* src, int x, int y)
      computeBlitRegion(&tmp_sx, &tmp_sy, &tmp_dx, &tmp_dy, &tmp_w, &tmp_h, src->m_width, src->m_height, dst->m_width, dst->m_height);
 
      if (w <= 0 || h <= 0) {
-         VG_RETURN(VG_NO_RETVAL);
+         return;
      }
      //copy source region to tmp
      for (int j = 0; j < tmp_h; j++)
@@ -8416,7 +8416,7 @@ Color readPixel(Image* src, int x, int y)
              writePixel(dst, tmp_dx + i, tmp_dy + j, tmp, display);
          }
      }
-     VG_RETURN(VG_NO_RETVAL);
+     return;
  }
 
  VGboolean inverseMatrix3x3(Matrix3x3* result, const Matrix3x3 matrix, VGboolean isAffine)
