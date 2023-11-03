@@ -29,7 +29,7 @@ ZC702)
     export ARCH=arm
     export ENABLE_PCIE=0
     export EGL_API_FBDEV=1
-    export VG_LITE_SDK=$AQROOT/../Hubi.dev/build
+    export VG_LITE_SDK=$AQROOT/../build.s2c/sdk
 ;;
 
 PCIE-GEN6)
@@ -40,7 +40,7 @@ PCIE-GEN6)
     export EGL_API_FBDEV=1
     export CPU_ARCH=0
     export ARCH=x86
-    export VG_LITE_SDK=$AQROOT/../Hubi.dev/build
+    export VG_LITE_SDK=$AQROOT/../build.s2c/sdk
 ;;
 
 X86_51510)
