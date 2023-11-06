@@ -8359,7 +8359,8 @@ Color readPixel(Image* src, int x, int y)
     int bs = src->m_desc.blueShift;
     int as = src->m_desc.alphaShift;
     int ls = src->m_desc.luminanceShift;
-    if (src->m_desc.format == VG_lRGBX_8888 || src->m_desc.format == VG_sRGBX_8888) {
+    if (src->m_desc.format == VG_lRGBX_8888 || src->m_desc.format == VG_sRGBX_8888 ||
+        src->m_desc.format == VG_lRGBX_8888_PRE || src->m_desc.format == VG_sRGBX_8888_PRE) {
         ab = 0;
         lb = src->m_desc.luminanceBits;
         rs = 24;
