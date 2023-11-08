@@ -7421,7 +7421,8 @@ void writePixel(Image* dst, int x, int y, Color c, VGboolean display)
     }
 }
 
-static void imgClear(Image* dst, Color c, int x, int y, int w, int h, VGboolean display) {
+static void imgClear(Image* dst, Color c, int x, int y, int w, int h, VGboolean display)
+{
     if (x < 0)
         w += x;
     if (y < 0)
@@ -7440,7 +7441,6 @@ static void imgClear(Image* dst, Color c, int x, int y, int w, int h, VGboolean 
             writePixel(dst, x + i, y + j, c, display);
         }
     }
-    VG_RETURN(VG_NO_RETVAL);
 }
 
 void VG_APIENTRY vgClearImage(VGImage image, VGint x, VGint y, VGint width, VGint height)

@@ -1870,22 +1870,18 @@ void OSAcquireMutex(void)
             break;
 
         case EBUSY:
-            mutex_locked = 0;
             printf("timout \n");
             break;
 
         case EINVAL:
-            mutex_locked = 0;
             printf("invalid mutex value \n");
             break;
 
         case EDEADLK:
-            mutex_locked = 0;
             printf("deadlock situation \n");
             break;
 
         default:
-            mutex_locked = 0;
             printf("acqure mutex error:%d \n", error);
     }
 }
