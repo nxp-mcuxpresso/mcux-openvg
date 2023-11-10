@@ -35,7 +35,6 @@
 #define _OPENVG_H
 
 #include <VG/vgplatform.h>
-#include "vg_lite.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -363,8 +362,57 @@ typedef enum {
   VG_TILING_MODE_FORCE_SIZE                   = VG_MAX_ENUM
 } VGTilingMode;
 
-typedef vg_lite_buffer_format_t VGImageFormat;
-#define VG_IMAGE_FORMAT_FORCE_SIZE VG_MAX_ENUM
+typedef enum {
+  /* RGB{A,X} channel ordering */
+  VG_sRGBX_8888                               =  0,
+  VG_sRGBA_8888                               =  1,
+  VG_sRGBA_8888_PRE                           =  2,
+  VG_sRGB_565                                 =  3,
+  VG_sRGBA_5551                               =  4,
+  VG_sRGBA_4444                               =  5,
+  VG_sL_8                                     =  6,
+  VG_lRGBX_8888                               =  7,
+  VG_lRGBA_8888                               =  8,
+  VG_lRGBA_8888_PRE                           =  9,
+  VG_lL_8                                     = 10,
+  VG_A_8                                      = 11,
+  VG_BW_1                                     = 12,
+  VG_A_1                                      = 13,
+  VG_A_4                                      = 14,
+
+  /* {A,X}RGB channel ordering */
+  VG_sXRGB_8888                               =  0 | (1 << 6),
+  VG_sARGB_8888                               =  1 | (1 << 6),
+  VG_sARGB_8888_PRE                           =  2 | (1 << 6),
+  VG_sARGB_1555                               =  4 | (1 << 6),
+  VG_sARGB_4444                               =  5 | (1 << 6),
+  VG_lXRGB_8888                               =  7 | (1 << 6),
+  VG_lARGB_8888                               =  8 | (1 << 6),
+  VG_lARGB_8888_PRE                           =  9 | (1 << 6),
+
+  /* BGR{A,X} channel ordering */
+  VG_sBGRX_8888                               =  0 | (1 << 7),
+  VG_sBGRA_8888                               =  1 | (1 << 7),
+  VG_sBGRA_8888_PRE                           =  2 | (1 << 7),
+  VG_sBGR_565                                 =  3 | (1 << 7),
+  VG_sBGRA_5551                               =  4 | (1 << 7),
+  VG_sBGRA_4444                               =  5 | (1 << 7),
+  VG_lBGRX_8888                               =  7 | (1 << 7),
+  VG_lBGRA_8888                               =  8 | (1 << 7),
+  VG_lBGRA_8888_PRE                           =  9 | (1 << 7),
+
+  /* {A,X}BGR channel ordering */
+  VG_sXBGR_8888                               =  0 | (1 << 6) | (1 << 7),
+  VG_sABGR_8888                               =  1 | (1 << 6) | (1 << 7),
+  VG_sABGR_8888_PRE                           =  2 | (1 << 6) | (1 << 7),
+  VG_sABGR_1555                               =  4 | (1 << 6) | (1 << 7),
+  VG_sABGR_4444                               =  5 | (1 << 6) | (1 << 7),
+  VG_lXBGR_8888                               =  7 | (1 << 6) | (1 << 7),
+  VG_lABGR_8888                               =  8 | (1 << 6) | (1 << 7),
+  VG_lABGR_8888_PRE                           =  9 | (1 << 6) | (1 << 7),
+
+  VG_IMAGE_FORMAT_FORCE_SIZE                  = VG_MAX_ENUM
+} VGImageFormat;
 
 typedef enum {
   VG_IMAGE_QUALITY_NONANTIALIASED             = (1 << 0),
