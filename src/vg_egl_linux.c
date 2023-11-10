@@ -1964,6 +1964,11 @@ VGEGLDisplay* OSGetDisplay(NativeDisplayType display_id)
     return vdisplay;
 }
 
+void OSDestroyDisplay(VGEGLDisplay* vdisplay)
+{
+    fbDestroyDisplay(vdisplay->nativeDisplay);
+}
+
 void* OSCreateWindowContext(NativeWindowType window)
 {
     OSWindowContext *ctx = NULL;
