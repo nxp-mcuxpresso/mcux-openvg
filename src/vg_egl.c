@@ -44,6 +44,7 @@ void OSReleaseMutex(void);
 void OSDeinitMutex(void);
 
 EGLDisplay OSGetDisplay(EGLNativeDisplayType display_id);
+void OSDestroyDisplay(void* display);
 void* OSCreateWindowContext(EGLNativeWindowType window);
 void OSDestroyWindowContext(void* context);
 VGboolean OSIsWindow(const void* context);
@@ -565,6 +566,8 @@ void removeEglDisplay(EGLDisplay display)
         preptr = dpyptr;
         dpyptr = dpyptr->next;
     }
+
+    OSDestroyDisplay(display);
 }
 
 VGEGLThread* getEglThread()
@@ -964,6 +967,9 @@ EGLAPI EGLBoolean EGLAPIENTRY eglTerminate(EGLDisplay dpy)
 {
     EGL_GET_DISPLAY(dpy, EGL_FALSE);
     EGL_IF_ERROR(!display, EGL_SUCCESS, EGL_TRUE);
+
+    vg_lite_close();
+
     removeEglDisplay(display);
     free(display);
     EGL_RETURN(EGL_SUCCESS, EGL_TRUE);
@@ -1763,7 +1769,7 @@ EGLAPI EGLBoolean EGLAPIENTRY eglDestroySurface(EGLDisplay dpy, EGLSurface surfa
     ((VGEGLSurface*)surface)->m_referenceCount--; VG_ASSERT(((VGEGLSurface*)surface)->m_referenceCount >= 0);
     if (!((VGEGLSurface*)surface)->m_referenceCount)
         destroyVgEglSurface((VGEGLSurface*)surface);
-    /*vg_lite_close();*/
+
     EGL_RETURN(EGL_SUCCESS, EGL_TRUE);
 }
 
