@@ -8000,8 +8000,8 @@ void writePixel(Image* dst, int x, int y, Color c, VGboolean display)
     int as = dst->m_desc.alphaShift;
     int ls = dst->m_desc.luminanceShift;
     unsigned int p;
-    if (dst->m_desc.format == VG_lRGBX_8888 || dst->m_desc.format == VG_sRGBX_8888 ||
-        dst->m_desc.format == VG_lRGBX_8888_PRE || dst->m_desc.format == VG_sRGBX_8888_PRE) {
+    if (dst->m_desc.format == VG_lRGBX_8888 || dst->m_desc.format == VG_sRGBX_8888)
+    {
         ab = 8;
         lb = dst->m_desc.luminanceBits;
         rs = 24;
@@ -8359,8 +8359,8 @@ Color readPixel(Image* src, int x, int y)
     int bs = src->m_desc.blueShift;
     int as = src->m_desc.alphaShift;
     int ls = src->m_desc.luminanceShift;
-    if (src->m_desc.format == VG_lRGBX_8888 || src->m_desc.format == VG_sRGBX_8888 ||
-        src->m_desc.format == VG_lRGBX_8888_PRE || src->m_desc.format == VG_sRGBX_8888_PRE) {
+    if (src->m_desc.format == VG_lRGBX_8888 || src->m_desc.format == VG_sRGBX_8888)
+    {
         ab = 0;
         lb = src->m_desc.luminanceBits;
         rs = 24;

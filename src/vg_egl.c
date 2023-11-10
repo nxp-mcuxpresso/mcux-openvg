@@ -174,49 +174,39 @@ static VG_INLINE ColorDescriptor configToDescriptor(VGEGLConfig* vgEglConfig, VG
             desc.format += 7;   
     }
     else if (desc.format == VG_sRGBX_8888) {
-        if (premultiplied) {
-            if (!sRGB)
-                desc.format = VG_lRGBX_8888_PRE;
-            else
-                desc.format = VG_sRGBX_8888_PRE;
-        }
-        else if (!sRGB)
+        if (!sRGB) {
             desc.format = VG_lRGBX_8888;
+        }
     }
     else if (desc.format == VG_sRGBA_5551) {
         if (premultiplied) {
             if (!sRGB)
-                desc.format = VG_lRGBA_5551_PRE;
+                desc.format = OPENVG_lRGBA_5551_PRE;
             else
-                desc.format = VG_sRGBA_5551_PRE;
+                desc.format = OPENVG_sRGBA_5551_PRE;
         }
         else {
-            if (!sRGB)
-                desc.format = VG_lRGBA_5551;
+            if (!sRGB) {
+                desc.format = OPENVG_lRGBA_5551;
+            }
         }
     }
     else if (desc.format == VG_sRGBA_4444) {
         if (premultiplied) {
             if (!sRGB)
-                desc.format = VG_lRGBA_4444_PRE;
+                desc.format = OPENVG_lRGBA_4444_PRE;
             else
-                desc.format = VG_sRGBA_4444_PRE;
+                desc.format = OPENVG_sRGBA_4444_PRE;
         }
         else {
-            if (!sRGB)
-                desc.format = VG_lRGBA_4444;
+            if (!sRGB) {
+                desc.format = OPENVG_lRGBA_4444;
+            }
         }
     }
     else if (desc.format == VG_sRGB_565) {
-        if (premultiplied) {
-            if (!sRGB)
-                desc.format = VG_lRGB_565_PRE;
-            else
-                desc.format = VG_sRGB_565_PRE;
-        }
-        else {
-            if (!sRGB)
-                desc.format = VG_lRGB_565;
+        if (!sRGB) {
+            desc.format = OPENVG_lRGB_565;
         }
     }
     return desc;
