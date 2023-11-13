@@ -5527,6 +5527,7 @@ void VG_APIENTRY vgAppendPathData(VGPath dstPath, VGint numSegments, const VGuby
         VG_IF_ERROR(c & ~0x1f, VG_ILLEGAL_ARGUMENT_ERROR, VG_NO_RETVAL);    //reserved bits are nonzero
         size = _commandSize[c] * dataSize;
         tmp = malloc(size);
+        p->m_numSegments++;
         VG_IF_ERROR(tmp == NULL, VG_OUT_OF_MEMORY_ERROR, VG_NO_RETVAL);
         memcpy(tmp, src_ptr, size);
         *data_ptr++ = tmp;
@@ -5535,7 +5536,6 @@ void VG_APIENTRY vgAppendPathData(VGPath dstPath, VGint numSegments, const VGuby
 
     biasScaleTransform(p, p->m_numSegments, numSegments);
 
-    p->m_numSegments += numSegments;
     p->m_pathChanged = VG_TRUE;
 
     VG_RETURN(VG_NO_RETVAL);
