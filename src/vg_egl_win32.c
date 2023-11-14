@@ -81,6 +81,11 @@ void* OSGetCurrentThreadID(void)
     return (void*)GetCurrentThreadId();
 }
 
+void OSDestroyDisplay(void* display)
+{
+    return;
+}
+
 VGEGLDisplay* OSGetDisplay(EGLNativeDisplayType display_id)
 {
     int bpp;
