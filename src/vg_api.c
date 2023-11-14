@@ -5523,12 +5523,18 @@ void VG_APIENTRY vgAppendPathData(VGPath dstPath, VGint numSegments, const VGuby
     VGuint size = 0;
     for (VGint i = 0; i < numSegments; ++i) {
         VGPathSegment c = (VGPathSegment)(pathSegments[i] & 0x1f);
-        VG_IF_ERROR(c < VG_CLOSE_PATH || c > VG_LCWARC_TO_REL, VG_ILLEGAL_ARGUMENT_ERROR, VG_NO_RETVAL);    //invalid segment
-        VG_IF_ERROR(c & ~0x1f, VG_ILLEGAL_ARGUMENT_ERROR, VG_NO_RETVAL);    //reserved bits are nonzero
+        if (c < VG_CLOSE_PATH || c > VG_LCWARC_TO_REL || (c & ~0x1f)) {
+            setError(VG_ILLEGAL_ARGUMENT_ERROR);
+            numSegments = i;
+            break;
+        }
         size = _commandSize[c] * dataSize;
         tmp = malloc(size);
-        p->m_numSegments++;
-        VG_IF_ERROR(tmp == NULL, VG_OUT_OF_MEMORY_ERROR, VG_NO_RETVAL);
+        if (tmp == NULL) {
+            setError(VG_OUT_OF_MEMORY_ERROR);
+            numSegments = i;
+            break;
+        }
         memcpy(tmp, src_ptr, size);
         *data_ptr++ = tmp;
         src_ptr += size;
@@ -5536,6 +5542,7 @@ void VG_APIENTRY vgAppendPathData(VGPath dstPath, VGint numSegments, const VGuby
 
     biasScaleTransform(p, p->m_numSegments, numSegments);
 
+    p->m_numSegments += numSegments;
     p->m_pathChanged = VG_TRUE;
 
     VG_RETURN(VG_NO_RETVAL);
