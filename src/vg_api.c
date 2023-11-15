@@ -408,7 +408,9 @@ static void setifv(VGContext* context, VGParamType type, VGint count, const void
             context->m_scissor[j++] = s;
         }
         context->m_scissorCount = j;
-        vg_lite_scissor_rects(context->m_scissorCount, (vg_lite_rectangle_t*)context->m_scissor);
+        if (context->m_scissorCount) {
+            vg_lite_scissor_rects(context->m_scissorCount, (vg_lite_rectangle_t*)context->m_scissor);
+        }
         if (context->m_scissoring && context->m_scissorCount > 0) {
             vg_lite_enable_scissor();
         }
