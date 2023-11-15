@@ -8877,10 +8877,6 @@ static VGboolean drawImage(VGContext* context, VGImage image, const Matrix3x3 us
     tmpbuf.format = dstbuf->format;
     vg_lite_allocate(&tmpbuf);
 
-    if (blend == OPENVG_BLEND_SRC) {
-        dstbuf->transparency_mode = VG_LITE_IMAGE_TRANSPARENT;
-    }
-
     Paint* paint = (Paint*)context->m_fillPaint;
     if (paint)
     {

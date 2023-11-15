@@ -898,11 +898,7 @@ Drawable* createDrawable(ColorDescriptor* desc, VGint width, VGint height, VGint
     draw->m_mask = NULL;
     if (maskBits)
     {
-        VGImageFormat mf = VG_A_1;
-        if (maskBits == 4)
-            mf = VG_A_4;
-        else if (maskBits == 8)
-            mf = VG_A_8;
+        VGImageFormat mf = VG_A_8;
         ColorDescriptor md = formatToDescriptor(mf);
         draw->m_mask = createSurface(&md, width, height, numSamples);
         if (draw->m_mask)
