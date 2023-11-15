@@ -175,8 +175,11 @@ static VG_INLINE ColorDescriptor configToDescriptor(VGEGLConfig* vgEglConfig, VG
             desc.format += 7;   
     }
     else if (desc.format == VG_sRGBX_8888) {
-        if (!sRGB) {
-            desc.format = VG_lRGBX_8888;
+        if (premultiplied) {
+            if (!sRGB)
+                desc.format = OPENVG_lRGBX_8888_PRE;
+            else
+                desc.format = OPENVG_sRGBX_8888_PRE;
         }
     }
     else if (desc.format == VG_sRGBA_5551) {
@@ -206,8 +209,15 @@ static VG_INLINE ColorDescriptor configToDescriptor(VGEGLConfig* vgEglConfig, VG
         }
     }
     else if (desc.format == VG_sRGB_565) {
-        if (!sRGB) {
-            desc.format = OPENVG_lRGB_565;
+        if (premultiplied) {
+            if (!sRGB)
+                desc.format = OPENVG_lRGB_565_PRE;
+            else
+                desc.format = OPENVG_sRGB_565_PRE;
+        }
+        else {
+            if (!sRGB)
+                desc.format = OPENVG_lRGB_565;
         }
     }
     return desc;
