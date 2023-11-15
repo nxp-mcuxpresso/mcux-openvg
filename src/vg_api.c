@@ -1477,7 +1477,8 @@ static void biasScaleTransform(Path* path, VGuint startIndex, VGuint numSegments
             data_ptr_s8 = (int8_t*)(*data_list++);
             VGuint command_size = _commandSize[*seg_ptr++];
             for (VGuint j = 0; j < command_size; ++j) {
-                *data_ptr_s8++ = (int8_t)(*data_ptr_s8 * scale + bias);
+                *data_ptr_s8 = (int8_t)(*data_ptr_s8 * scale + bias);
+                data_ptr_s8++;
             }
         }
         break;
@@ -1487,7 +1488,8 @@ static void biasScaleTransform(Path* path, VGuint startIndex, VGuint numSegments
             data_ptr_s16 = (int16_t*)(*data_list++);
             VGuint command_size = _commandSize[*seg_ptr++];
             for (VGuint j = 0; j < command_size; ++j) {
-                *data_ptr_s16++ = (int16_t)(*data_ptr_s16 * scale + bias);
+                *data_ptr_s16 = (int16_t)(*data_ptr_s16 * scale + bias);
+                data_ptr_s16++;
             }
         }
         break;
@@ -1497,7 +1499,8 @@ static void biasScaleTransform(Path* path, VGuint startIndex, VGuint numSegments
             data_ptr_s32 = (int32_t*)(*data_list++);
             VGuint command_size = _commandSize[*seg_ptr++];
             for (VGuint j = 0; j < command_size; ++j) {
-                *data_ptr_s32++ = (int32_t)(*data_ptr_s32 * scale + bias);
+                *data_ptr_s32 = (int32_t)(*data_ptr_s32 * scale + bias);
+                data_ptr_s32++;
             }
         }
         break;
@@ -1507,7 +1510,8 @@ static void biasScaleTransform(Path* path, VGuint startIndex, VGuint numSegments
             data_ptr_fp32 = (float*)(*data_list++);
             VGuint command_size = _commandSize[*seg_ptr++];
             for (VGuint j = 0; j < command_size; ++j) {
-                *data_ptr_fp32++ = (float)(*data_ptr_fp32 * scale + bias);
+                *data_ptr_fp32 = (float)(*data_ptr_fp32 * scale + bias);
+                data_ptr_fp32++;
             }
         }
         break;
