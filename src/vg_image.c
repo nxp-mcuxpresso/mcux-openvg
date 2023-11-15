@@ -1366,7 +1366,8 @@ void colorUnpack(Color* color, unsigned int inputData, const ColorDescriptor* in
     int as = inputDesc->alphaShift;
     int ls = inputDesc->luminanceShift;
 
-    if (inputDesc->format == VG_lRGBX_8888 || inputDesc->format == VG_sRGBX_8888)
+    if (inputDesc->format == OPENVG_lRGBX_8888 || inputDesc->format == OPENVG_sRGBX_8888 ||
+        inputDesc->format == OPENVG_lRGBX_8888_PRE || inputDesc->format == OPENVG_sRGBX_8888_PRE)
     {
         ab = 8;
         lb = inputDesc->luminanceBits;
@@ -1414,7 +1415,8 @@ unsigned int colorPack(Color* color, const ColorDescriptor* outputDesc)
     int as = outputDesc->alphaShift;
     int ls = outputDesc->luminanceShift;
 
-    if (outputDesc->format == VG_lRGBX_8888 || outputDesc->format == VG_sRGBX_8888)
+    if (outputDesc->format == OPENVG_lRGBX_8888 || outputDesc->format == OPENVG_sRGBX_8888 ||
+        outputDesc->format == OPENVG_lRGBX_8888_PRE || outputDesc->format == OPENVG_sRGBX_8888_PRE)
     {
         ab = 8;
         lb = outputDesc->luminanceBits;
