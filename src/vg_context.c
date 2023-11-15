@@ -623,6 +623,10 @@ void releasePaint(VGContext* ctx, VGbitfield paintModes)
             if (!prev->m_referenceCount)
                 freePaintImpl(prev);
         }
+        if (ctx->m_strokePaint == ctx->m_fillPaint)
+        {
+            ctx->m_strokePaint = VG_INVALID_HANDLE;
+        }
         ctx->m_fillPaint = VG_INVALID_HANDLE;
     }
     if (paintModes & VG_STROKE_PATH)
@@ -634,6 +638,10 @@ void releasePaint(VGContext* ctx, VGbitfield paintModes)
             prev->m_referenceCount--;
             if (!prev->m_referenceCount)
                 freePaintImpl(prev);
+        }
+        if (ctx->m_fillPaint == ctx->m_strokePaint)
+        {
+            ctx->m_fillPaint = VG_INVALID_HANDLE;
         }
         ctx->m_strokePaint = VG_INVALID_HANDLE;
     }
