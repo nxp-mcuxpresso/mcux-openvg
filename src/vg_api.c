@@ -5639,8 +5639,11 @@ static VGboolean drawPath(VGContext* context, VGPath path, const Matrix3x3 userT
         VGuint data_num = 0;
         VGubyte* seg_ptr = p->m_segments;
         VGuint grid_size = _dataSize[p->m_datatype];
-        for (VGint i = 0; i < p->m_numSegments; ++i)
-            data_num += _commandSize[*seg_ptr++];
+        for (VGint i = 0; i < p->m_numSegments; ++i) {
+            data_num += _commandSize[*seg_ptr];
+            seg_ptr++;
+        }
+
         VGubyte* dst_data = malloc(data_num * grid_size);
         VG_IF_ERROR(dst_data == NULL, VG_OUT_OF_MEMORY_ERROR, VG_FALSE);
         uint8_t* vgl_opcodes = malloc(sizeof(uint8_t) * p->m_numSegments);
@@ -5652,9 +5655,11 @@ static VGboolean drawPath(VGContext* context, VGPath path, const Matrix3x3 userT
         VGubyte* dst_data_ptr = dst_data;
         uint8_t* vgl_opcodes_ptr = vgl_opcodes;
         for (VGint i = 0; i < p->m_numSegments; ++i) {
-            *vgl_opcodes_ptr++ = _vglOpcodes[*seg_ptr];
+            *vgl_opcodes_ptr = _vglOpcodes[*seg_ptr];
+            vgl_opcodes_ptr++;
 
-            bytes = _commandSize[*seg_ptr++] * grid_size;
+            bytes = _commandSize[*seg_ptr] * grid_size;
+            seg_ptr++;
             memcpy(dst_data_ptr, *src_data_list_ptr, bytes);
             dst_data_ptr += bytes;
             src_data_list_ptr++;
