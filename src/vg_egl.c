@@ -89,22 +89,6 @@ static void releaseEGL()
             destroyVgEglDisplay(dpy);
             dpy = g_egl.m_displays;
         }
-
-        thr = g_egl.m_threads;
-        while (thr)
-        {
-            g_egl.m_threads = thr->next;
-            free(thr);
-            thr = g_egl.m_threads;
-        }
-
-        thr = g_egl.m_currentThreads;
-        while (thr)
-        {
-            g_egl.m_currentThreads = thr->next;
-            free(thr);
-            thr = g_egl.m_currentThreads;
-        }
     }
 }
 
@@ -613,6 +597,21 @@ VGEGLThread* getEglThread()
     }
 }
 
+void destroyEglThreads()
+{
+    VGEGL* egl = getEGL();
+    VGEGLThread* thrptr = egl->m_threads;
+
+    while (thrptr)
+    {
+        egl->m_threads = thrptr->next;
+
+        free(thrptr);
+
+        thrptr = egl->m_threads;
+    }
+}
+
 VGEGLThread* getEglCurrentThread()
 {
     VGEGL* egl = getEGL();
@@ -658,30 +657,6 @@ void removeEglCurrentThread(VGEGLThread* thread)
                 prethr = thrptr->next;
             else
                 egl->m_currentThreads = thrptr->next;
-            break;
-        }
-        prethr = thrptr;
-        thrptr = thrptr->next;
-    }
-}
-
-void destroyEglCurrentThread()
-{
-    VGEGL* egl = getEGL();
-    VGEGLThread* thrptr = egl->m_currentThreads;
-    void* currentThreadID = OSGetCurrentThreadID();
-    VGEGLThread* prethr = NULL;
-
-    while (thrptr)
-    {
-        if (currentThreadID == thrptr->m_threadID)
-        {
-            if (prethr)
-                prethr = thrptr->next;
-            else
-                egl->m_currentThreads = thrptr->next;
-
-            free(thrptr);
             break;
         }
         prethr = thrptr;
@@ -2393,7 +2368,7 @@ EGLAPI EGLBoolean EGLAPIENTRY eglReleaseThread(void)
     }
 
     //destroy EGL's thread struct
-    destroyEglCurrentThread();
+    destroyEglThreads();
 
     //destroy the EGL instance
     releaseEGL();

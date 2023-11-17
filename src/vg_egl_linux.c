@@ -1930,6 +1930,9 @@ void OSDeinitMutex(void)
 
     error = pthread_mutex_destroy(mutex);
 
+    free (mutex);
+    mutex = NULL;
+
     switch (error)
     {
         case 0:
