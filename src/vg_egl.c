@@ -80,7 +80,6 @@ static void releaseEGL()
     {
         //RI_DELETE(g_egl); Clean up g_egl lists.
         VGEGLDisplay* dpy;
-        VGEGLThread* thr;
 
         dpy = g_egl.m_displays;    
         while (dpy)
@@ -165,6 +164,8 @@ static VG_INLINE ColorDescriptor configToDescriptor(VGEGLConfig* vgEglConfig, VG
             else
                 desc.format = OPENVG_sRGBX_8888_PRE;
         }
+        else if (!sRGB)
+            desc.format = OPENVG_lRGBX_8888;
     }
     else if (desc.format == VG_sRGBA_5551) {
         if (premultiplied) {
