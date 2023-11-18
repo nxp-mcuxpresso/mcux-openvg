@@ -606,9 +606,7 @@ void destroyEglThreads()
     while (thrptr)
     {
         egl->m_threads = thrptr->next;
-
         free(thrptr);
-
         thrptr = egl->m_threads;
     }
 }
