@@ -408,21 +408,8 @@ static void setifv(VGContext* context, VGParamType type, VGint count, const void
             context->m_scissor[j++] = s;
         }
         context->m_scissorCount = j;
-        vg_lite_buffer_t* fbbuf = (vg_lite_buffer_t*)drawable->m_color->m_image->m_vglbuf;
-        vg_lite_buffer_t* tempbuf = (vg_lite_buffer_t*)malloc(sizeof(vg_lite_buffer_t));
-        memset(tempbuf, 0, sizeof(vg_lite_buffer_t));
-        tempbuf->width = fbbuf->width;
-        tempbuf->height = fbbuf->height;
-        tempbuf->format = fbbuf->format;
-        vg_lite_allocate(tempbuf);
-        vg_lite_clear(tempbuf, NULL, 0xFFFFFFFF);
-        vg_lite_scissor_rects(context->m_scissorCount, (vg_lite_rectangle_t*)context->m_scissor);
-        if (tempbuf->address)
-        {
-            vg_lite_free(tempbuf);
-            free(tempbuf);
-            tempbuf = NULL;
-        }
+        vg_lite_buffer_t* dstbuf = (vg_lite_buffer_t*)drawable->m_color->m_image->m_vglbuf;
+        vg_lite_scissor_rects(dstbuf, context->m_scissorCount, (vg_lite_rectangle_t*)context->m_scissor); 
         if (context->m_scissoring && context->m_scissorCount > 0) {
             vg_lite_enable_scissor();
         }
