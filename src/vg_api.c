@@ -5785,9 +5785,6 @@ static VGboolean drawPath(VGContext* context, VGPath path, const Matrix3x3 userT
                     vg_lite_set_path_type(vglpath, path_type);
                     vg_lite_image_mode_t tmp_image_mode = srcbuf->image_mode;
 
-                    if (srcbuf->paintType == VG_LITE_PAINT_PATTERN) {
-                        srcbuf->image_mode = VG_LITE_NONE_IMAGE_MODE;
-                    }
                     vg_lite_draw_pattern(fbbuf, vglpath, fill_rule, (vg_lite_matrix_t*)&(context->m_pathUserToSurface), srcbuf, (vg_lite_matrix_t*)&userToSurfaceFill, VG_LITE_BLEND_NONE, paint->m_patternTilingMode, tile_color, 0xFFFFFFFF, VG_LITE_FILTER_POINT);
                     vg_lite_finish();
                     srcbuf->image_mode = tmp_image_mode;
