@@ -9113,6 +9113,12 @@ static VGboolean drawImage(VGContext* context, VGImage image, const Matrix3x3 us
                 source->paintType = tmp_paintType;
             }
         }
+
+        if (blend > OPENVG_BLEND_SRC && (dstbuf->format == OPENVG_sRGBA_5551_PRE || dstbuf->format == OPENVG_lRGBA_5551_PRE)) {
+            vg_lite_matrix_t mat;
+            vg_lite_identity(&mat);
+            vg_lite_blit(dstbuf, dstbuf, &mat, OPENVG_BLEND_SRC, 0, VG_LITE_FILTER_POINT);
+        }
         vg_lite_blit(dstbuf, srcbuf, (vg_lite_matrix_t*)&userToSurfaceMatrix_temp, blend, srcColor, filter);
         vg_lite_finish();
     }
