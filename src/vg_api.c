@@ -4967,7 +4967,6 @@ void VG_APIENTRY vgMask(VGHandle mask, VGMaskOperation operation, VGint x, VGint
     vg_lite_filter_t filter = VG_LITE_FILTER_POINT;
     vg_lite_blend_t blend = context->m_blendMode;
     vg_lite_rectangle_t rect;
-    vg_lite_matrix_t matrix;
     rect.x = x;
     rect.y = y;
     rect.width = width;
@@ -4987,8 +4986,7 @@ void VG_APIENTRY vgMask(VGHandle mask, VGMaskOperation operation, VGint x, VGint
             vg_lite_buffer_t tempbuf = *srcbuf;
             tempbuf.format = VG_sRGBA_8888;
             vg_lite_allocate(&tempbuf);
-            vg_lite_identity(&matrix);
-            vg_lite_blit(&tempbuf, srcbuf, &matrix, VG_LITE_BLEND_NONE, 0, filter);
+            vg_lite_blit(&tempbuf, srcbuf, NULL, VG_LITE_BLEND_NONE, 0, filter);
             tempbuf.format = VG_sABGR_8888;
             vg_lite_blend_masklayer(masklayer, &tempbuf, operation, &rect);
         }
@@ -5001,8 +4999,7 @@ void VG_APIENTRY vgMask(VGHandle mask, VGMaskOperation operation, VGint x, VGint
             vg_lite_buffer_t tempbuf = *srcbuf;
             tempbuf.format = VG_lRGBA_8888;
             vg_lite_allocate(&tempbuf);
-            vg_lite_identity(&matrix);
-            vg_lite_blit(&tempbuf, srcbuf, &matrix, VG_LITE_BLEND_NONE, 0, filter);
+            vg_lite_blit(&tempbuf, srcbuf, NULL, VG_LITE_BLEND_NONE, 0, filter);
             tempbuf.format = VG_lABGR_8888;
             vg_lite_blend_masklayer(masklayer, &tempbuf, operation, &rect);
         }
@@ -8930,7 +8927,6 @@ static VGboolean drawImage(VGContext* context, VGImage image, const Matrix3x3 us
     /* Split child image from parent image. */
     if (img->m_storageOffsetX > 0 || img->m_storageOffsetY > 0 || img->m_width != srcbuf->width || img->m_height != srcbuf->height) {
         vg_lite_rectangle_t rect = { img->m_storageOffsetX, img->m_storageOffsetY, img->m_width, img->m_height };
-        vg_lite_matrix_t matrix;
 
         child.width = img->m_width;
         child.height = img->m_height;
@@ -8951,8 +8947,7 @@ static VGboolean drawImage(VGContext* context, VGImage image, const Matrix3x3 us
         }
         else {
             vg_lite_disable_scissor();
-            vg_lite_identity(&matrix);
-            vg_lite_blit_rect(&child, srcbuf, &rect, &matrix, VG_LITE_BLEND_NONE, 0, filter);
+            vg_lite_blit_rect(&child, srcbuf, &rect, NULL, VG_LITE_BLEND_NONE, 0, filter);
             vg_lite_finish();
             if (context->m_scissoring && context->m_scissorCount > 0) {
                 vg_lite_enable_scissor();
@@ -9112,9 +9107,7 @@ static VGboolean drawImage(VGContext* context, VGImage image, const Matrix3x3 us
         }
 
         if (blend > OPENVG_BLEND_SRC && (dstbuf->format == OPENVG_sRGBA_5551_PRE || dstbuf->format == OPENVG_lRGBA_5551_PRE)) {
-            vg_lite_matrix_t mat;
-            vg_lite_identity(&mat);
-            vg_lite_blit(dstbuf, dstbuf, &mat, OPENVG_BLEND_SRC, 0, VG_LITE_FILTER_POINT);
+            vg_lite_blit(dstbuf, dstbuf, NULL, OPENVG_BLEND_SRC, 0, VG_LITE_FILTER_POINT);
         }
         vg_lite_blit(dstbuf, srcbuf, (vg_lite_matrix_t*)&userToSurfaceMatrix_temp, blend, srcColor, filter);
         vg_lite_finish();
