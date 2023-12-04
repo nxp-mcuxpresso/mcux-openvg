@@ -363,3 +363,5 @@ void convolve(Image* dst, Image* src, int kernelWidth, int kernelHeight, int shi
 void separableConvolve(Image* dst, Image* src, int kernelWidth, int kernelHeight, int shiftX, int shiftY, const VGshort* kernelX, const VGshort* kernelY, VGfloat scale, VGfloat bias, VGTilingMode tilingMode, Color* edgeFillColor, VGboolean filterFormatLinear, VGboolean filterFormatPremultiplied, VGbitfield channelMask);
 
 int getNumGlyphs(Font* font);
+
+VGboolean descriptorIsPremultiplied(const ColorDescriptor* dec);

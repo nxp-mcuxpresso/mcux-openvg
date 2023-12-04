@@ -5327,6 +5327,12 @@ void VG_APIENTRY vgCopyMask(VGMaskLayer maskLayer, VGint dx, VGint dy, VGint sx,
 
     vg_lite_buffer_t* srcbuf = drawable->m_mask->m_image->m_vglbuf;
     vg_lite_buffer_t* dstbuf = (vg_lite_buffer_t*)((Surface*)maskLayer)->m_image->m_vglbuf;
+    Image* srcimg = drawable->m_mask->m_image;
+    Image* dstimg = ((Surface*)maskLayer)->m_image;
+
+    if (descriptorIsPremultiplied(&(srcimg->m_desc)) && descriptorIsPremultiplied(&(dstimg->m_desc))) {
+        vg_lite_blit(srcbuf, srcbuf, NULL, OPENVG_BLEND_SRC, 0, VG_LITE_FILTER_POINT);
+    }
 
     vg_lite_copy_image(dstbuf, srcbuf, dx, dy, sx, sy, width, height);
     vg_lite_finish();
@@ -8623,6 +8629,7 @@ void VG_APIENTRY vgImageSubData(VGImage image, const void* data, VGint dataStrid
     vg_lite_buffer_t* dstbuf ;
     uint32_t mul, div, align;
     dstbuf = (vg_lite_buffer_t*)(img->m_vglbuf);
+    ColorDescriptor src_desc = formatToDescriptor(dataFormat);
 
     VGint byteOneLine;
     uint8_t* temp_memory = NULL;
@@ -8669,6 +8676,11 @@ void VG_APIENTRY vgImageSubData(VGImage image, const void* data, VGint dataStrid
     if (context->m_masking == VG_TRUE) {
         vg_lite_disable_masklayer();
     }
+
+    if (descriptorIsPremultiplied(&src_desc) && descriptorIsPremultiplied(&(img->m_desc))) {
+        vg_lite_blit(&srcbuf, &srcbuf, NULL, OPENVG_BLEND_SRC, 0, VG_LITE_FILTER_POINT);
+    }
+
     vg_lite_copy_image(dstbuf, &srcbuf, (VGint)(tmp_dx + img->m_storageOffsetX), (VGint)(tmp_dy + img->m_storageOffsetY), 0, 0, tmp_w, tmp_h);
     vg_lite_finish();
 
@@ -8839,6 +8851,11 @@ void VG_APIENTRY vgCopyImage(VGImage dst, VGint dx, VGint dy, VGImage src, VGint
             rect.width = tmp_w;
             rect.height = tmp_h;
         }
+
+        if (descriptorIsPremultiplied(&(((Image*)src)->m_desc)) && descriptorIsPremultiplied(&(((Image*)dst)->m_desc))) {
+            vg_lite_blit(srcbuf, srcbuf, NULL, OPENVG_BLEND_SRC, 0, VG_LITE_FILTER_POINT);
+        }
+
         vg_lite_copy_image(dstbuf, srcbuf, (VGint)(tmp_dx + ((Image*)dst)->m_storageOffsetX), (VGint)(tmp_dy + ((Image*)dst)->m_storageOffsetX), rect.x, rect.y, rect.width, rect.height);
         vg_lite_finish();
     }
@@ -9106,7 +9123,7 @@ static VGboolean drawImage(VGContext* context, VGImage image, const Matrix3x3 us
             }
         }
 
-        if (blend > OPENVG_BLEND_SRC && (dstbuf->format == OPENVG_sRGBA_5551_PRE || dstbuf->format == OPENVG_lRGBA_5551_PRE)) {
+        if (!context->m_colorTransform && blend > OPENVG_BLEND_SRC && (dstbuf->format == OPENVG_sRGBA_5551_PRE || dstbuf->format == OPENVG_lRGBA_5551_PRE)) {
             vg_lite_blit(dstbuf, dstbuf, NULL, OPENVG_BLEND_SRC, 0, VG_LITE_FILTER_POINT);
         }
         vg_lite_blit(dstbuf, srcbuf, (vg_lite_matrix_t*)&userToSurfaceMatrix_temp, blend, srcColor, filter);
@@ -9161,6 +9178,7 @@ void VG_APIENTRY vgSetPixels(VGint dx, VGint dy, VGImage src, VGint sx, VGint sy
     vg_lite_buffer_t* dstbuf = (vg_lite_buffer_t*)drawable->m_color->m_image->m_vglbuf;
     vg_lite_buffer_t* srcbuf = (vg_lite_buffer_t*)((Image*)src)->m_vglbuf;
     Image* img = (Image*)src;
+    Image* dstimg = drawable->m_color->m_image;
 
     /* Special format not support blit, so cpu operation. Currently only support start at (0,0). */
     if ((!isSupportFormat(context, srcbuf->format)) || (!isSupportFormat(context, dstbuf->format))) {
@@ -9180,6 +9198,10 @@ void VG_APIENTRY vgSetPixels(VGint dx, VGint dy, VGImage src, VGint sx, VGint sy
     computeBlitRegion(&tmp_sx, &tmp_sy, &tmp_dx, &tmp_dy, &tmp_w, &tmp_h, ((Image*)src)->m_width, ((Image*)src)->m_height, dstbuf->width, dstbuf->height);
     vg_lite_rectangle_t rect = { tmp_sx + img->m_storageOffsetX, tmp_sy + img->m_storageOffsetY, tmp_w, tmp_h };
     vg_lite_disable_masklayer();
+
+    if (descriptorIsPremultiplied(&(img->m_desc)) && descriptorIsPremultiplied(&(dstimg->m_desc))) {
+        vg_lite_blit(srcbuf, srcbuf, NULL, OPENVG_BLEND_SRC, 0, VG_LITE_FILTER_POINT);
+    }
     vg_lite_copy_image(dstbuf, srcbuf, (VGint)tmp_dx, (VGint)tmp_dy, rect.x, rect.y, rect.width, rect.height);
     vg_lite_finish();
     if (context->m_masking) {
@@ -9205,6 +9227,8 @@ void VG_APIENTRY vgWritePixels(const void * data, VGint dataStride, VGImageForma
     vg_lite_buffer_t srcbuf;
     memset(&srcbuf, 0, sizeof(vg_lite_buffer_t));
     uint32_t mul, div, align, byteOneLine;
+    Image* dstimg = drawable->m_color->m_image;
+    ColorDescriptor src_desc = formatToDescriptor(dataFormat);
 
     /* Special format not support blit, so cpu operation. Currently only support start at (0,0). */
     if ((!isSupportFormat(context, dstbuf->format)) || (!isSupportFormat(context, dataFormat))) {
@@ -9245,6 +9269,10 @@ void VG_APIENTRY vgWritePixels(const void * data, VGint dataStride, VGImageForma
     /* Adjust the coordinate position of blit according to tmp_sx, tmp_sy, tmp_w, tmp_h. */
     vg_lite_rectangle_t rect = { tmp_sx, tmp_sy, tmp_w, tmp_h };
 
+    if (descriptorIsPremultiplied(&src_desc) && descriptorIsPremultiplied(&(dstimg->m_desc))) {
+        vg_lite_blit(&srcbuf, &srcbuf, NULL, OPENVG_BLEND_SRC, 0, VG_LITE_FILTER_POINT);
+    }
+
     vg_lite_copy_image(dstbuf, &srcbuf, (VGint)(tmp_dx + drawable->m_color->m_image->m_storageOffsetX), (VGint)(tmp_dy + drawable->m_color->m_image->m_storageOffsetY), rect.x, rect.y, rect.width, rect.height);
     vg_lite_finish();
     if (context->m_masking) {
@@ -9270,6 +9298,7 @@ void VG_APIENTRY vgGetPixels(VGImage dst, VGint dx, VGint dy, VGint sx, VGint sy
     vg_lite_buffer_t* srcbuf = (vg_lite_buffer_t*)drawable->m_color->m_image->m_vglbuf;
     vg_lite_buffer_t* dstbuf = (vg_lite_buffer_t*)((Image*)dst)->m_vglbuf;
     Image* img = (Image*)dst;
+    Image* srcimg = (Image*)drawable->m_color->m_image;
 
     /* Special format not support blit, so cpu operation. Currently only support start at (0,0). */
     if ((!isSupportFormat(context, srcbuf->format)) || (!isSupportFormat(context, dstbuf->format))) {
@@ -9287,6 +9316,10 @@ void VG_APIENTRY vgGetPixels(VGImage dst, VGint dx, VGint dy, VGint sx, VGint sy
     computeBlitRegion(&tmp_sx, &tmp_sy, &tmp_dx, &tmp_dy, &tmp_w, &tmp_h, srcbuf->width, srcbuf->height, dstbuf->width, dstbuf->height);
 
     vg_lite_rectangle_t rect = { tmp_sx, tmp_sy, tmp_w, tmp_h };
+
+    if (descriptorIsPremultiplied(&(srcimg->m_desc)) && descriptorIsPremultiplied(&(img->m_desc))) {
+        vg_lite_blit(srcbuf, srcbuf, NULL, OPENVG_BLEND_SRC, 0, VG_LITE_FILTER_POINT);
+    }
 
     vg_lite_copy_image(dstbuf, srcbuf, (VGint)(tmp_dx + img->m_storageOffsetX), (VGint)(tmp_dy + img->m_storageOffsetY), rect.x, rect.y, rect.width, rect.height);
     vg_lite_finish();
@@ -9308,6 +9341,8 @@ void VG_APIENTRY vgReadPixels(void* data, VGint dataStride, VGImageFormat dataFo
     uint32_t mul, div, align, byteOneLine;
     vg_lite_buffer_t* srcbuf = (vg_lite_buffer_t*)drawable->m_color->m_image->m_vglbuf;
     vg_lite_buffer_t dstbuf;
+    Image* srcimage = (Image *)drawable->m_color->m_image;
+    ColorDescriptor dst_desc = formatToDescriptor(dataFormat);
     memset(&dstbuf, 0, sizeof(vg_lite_buffer_t));
     /* Special format not support blit, so cpu operation. Currently only support start at (0,0). */
     if ((!isSupportFormat(context, srcbuf->format)) || (!isSupportFormat(context, dataFormat))) {
@@ -9347,6 +9382,11 @@ void VG_APIENTRY vgReadPixels(void* data, VGint dataStride, VGImageFormat dataFo
     }
     /* Adjust the coordinate position of blit according to tmp_sx, tmp_sy, tmp_w, tmp_h. */
     vg_lite_rectangle_t rect = { tmp_sx + drawable->m_color->m_image->m_storageOffsetX, tmp_sy + drawable->m_color->m_image->m_storageOffsetY, tmp_w, tmp_h };
+
+    if (descriptorIsPremultiplied(&(srcimage->m_desc)) && descriptorIsPremultiplied(&dst_desc)) {
+        vg_lite_blit(srcbuf, srcbuf, NULL, OPENVG_BLEND_SRC, 0, VG_LITE_FILTER_POINT);
+    }
+
     vg_lite_copy_image(&dstbuf, srcbuf, (VGint)(tmp_dx), (VGint)(tmp_dy), rect.x, rect.y, rect.width, rect.height);
     vg_lite_finish();
     srcbuf->transparency_mode = 0;
@@ -9446,6 +9486,11 @@ void VG_APIENTRY vgColorMatrix(VGImage dst, VGImage src, const VGfloat * matrix)
         VG_RETURN(VG_NO_RETVAL);
     }
     vg_lite_rectangle_t rect = { 0, 0, srcbuf->width, srcbuf->height };
+
+    if (descriptorIsPremultiplied(&(s->m_desc)) && descriptorIsPremultiplied(&(d->m_desc))) {
+        vg_lite_blit(srcbuf, srcbuf, NULL, OPENVG_BLEND_SRC, 0, VG_LITE_FILTER_POINT);
+    }
+
     vg_lite_copy_image(dstbuf, srcbuf, 0, 0, rect.x, rect.y, rect.width, rect.height);
     VG_RETURN(VG_NO_RETVAL);
 }
