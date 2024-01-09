@@ -5058,42 +5058,6 @@ static void renderStroke(const VGContext* context, int w, int h, int numSamples,
     VGuint* covBuffer = (VGuint*)malloc(w*h);
     memset(covBuffer, 0, w * h * sizeof(VGuint));
     setupRasterizer(rasterizer, 0, 0, w, h, VG_NON_ZERO, NULL, covBuffer);
-
-
-#if 0 // TODO
-    memset(covBuffer, 0, w*h*sizeof(VGuint));
-
-    rasterizer.setup(0, 0, w, h, VG_NON_ZERO, NULL, covBuffer);
-    path->stroke(userToSurface, rasterizer, context->m_strokeDashPattern, context->m_strokeDashPhase, context->m_strokeDashPhaseReset ? VG_TRUE : VG_FALSE,
-                 context->m_strokeLineWidth, context->m_strokeCapStyle, context->m_strokeJoinStyle, VG_MAX(context->m_strokeMiterLimit, 1.0f));    //throws bad_alloc
-
-    int sx,sy,ex,ey;
-    rasterizer.getBBox(sx,sy,ex,ey);
-    VG_ASSERT(sx >= 0 && sx <= w);
-    VG_ASSERT(sy >= 0 && sy <= h);
-    VG_ASSERT(ex >= 0 && ex <= w);
-    VG_ASSERT(ey >= 0 && ey <= h);
-
-    for (int j=sy;j<ey;j++)
-    {
-        for (int i=sx;i<ex;i++)
-        {
-            unsigned int c = covBuffer[j*w+i];
-            if (c)
-            {
-                int coverage = 0;
-                for (int k=0;k<numSamples;k++)
-                {
-                    if (c & (1<<k))
-                        coverage++;
-                }
-                pixelPipe->pixelPipe(i, j, (VGfloat)coverage/(VGfloat)numSamples, c);
-            }
-        }
-    }
-#endif
-
-//    VG_DELETE_ARRAY(covBuffer);
 }
 
 void VG_APIENTRY vgRenderToMask(VGPath path, VGbitfield paintModes, VGMaskOperation operation)
@@ -6357,16 +6321,6 @@ VGfloat VG_APIENTRY vgPathLength(VGPath path, VGint startSegment, VGint numSegme
 
     freePathImpl(p_fp32);
 
-#if 0 // TODO
-    try
-    {
-        pathLength = p->getPathLength(startSegment, numSegments);    //throws bad_alloc
-    }
-    catch(std::bad_alloc)
-    {
-        setError(VG_OUT_OF_MEMORY_ERROR);
-    }
-#endif
     VG_RETURN(pathLength);
 }
 
@@ -6877,28 +6831,6 @@ void VG_APIENTRY vgPointAlongPath(VGPath path, VGint startSegment, VGint numSegm
         }
     }
 
-#if 0 // TODO
-    try
-    {
-        Vector2 point, tangent;
-        p->getPointAlong(startSegment, numSegments, distance, point, tangent);    //throws bad_alloc
-        if (x && y)
-        {
-            *x = point.x;
-            *y = point.y;
-        }
-        if (tangentX && tangentY)
-        {
-            tangent.normalize();
-            *tangentX = tangent.x;
-            *tangentY = tangent.y;
-        }
-    }
-    catch (std::bad_alloc)
-    {
-        setError(VG_OUT_OF_MEMORY_ERROR);
-    }
-#endif
     VG_RETURN(VG_NO_RETVAL);
 }
 
@@ -7258,21 +7190,6 @@ void VG_APIENTRY vgPathBounds(VGPath path, VGfloat* minx, VGfloat* miny, VGfloat
     *width = x_max - x_min;
     *height = y_max - y_min;
 
-#if 0 // TODO
-    try
-    {
-        VGfloat pminx, pminy, pmaxx, pmaxy;
-        ((Path*)path)->getPathBounds(pminx, pminy, pmaxx, pmaxy);    //throws bad_alloc
-        *minx = pminx;
-        *miny = pminy;
-        *width = pmaxx - pminx;
-        *height = pmaxy - pminy;
-    }
-    catch (std::bad_alloc)
-    {
-        setError(VG_OUT_OF_MEMORY_ERROR);
-    }
-#endif
     VG_RETURN(VG_NO_RETVAL);
 }
 
@@ -7634,21 +7551,6 @@ void VG_APIENTRY vgPathTransformedBounds(VGPath path, VGfloat* minx, VGfloat* mi
     *width = x_max - x_min;
     *height = y_max - y_min;
 
-#if 0 // TODO
-    try
-    {
-        VGfloat pminx, pminy, pmaxx, pmaxy;
-        ((Path*)path)->getPathTransformedBounds(context->m_pathUserToSurface, pminx, pminy, pmaxx, pmaxy);    //throws bad_alloc
-        *minx = pminx;
-        *miny = pminy;
-        *width = pmaxx - pminx;
-        *height = pmaxy - pminy;
-    }
-    catch (std::bad_alloc)
-    {
-        setError(VG_OUT_OF_MEMORY_ERROR);
-    }
-#endif
     VG_RETURN(VG_NO_RETVAL);
 }
 
@@ -7744,17 +7646,6 @@ VGboolean VG_APIENTRY vgInterpolatePath(VGPath dstPath, VGPath startPath, VGPath
 
     d->m_pathChanged = VG_TRUE;
 
-#if 0 // TODO
-    try
-    {
-        if (((Path*)dstPath)->interpolate((const Path*)startPath, (const Path*)endPath, inputFloat(amount)))    //throws bad_alloc
-            ret = VG_TRUE;
-    }
-    catch (std::bad_alloc)
-    {
-        setError(VG_OUT_OF_MEMORY_ERROR);
-    }
-#endif
     VG_RETURN(VG_TRUE);
 }
 
@@ -9585,16 +9476,7 @@ void VG_APIENTRY vgGaussianBlur(VGImage dst, VGImage src, VGfloat stdDeviationX,
         gaussianBlur(dst, src, stdDeviationX, stdDeviationY, context->m_filterFormatLinear ? VG_TRUE : VG_FALSE, context->m_filterFormatPremultiplied ? VG_TRUE : VG_FALSE, 
                      tilingMode, context->m_tileFillColor, context->m_filterChannelMask);
     }
-#if 0 // TODO
-    try
-    {
-        d->gaussianBlur(*s, sx, sy, tilingMode, context->m_tileFillColor, context->m_filterFormatLinear ? VG_TRUE : VG_FALSE,
-                        context->m_filterFormatPremultiplied ? VG_TRUE : VG_FALSE, channelMask);
-    }
-    catch(std::bad_alloc)
-    {
-    }
-#endif
+
     VG_RETURN(VG_NO_RETVAL);
 }
 
