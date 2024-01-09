@@ -520,6 +520,10 @@ static void setifv(VGContext* context, VGParamType type, VGint count, const void
         if (count != 1)
         { setError(VG_ILLEGAL_ARGUMENT_ERROR); return; }
         context->m_masking = ivalue ? VG_TRUE : VG_FALSE;
+        if (context->m_masking)
+            vg_lite_enable_masklayer();
+        else
+            vg_lite_disable_masklayer();
         break;
 
     case VG_SCISSORING:
@@ -600,14 +604,6 @@ void VG_APIENTRY vgSeti(VGParamType type, VGint value)
                 type == VG_CLEAR_COLOR, VG_ILLEGAL_ARGUMENT_ERROR, VG_NO_RETVAL);    //vector type value
     VGint values[1] = {value};
     setifv(context, type, 1, values, VG_FALSE);
-    if (context->m_masking)
-    {
-        vg_lite_enable_masklayer();
-    }
-    else
-    {
-        vg_lite_disable_masklayer();
-    }
     VG_RETURN(VG_NO_RETVAL);
 }
 
