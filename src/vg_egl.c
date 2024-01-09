@@ -1965,6 +1965,13 @@ EGLAPI EGLBoolean EGLAPIENTRY eglMakeCurrent(EGLDisplay dpy, EGLSurface draw, EG
     VGEGLSurface* s = (VGEGLSurface*)draw;
     VGEGLContext* c = (VGEGLContext*)ctx;
 
+    //Return if context/draw are already current
+    VGEGLThread* thread = getEglCurrentThread();
+    if (thread && thread->m_context == c && thread->m_surface == s)
+    {
+        EGL_RETURN(EGL_SUCCESS, EGL_TRUE);
+    }
+
     if (draw != EGL_NO_SURFACE && ctx != EGL_NO_CONTEXT)
     {
         EGL_IF_ERROR(!display, EGL_NOT_INITIALIZED, EGL_FALSE);
@@ -1997,7 +2004,6 @@ EGLAPI EGLBoolean EGLAPIENTRY eglMakeCurrent(EGLDisplay dpy, EGLSurface draw, EG
     }
 
     //check if the thread is current
-    VGEGLThread* thread = getEglCurrentThread();
     if (thread)
     {    //thread is current, release the old bindinds and remove the thread from the current thread list
         VGEGLContext* pc = thread->m_context;
