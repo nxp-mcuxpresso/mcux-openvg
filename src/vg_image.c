@@ -1114,16 +1114,6 @@ void resizeDrawable(Drawable* draw, VGint newWidth, VGint newHeight)
     VGint wmin = VG_INT_MIN(newWidth,oldWidth);
     VGint hmin = VG_INT_MIN(newHeight,oldHeight);
 
-#if 0 // TODO
-    m_color->clear(Color(0.0f, 0.0f, 0.0f, 0.0f, getDescriptor().internalFormat), 0, 0, m_color->getWidth(), m_color->getHeight());
-    m_color->blit(oldcolor, 0, 0, 0, 0, wmin, hmin);
-    if (m_mask)
-    {
-        m_mask->clear(Color(1.0f, 1.0f, 1.0f, 1.0f, getDescriptor().internalFormat), 0, 0, m_mask->getWidth(), m_mask->getHeight());
-        m_mask->blit(oldmask, 0, 0, 0, 0, wmin, hmin);
-    }
-#endif
-
     oldcolor->m_referenceCount--; VG_ASSERT(oldcolor->m_referenceCount >= 0);
     if (!oldcolor->m_referenceCount)
         destroySurface(oldcolor);
