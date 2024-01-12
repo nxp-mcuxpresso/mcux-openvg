@@ -1414,6 +1414,8 @@ EGLAPI EGLBoolean EGLAPIENTRY eglGetConfigAttrib(EGLDisplay dpy, EGLConfig confi
 * \note        
 *//*-------------------------------------------------------------------*/
 
+#define OPENGL_VGLITE_CMDBUF_SIZE (256 << 10)
+
 EGLAPI EGLSurface EGLAPIENTRY eglCreateWindowSurface(EGLDisplay dpy, EGLConfig config, EGLNativeWindowType win, const EGLint *attrib_list)
 {
     EGL_GET_DISPLAY(dpy, EGL_NO_SURFACE);
@@ -1470,6 +1472,9 @@ EGLAPI EGLSurface EGLAPIENTRY eglCreateWindowSurface(EGLDisplay dpy, EGLConfig c
             EGL_IF_ERROR(!isWindow, EGL_BAD_NATIVE_WINDOW, EGL_NO_SURFACE);
             EGL_IF_ERROR(windowWidth <= 0 || windowHeight <= 0, EGL_BAD_NATIVE_WINDOW, EGL_NO_SURFACE);
         }
+
+        /* VGMark needs at least 256K command buffer size for VGLite */
+        vg_lite_set_command_buffer_size(OPENGL_VGLITE_CMDBUF_SIZE);
 
         /* Initialize VGLite API here */
         if (vg_lite_init(windowWidth, windowHeight) != VG_LITE_SUCCESS)
@@ -1575,6 +1580,9 @@ EGLAPI EGLSurface EGLAPIENTRY eglCreatePbufferSurface(EGLDisplay dpy, EGLConfig 
     EGL_IF_ERROR(width <= 0 || height <= 0, EGL_BAD_ATTRIBUTE, EGL_NO_SURFACE);
     VGEGLSurface* s = NULL;
     Drawable* d = NULL;
+
+    /* VGMark needs at least 256K command buffer size for VGLite */
+    vg_lite_set_command_buffer_size(OPENGL_VGLITE_CMDBUF_SIZE);
 
     /* Initialize VGLite API here */
     if (vg_lite_init(width, height) != VG_LITE_SUCCESS)
