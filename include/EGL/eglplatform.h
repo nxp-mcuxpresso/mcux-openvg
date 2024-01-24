@@ -166,4 +166,6 @@ typedef khronos_int32_t EGLint;
 #define EGL_CAST(type, value) ((type) (value))
 #endif
 
+#include <EGL/eglvivante.h>
+
 #endif /* __eglplatform_h */
