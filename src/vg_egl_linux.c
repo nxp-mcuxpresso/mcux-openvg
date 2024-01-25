@@ -2091,8 +2091,43 @@ void OSBlitToWindow(void* context, const Drawable* drawable)
 
     pthread_mutex_lock(&displayMutex);
 
+#if 1
     {
-       int swapInterval = win->swapInterval;
+        int xoff = 160;
+        int yoff = 200;
+        int width = drawable->m_color->m_width;
+        int height = drawable->m_color->m_height;
+        vg_lite_buffer_t tmpbuf = {0};
+        char *dpy_mem;
+        char *buf_ptr;
+
+        tmpbuf.width = width;
+        tmpbuf.height = height;
+        tmpbuf.format = win->format;
+        vg_lite_allocate(&tmpbuf);
+
+        /* Convert drawable "m_vglbuf->format" to display window format "win->format" */
+        vg_lite_copy_image(&tmpbuf, im->m_vglbuf, 0, 0, 0, 0, width, height);
+        vg_lite_finish();
+
+        //vg_lite_dump_png("drawable_m_vglbuf.png", im->m_vglbuf);
+        //vg_lite_dump_png("tmpbuf.png", &tmpbuf);
+
+        /* Flip the Y direction and copy tmpbuf image to framebuffer */
+        buf_ptr = tmpbuf.memory;
+        dpy_mem = display->memory + (height + yoff) * display->stride + xoff;
+        for (int i = 0; i < height; i++)
+        {
+            memcpy(dpy_mem, buf_ptr, tmpbuf.stride);
+            buf_ptr += tmpbuf.stride;
+            dpy_mem -= display->stride;
+        }
+
+        vg_lite_free(&tmpbuf);
+    }
+#else
+    {
+        int swapInterval = win->swapInterval;
         if (swapInterval != 0 || !display->panVsync)
         {
             pthread_mutex_lock(&display->condMutex);
@@ -2116,6 +2151,7 @@ void OSBlitToWindow(void* context, const Drawable* drawable)
             pthread_mutex_unlock(&display->condMutex);
         }
     }
+#endif
 
     pthread_mutex_unlock(&displayMutex);
 }
