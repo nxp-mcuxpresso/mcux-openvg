@@ -5726,6 +5726,8 @@ static VGboolean drawPath(VGContext* context, VGPath path, const Matrix3x3 userT
                 setLinearGrad(&grad, paint->m_colorRampStopsCount, vg_color_ramp, linear_gradient, paint->m_colorRampSpreadMode, paint->m_colorRampPremultiplied);
                 updateLinearGrad(context, &grad, &userToSurfaceFill);
                 vg_lite_draw_linear_grad(fbbuf, vglpath, fill_rule, (vg_lite_matrix_t*)&(context->m_pathUserToSurface), &grad, 0, blend, VG_LITE_FILTER_LINEAR);
+                vg_lite_finish();
+                vg_lite_clear_linear_grad(&grad);
                 break;
             }
 
@@ -5793,6 +5795,8 @@ static VGboolean drawPath(VGContext* context, VGPath path, const Matrix3x3 userT
                 setRadialGrad(&grad, paint->m_colorRampStopsCount, vg_color_ramp, radialGradient, paint->m_colorRampSpreadMode, paint->m_colorRampPremultiplied);
                 updateRadialGrad(context, &grad, &userToSurfaceFill);
                 vg_lite_draw_radial_grad(fbbuf, vglpath, fill_rule, (vg_lite_matrix_t*)&(context->m_pathUserToSurface), &grad, 0, blend, VG_LITE_FILTER_LINEAR);
+                vg_lite_finish();
+                vg_lite_clear_radial_grad(&grad);
                 break;
             }
 
@@ -5874,6 +5878,8 @@ static VGboolean drawPath(VGContext* context, VGPath path, const Matrix3x3 userT
                     setLinearGrad(&grad, paint->m_colorRampStopsCount, vg_color_ramp, linear_gradient, paint->m_colorRampSpreadMode, paint->m_colorRampPremultiplied);
                     updateLinearGrad(context, &grad, &userToSurfaceStroke);
                     vg_lite_draw_linear_grad(fbbuf, vglpath, fill_rule, (vg_lite_matrix_t*)&(context->m_pathUserToSurface), &grad, 0, blend, VG_LITE_FILTER_LINEAR);
+                    vg_lite_finish();
+                    vg_lite_clear_linear_grad(&grad);
                     break;
                 }
 
@@ -5914,6 +5920,8 @@ static VGboolean drawPath(VGContext* context, VGPath path, const Matrix3x3 userT
                     setRadialGrad(&grad, paint->m_colorRampStopsCount, vg_color_ramp, radialGradient, paint->m_colorRampSpreadMode, paint->m_colorRampPremultiplied);
                     updateRadialGrad(context, &grad, &userToSurfaceStroke);
                     vg_lite_draw_radial_grad(fbbuf, vglpath, fill_rule, (vg_lite_matrix_t*)&(context->m_pathUserToSurface), &grad, 0, blend, VG_LITE_FILTER_LINEAR);
+                    vg_lite_finish();
+                    vg_lite_clear_radial_grad(&grad);
                     break;
                 }
 
@@ -8932,6 +8940,8 @@ static VGboolean drawImage(VGContext* context, VGImage image, const Matrix3x3 us
                 };
                 tmpbuf.image_mode = srcbuf->image_mode;
                 vg_lite_draw_linear_grad(&tmpbuf, &vglpath, VG_LITE_FILL_EVEN_ODD, (vg_lite_matrix_t*)&userToSurfaceMatrix_temp, &grad, 0, blend, VG_LITE_FILTER_LINEAR);
+                vg_lite_finish();
+                vg_lite_clear_linear_grad(&grad);
             }
             else if (srcbuf->paintType == VG_PAINT_TYPE_RADIAL_GRADIENT) {
                 vg_lite_radial_gradient_t grad;
@@ -8974,6 +8984,8 @@ static VGboolean drawImage(VGContext* context, VGImage image, const Matrix3x3 us
                 };
                 tmpbuf.image_mode = srcbuf->image_mode;
                 vg_lite_draw_radial_grad(&tmpbuf, &vglpath, VG_LITE_FILL_EVEN_ODD, (vg_lite_matrix_t*)&userToSurfaceMatrix_temp, &grad, 0, blend, VG_LITE_FILTER_LINEAR);
+                vg_lite_finish();
+                vg_lite_clear_radial_grad(&grad);
             }
             else if (srcbuf->paintType == VG_PAINT_TYPE_PATTERN)
             {
