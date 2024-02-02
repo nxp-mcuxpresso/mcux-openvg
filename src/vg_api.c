@@ -5650,7 +5650,6 @@ static VGboolean drawPath(VGContext* context, VGPath path, const Matrix3x3 userT
     }
 
     vg_lite_buffer_t* fbbuf = (vg_lite_buffer_t*)drawable->m_color->m_image->m_vglbuf;
-    vg_lite_path_type_t path_type = paintModes;
     vg_lite_fill_t fill_rule = context->m_fillRule;
     vg_lite_blend_t blend = context->m_blendMode;
     Matrix3x3 userToSurfaceFill = userToSurfaceMatrix;
@@ -5747,7 +5746,6 @@ static VGboolean drawPath(VGContext* context, VGPath path, const Matrix3x3 userT
                     vg_lite_uint8_t g = VG_FLOAT_TO_UB(context->m_tileFillColor.g);
                     vg_lite_uint8_t r = VG_FLOAT_TO_UB(context->m_tileFillColor.r);
                     tile_color = (a << 24) | (b << 16) | (g << 8) | (r << 0);
-                    vg_lite_set_path_type(vglpath, path_type);
                     vg_lite_image_mode_t tmp_image_mode = srcbuf->image_mode;
 
                     vg_lite_draw_pattern(fbbuf, vglpath, fill_rule, (vg_lite_matrix_t*)&(context->m_pathUserToSurface), srcbuf, (vg_lite_matrix_t*)&userToSurfaceFill, VG_LITE_BLEND_NONE, paint->m_patternTilingMode, tile_color, 0xFFFFFFFF, VG_LITE_FILTER_POINT);
@@ -5764,7 +5762,6 @@ static VGboolean drawPath(VGContext* context, VGPath path, const Matrix3x3 userT
                     vg_lite_uint8_t g = VG_FLOAT_TO_UB(paint->m_paintColor.g);
                     vg_lite_uint8_t r = VG_FLOAT_TO_UB(paint->m_paintColor.r);
                     fill_color = (a << 24) | (b << 16) | (g << 8) | (r << 0);
-                    vg_lite_set_path_type(vglpath, path_type);
                     vg_lite_draw(fbbuf, vglpath, fill_rule, (vg_lite_matrix_t*)&userToSurfaceFill, blend, fill_color);
                 }
                 break;
