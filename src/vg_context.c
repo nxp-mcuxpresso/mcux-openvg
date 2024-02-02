@@ -835,14 +835,8 @@ void freePaintImpl(Paint* paint)
 {
     if (paint->m_pattern)
     {
-        if (paint->m_pattern->m_vglbuf)
-        {
-            vg_lite_free(paint->m_pattern->m_vglbuf);
-            free(paint->m_pattern->m_vglbuf);
-            paint->m_pattern->m_vglbuf = NULL;
-            paint->m_pattern->m_data = NULL;
-        }
-        free(paint->m_pattern);
+        paint->m_pattern->m_referenceCount--;
+        paint->m_pattern->m_inUse--;
         paint->m_pattern = NULL;
     }
 
