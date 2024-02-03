@@ -3988,14 +3988,16 @@ static void updateLinearGrad(VGContext* context, vg_lite_ext_linear_gradient_t* 
         grad_param->Y0 = 0.f;
         grad_param->X1 = 1.f;
         grad_param->Y1 = 0.f;
+
         /* Allocate the color ramp surface. */
-        memset(&grad->image, 0, sizeof(grad->image));
+        memset(&grad->image, 0, sizeof(vg_lite_buffer_t));
         grad->image.width = 1;
         grad->image.height = 1;
         grad->image.stride = 0;
         grad->image.image_mode = VG_LITE_NONE_IMAGE_MODE;
         grad->image.format = VG_LITE_ABGR8888;
         vg_lite_allocate(&grad->image);
+
         /* Set pointer to color array. */
         bits = (uint8_t*)grad->image.memory;
         /* Fill the color array */
@@ -4029,7 +4031,7 @@ static void updateLinearGrad(VGContext* context, vg_lite_ext_linear_gradient_t* 
     grad_param->Y1 = 0.f;
 
     /* Allocate the color ramp surface. */
-    memset(&grad->image, 0, sizeof(grad->image));
+    memset(&grad->image, 0, sizeof(vg_lite_buffer_t));
     grad->image.width = width;
     grad->image.height = 1;
     grad->image.stride = 0;
@@ -4315,14 +4317,16 @@ static void updateRadialGrad(VGContext* context, vg_lite_radial_gradient_t* grad
         grad_param->cy = 0.f;
         grad_param->fx = 0.f;
         grad_param->fy = 0.f;
+
         /* Allocate the color ramp surface. */
-        memset(&grad->image, 0, sizeof(grad->image));
+        memset(&grad->image, 0, sizeof(vg_lite_buffer_t));
         grad->image.width = 1;
         grad->image.height = 1;
         grad->image.stride = 0;
         grad->image.image_mode = VG_LITE_NONE_IMAGE_MODE;
         grad->image.format = VG_LITE_ABGR8888;
         vg_lite_allocate(&grad->image);
+
         /* Set pointer to color array. */
         bits = (uint8_t*)grad->image.memory;
         /* Fill the color array */
@@ -4381,7 +4385,7 @@ static void updateRadialGrad(VGContext* context, vg_lite_radial_gradient_t* grad
     vglMatrixMultiply(grad_m, &tmp_m);
 
     /* Allocate the color ramp surface. */
-    memset(&grad->image, 0, sizeof(grad->image));
+    memset(&grad->image, 0, sizeof(vg_lite_buffer_t));
     grad->image.width = width;
     grad->image.height = 1;
     grad->image.stride = 0;
@@ -8517,7 +8521,6 @@ void VG_APIENTRY vgImageSubData(VGImage image, const void* data, VGint dataStrid
     VG_IF_ERROR(!data || !isFormatAligned(data, dataFormat) || width <= 0 || height <= 0, VG_ILLEGAL_ARGUMENT_ERROR, VG_NO_RETVAL);
 
     vg_lite_buffer_t srcbuf;
-    memset(&srcbuf, 0, sizeof(vg_lite_buffer_t));
     vg_lite_buffer_t* dstbuf ;
     uint32_t mul, div, align;
     dstbuf = (vg_lite_buffer_t*)(img->m_vglbuf);
@@ -8547,6 +8550,7 @@ void VG_APIENTRY vgImageSubData(VGImage image, const void* data, VGint dataStrid
     get_format_bytes(dataFormat, &mul, &div, &align);
     computeBlitRegion(&tmp_sx, &tmp_sy, &tmp_dx, &tmp_dy, &tmp_w, &tmp_h, width, height, ((Image*)img)->m_width, ((Image*)img)->m_height);
 
+    memset(&srcbuf, 0, sizeof(vg_lite_buffer_t));
     srcbuf.format = dataFormat;
     srcbuf.width = width;
     srcbuf.height = height;
@@ -8596,6 +8600,7 @@ void VG_APIENTRY vgGetImageSubData(VGImage image, void* data, VGint dataStride, 
     vg_lite_filter_t filter = VG_LITE_FILTER_POINT;
     vg_lite_blend_t blend = VG_LITE_BLEND_NONE;
 
+    memset(&dstbuf, 0, sizeof(vg_lite_buffer_t));
     dstbuf.width = width;
     dstbuf.height = height;
     dstbuf.format = dataFormat;
@@ -8778,7 +8783,8 @@ static VGboolean drawImage(VGContext* context, VGImage image, const Matrix3x3 us
     multMatrix3x3(&fillPaintToSurfaceFill, &(context->m_fillPaintToUser));
 
     srcbuf->image_mode = context->m_imageMode;
-    memset(&tmpbuf, 0, sizeof(tmpbuf));
+
+    memset(&tmpbuf, 0, sizeof(vg_lite_buffer_t));
     tmpbuf.width = dstbuf->width;
     tmpbuf.height = dstbuf->height;
     tmpbuf.format = dstbuf->format;
@@ -8834,9 +8840,11 @@ static VGboolean drawImage(VGContext* context, VGImage image, const Matrix3x3 us
     }
 
     /* Split child image from parent image. */
-    if (img->m_storageOffsetX > 0 || img->m_storageOffsetY > 0 || img->m_width != srcbuf->width || img->m_height != srcbuf->height) {
+    if (img->m_storageOffsetX > 0 || img->m_storageOffsetY > 0 || img->m_width != srcbuf->width || img->m_height != srcbuf->height)
+    {
         vg_lite_rectangle_t rect = { img->m_storageOffsetX, img->m_storageOffsetY, img->m_width, img->m_height };
 
+        memset(&child, 0, sizeof(vg_lite_buffer_t));
         child.width = img->m_width;
         child.height = img->m_height;
         child.format = srcbuf->format;
@@ -9121,7 +9129,6 @@ void VG_APIENTRY vgWritePixels(const void * data, VGint dataStride, VGImageForma
     vg_lite_buffer_t* dstbuf = (vg_lite_buffer_t*)drawable->m_color->m_image->m_vglbuf;
 
     vg_lite_buffer_t srcbuf;
-    memset(&srcbuf, 0, sizeof(vg_lite_buffer_t));
     uint32_t mul, div, align, byteOneLine;
     Image* dstimg = drawable->m_color->m_image;
     ColorDescriptor src_desc = formatToDescriptor(dataFormat);
@@ -9145,6 +9152,8 @@ void VG_APIENTRY vgWritePixels(const void * data, VGint dataStride, VGImageForma
     int tmp_h = height;
     computeBlitRegion(&tmp_sx, &tmp_sy, &tmp_dx, &tmp_dy, &tmp_w, &tmp_h, width, height, dstbuf->width, dstbuf->height);
     get_format_bytes(dataFormat, &mul, &div, &align);
+
+    memset(&srcbuf, 0, sizeof(vg_lite_buffer_t));
     srcbuf.format = dataFormat;
     srcbuf.width = width;
     srcbuf.height = height;
@@ -9239,7 +9248,6 @@ void VG_APIENTRY vgReadPixels(void* data, VGint dataStride, VGImageFormat dataFo
     vg_lite_buffer_t dstbuf;
     Image* srcimage = (Image *)drawable->m_color->m_image;
     ColorDescriptor dst_desc = formatToDescriptor(dataFormat);
-    memset(&dstbuf, 0, sizeof(vg_lite_buffer_t));
     /* Special format not support blit, so cpu operation. Currently only support start at (0,0). */
     if ((!isSupportFormat(context, srcbuf->format)) || (!isSupportFormat(context, dataFormat))) {
         Image dstimg = { 0 };
@@ -9259,6 +9267,8 @@ void VG_APIENTRY vgReadPixels(void* data, VGint dataStride, VGImageFormat dataFo
     int tmp_h = height;
     computeBlitRegion(&tmp_sx, &tmp_sy, &tmp_dx, &tmp_dy, &tmp_w, &tmp_h, srcbuf->width, srcbuf->height, width, height);
     get_format_bytes(dataFormat, &mul, &div, &align);
+
+    memset(&dstbuf, 0, sizeof(vg_lite_buffer_t));
     dstbuf.format = dataFormat;
     dstbuf.width = width;
     dstbuf.height = height;
