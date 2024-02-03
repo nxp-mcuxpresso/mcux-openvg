@@ -523,25 +523,16 @@ Image* createBlankImage(ColorDescriptor *desc, VGint width, VGint height, VGbitf
     im->m_allowedQuality = allowedQuality;
 
     vg_lite_buffer_t *imgbuf = (vg_lite_buffer_t*)malloc(sizeof(vg_lite_buffer_t));
-    if (imgbuf)
-    {
-        memset(imgbuf, 0, sizeof(vg_lite_buffer_t));
-    }
-    else
-    {
+    if (!imgbuf) {
         // Error out of memory.
         free(im);
         return NULL;
     }
 
+    memset(imgbuf, 0, sizeof(vg_lite_buffer_t));
     imgbuf->width = im->m_width;
     imgbuf->height = im->m_height;
-
-    if (desc->format == -1)
-        imgbuf->format = VG_sRGBA_8888;
-    else
-        imgbuf->format = desc->format;
-
+    imgbuf->format = (desc->format == -1) ? VG_sRGBA_8888 : desc->format;
     vg_lite_allocate(imgbuf);
     memset(imgbuf->memory, 0, imgbuf->stride * imgbuf->height);
 
