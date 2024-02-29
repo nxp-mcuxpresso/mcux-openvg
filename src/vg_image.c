@@ -1239,6 +1239,10 @@ void colorPremultiply(Color* color)
 
 void assertConsistency(Color* color)
 {
+    color->r = VG_CLAMP(color->r, 0.0f, 1.0f);
+    color->g = VG_CLAMP(color->g, 0.0f, 1.0f);
+    color->b = VG_CLAMP(color->b, 0.0f, 1.0f);
+    color->a = VG_CLAMP(color->a, 0.0f, 1.0f);
     VG_ASSERT(color->r >= 0.0f && color->r <= 1.0f);
     VG_ASSERT(color->g >= 0.0f && color->g <= 1.0f);
     VG_ASSERT(color->b >= 0.0f && color->b <= 1.0f);
