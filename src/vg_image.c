@@ -1237,24 +1237,8 @@ void colorPremultiply(Color* color)
     }
 }
 
-void assertConsistency(Color* color)
-{
-    color->r = VG_CLAMP(color->r, 0.0f, 1.0f);
-    color->g = VG_CLAMP(color->g, 0.0f, 1.0f);
-    color->b = VG_CLAMP(color->b, 0.0f, 1.0f);
-    color->a = VG_CLAMP(color->a, 0.0f, 1.0f);
-    VG_ASSERT(color->r >= 0.0f && color->r <= 1.0f);
-    VG_ASSERT(color->g >= 0.0f && color->g <= 1.0f);
-    VG_ASSERT(color->b >= 0.0f && color->b <= 1.0f);
-    VG_ASSERT(color->a >= 0.0f && color->a <= 1.0f);
-    VG_ASSERT(!isPremultiplied(color) || (color->r <= color->a && color->g <= color->a && color->b <= color->a));
-    VG_ASSERT((isLuminance(color) && (color->r == color->g) && (color->r == color->b)) || !isLuminance(color));
-}
-
 void colorConvert(Color* color, InternalFormat outputFormat)
 {
-    assertConsistency(color);
-
     if (color->m_format == outputFormat)
         return;
 
@@ -1291,8 +1275,6 @@ void colorConvert(Color* color, InternalFormat outputFormat)
         color->b *= color->a;
     }
     color->m_format = outputFormat;
-
-    assertConsistency(color);
 }
 
 static InternalFormat getProcessingFormat(InternalFormat srcFormat, VGboolean filterFormatLinear, VGboolean filterFormatPremultiplied)
@@ -1377,14 +1359,10 @@ void colorUnpack(Color* color, unsigned int inputData, const ColorDescriptor* in
             color->b = VG_MIN(color->b, color->a);
         }
     }
-
-    assertConsistency(color);
 }
 
 unsigned int colorPack(Color* color, const ColorDescriptor* outputDesc)
 {
-    assertConsistency(color);
-
     int rb = outputDesc->redBits;
     int gb = outputDesc->greenBits;
     int bb = outputDesc->blueBits;

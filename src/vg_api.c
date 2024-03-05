@@ -141,16 +141,6 @@ static VG_INLINE VGboolean isSupportFormat(VGContext* context, VGImageFormat for
         return !(format == VG_A_1 || format == VG_A_4 || format == VG_BW_1 || format == VG_sL_8 || format == VG_lL_8);
 }
 
-static VG_INLINE void assertConsistency(Color* c)
-{
-    VG_ASSERT(c->r >= 0.0f && c->r <= 1.0f);
-    VG_ASSERT(c->g >= 0.0f && c->g <= 1.0f);
-    VG_ASSERT(c->b >= 0.0f && c->b <= 1.0f);
-    VG_ASSERT(c->a >= 0.0f && c->a <= 1.0f);
-    VG_ASSERT(!(c->m_format & PREMULTIPLIED) || (c->r <= c->a && c->g <= c->a && c->b <= c->a));    //premultiplied colors must have color channels less than or equal to alpha
-    VG_ASSERT(((c->m_format & LUMINANCE) && c->r == c->g && c->r == c->b) || !(c->m_format & LUMINANCE));    //if luminance, r=g=b
-}
-
 static VG_INLINE void clampColor(VGContext* context, Color* c)
 {
     VGfloat u;
@@ -7756,14 +7746,10 @@ static void unpackColor(Color *c, VGuint inputData, const ColorDescriptor inputD
             c->b = VG_MIN(c->b, c->a);
         }
     }
-
-    assertConsistency(c);
 }
 
 VGuint packColor(Color* c, const ColorDescriptor outputDesc)
 {
-    assertConsistency(c);
-
     VGint rb = outputDesc.redBits;
     VGint gb = outputDesc.greenBits;
     VGint bb = outputDesc.blueBits;
