@@ -8,9 +8,7 @@
 #include "EGL/egl.h"
 #include "VDK/gc_vdk.h"
 #include "tiger.h"
-#ifndef _WIN32
-#include <sys/time.h>
-#endif
+
 #ifndef min
 #define min(x, y) ( ((x) < (y)) ? (x) : (y) )
 #endif
@@ -45,32 +43,14 @@ void reset(void)
     angle = 0.0f;
     center(3);
 }
-static int numFrame = 1000;
-static int Frame = 0;
-#ifndef _WIN32
-long gettick()
-{
-    long time;
-    struct timeval t;
-    gettimeofday(&t, NULL);
-
-    time = t.tv_sec * 1000000 + t.tv_usec;
-
-    return time;
-}
-#endif
 
 int main(int argc, char *argv[])
 {
-#ifndef _WIN32
-    long time ,starttime;
-#endif
     int render, run, i;
     int control = 0;
     int flags = 3;
     int animate = 0;
     int verbose = 0;
-    double cpu_time_used;
 
     reset();
 
@@ -138,33 +118,138 @@ int main(int argc, char *argv[])
                          tigerPointCount);
 
     center(flags);
-    if (verbose)
-    {
-#ifndef _WIN32
-        starttime = gettick();
-#endif
-    }
+
     for (run = render = 1; run && (NULL != tiger);)
     {
-        switch (rand() % 4)
+        vdkEvent event;
+        while (vdkGetEvent(vdk.window, &event))
         {
-        case 0: /* Move x. */
-            x += getRandom(-width / 8.0f, width / 8.0f);
-            break;
-        case 1: /* Move y. */
-            y += getRandom(-height / 8.0f, height / 8.0f);
-            break;
-        case 2: /* Scale. */
-            scale *= getRandom(0.5f, 2.0f);
-            break;
-        case 3: /* Rotate. */
-            angle += getRandom(-5.0f, 5.0f);
-            break;
+            switch (event.type)
+            {
+            case VDK_KEYBOARD:
+                if ((event.data.keyboard.scancode == VDK_LCTRL)
+                ||  (event.data.keyboard.scancode == VDK_RCTRL)
+                )
+                {
+                    control = event.data.keyboard.pressed;
+                    break;
+                }
+                
+                if (event.data.keyboard.pressed)
+                {
+                    switch (event.data.keyboard.scancode)
+                    {
+                    case VDK_ESCAPE:
+                        run = 0;
+                        break;
+
+                    case VDK_EQUAL:
+                        scale *= 2.0f;
+                        render = 1;
+                        break;
+
+                    case VDK_HYPHEN:
+                        scale /= 2.0f;
+                        render = 1;
+                        break;
+
+                    case VDK_LEFT:
+                        x     += width / (control ? 16.0f : 4.0f);
+                        render = 1;
+                        break;
+
+                    case VDK_RIGHT:
+                        x     -= width / (control ? 16.0f : 4.0f);
+                        render = 1;
+                        break;
+
+                    case VDK_UP:
+                        y     -= height / (control ? 16.0f : 4.0f);
+                        render = 1;
+                        break;
+
+                    case VDK_DOWN:
+                        y     += height / (control ? 16.0f : 4.0f);
+                        render = 1;
+                        break;
+
+                    case VDK_SPACE:
+                        if (animate)
+                        {
+                            animate ^= 2;
+                        }
+                        else
+                        {
+                            reset();
+                            render = 1;
+                        }
+                        break;
+
+                    case VDK_COMMA:
+                        angle += control ? 45.0f : 5.0f;
+                        render = 1;
+                        break;
+
+                    case VDK_PERIOD:
+                        angle -= control ? 45.0f : 5.0f;
+                        render = 1;
+                        break;
+
+                    case VDK_R:
+                        render = 1;
+                        break;
+
+                    case VDK_A:
+                        animate = !animate;
+                        break;
+
+                    case VDK_F:
+                        scale  = min(width / tigerMaxX, height / tigerMaxY);
+                        angle  = 0.0f;
+                        center(3);
+                        render = 1;
+                        break;
+
+                    default:
+                        break;
+                    }
+                }
+                break;
+
+            case VDK_CLOSE:
+                run = 0;
+                break;
+
+            default:
+                break;
+            }
+        }
+
+        if (animate == 1)
+        {
+            switch (rand() % 4)
+            {
+            case 0: /* Move x. */
+                x += getRandom(-width / 8.0f, width / 8.0f);
+                break;
+            case 1: /* Move y. */
+                y += getRandom(-height / 8.0f, height / 8.0f);
+                break;
+            case 2: /* Scale. */
+                scale *= getRandom(0.5f, 2.0f);
+                break;
+            case 3: /* Rotate. */
+                angle += getRandom(-5.0f, 5.0f);
+                break;
+            }
+
+            render = 1;
         }
 
         if (render)
         {
             float clearColor[4] = { 1, 1, 1, 1 };
+
             if (verbose)
             {
                 printf("Rendering with scale %.2f, angle %.2f at %.2f,%.2f...",
@@ -172,6 +257,7 @@ int main(int argc, char *argv[])
                        angle, 
                        x, y);
             }
+
             vgSetfv(VG_CLEAR_COLOR, 4, clearColor);
             vgClear(0, 0, width, height);
 
@@ -179,24 +265,20 @@ int main(int argc, char *argv[])
             vgTranslate(x, y);
             vgScale(scale, scale);
             vgRotate(angle);
+
             PS_render(tiger);
-            vgFinish();
             assert(vgGetError() == VG_NO_ERROR);
             render = 0;
 
             vdkSwapEGL(&vdk);
-        }
-        Frame++;
 
-        if (verbose)
-        {
-            printf("frame: %d \n", Frame);
-#ifndef _WIN32
-            time = gettick() - starttime;
-            printf("Render   time used %ld us, average time used %lf us , FPS %lf.\n", time, (double)time / Frame, Frame / ((double)time / (1000000)));
-#endif
+            if (verbose)
+            {
+                printf(" Done!\n");
+            }
         }
     }
+
     vdkFinishEGL(&vdk);
     return 0;
 }
