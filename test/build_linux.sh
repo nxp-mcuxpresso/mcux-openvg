@@ -58,5 +58,11 @@ cd ../03_TSOverflow
 make -f makefile.null clean
 make -f makefile.null
 
+cd ../drawimage
+make -f makefile.null clean
+make -f makefile.null
 
+cd ../drawpath
+make -f makefile.null clean
+make -f makefile.null
 
