@@ -51,8 +51,7 @@ int main(int argc, char *argv[])
     int flags = 3;
     int animate = 0;
     int verbose = 0;
-    width = 640;
-    height = 480;
+
     reset();
 
     for (i = 1; i < argc; ++i)

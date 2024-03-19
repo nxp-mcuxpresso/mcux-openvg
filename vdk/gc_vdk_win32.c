@@ -661,8 +661,55 @@ vdkGetEvent(
     vdkEvent * Event
     )
 {
-    /* No Event support */
+#if 0 /* No Event support */
+    halEvent halEvent;
+    int result = 0;
+    vdkResource vdkList = vdkFindResource(_vdk);
+
+    if (!vdkList)
+    {
+        printf("vdkFindResource find vdk resource failed\n");
+        return result;
+    }
+
+    if (IS_SUCCESS(GAL->GAL_GetEvent(vdkList->display, Window, &halEvent)))
+    {
+        result = 1;
+        switch(halEvent.type)
+        {
+        case HAL_KEYBOARD:
+            Event->type = VDK_KEYBOARD;
+            Event->data.keyboard.scancode = (vdkKeys)halEvent.data.keyboard.scancode;
+            Event->data.keyboard.pressed  = halEvent.data.keyboard.pressed;
+            Event->data.keyboard.key      = halEvent.data.keyboard.key;
+            break;
+        case HAL_BUTTON:
+            Event->type = VDK_BUTTON;
+            Event->data.button.left     = halEvent.data.button.left;
+            Event->data.button.right    = halEvent.data.button.right;
+            Event->data.button.middle   = halEvent.data.button.middle;
+            Event->data.button.x        = halEvent.data.button.x;
+            Event->data.button.y        = halEvent.data.button.y;
+            break;
+        case HAL_POINTER:
+            Event->type = VDK_POINTER;
+            Event->data.pointer.x = halEvent.data.pointer.x;
+            Event->data.pointer.y = halEvent.data.pointer.y;
+            break;
+        case HAL_CLOSE:
+            Event->type = VDK_CLOSE;
+            break;
+        case HAL_WINDOW_UPDATE:
+            Event->type = VDK_WINDOW_UPDATE;
+            break;
+        default:
+            return 0;
+        }
+    }
+    return result;
+#else
     return 0;
+#endif
 }
 
 /*******************************************************************************

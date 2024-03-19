@@ -141,6 +141,17 @@ typedef struct {
 } Color;
 
 typedef struct {
+
+    struct {
+        VGfloat                 r;
+        VGfloat                 g;
+        VGfloat                 b;
+        VGfloat                 a;
+        InternalFormat          m_format;
+    }color[64*64]; //test image's max_width * max_height
+} ColorArray;
+
+typedef struct {
     VGfloat                 offset;
     Color                   color;
 } GradientStop;

@@ -512,7 +512,7 @@ vdkInitialize(
             pthread_mutex_unlock(&_vdk_mutex);
             return NULL;
         }
-    }
+}
 
     /* Create a new vdk resource to vdk list. */
     if (!vdkCreateResource(_vdk))
@@ -590,12 +590,12 @@ vdkGetDisplayByIndex(
         return vdkList->display;
     }
 
-    vdkList->display = fbGetDisplayByIndex(DisplayIndex);
+    /*vdkList->display = fbGetDisplayByIndex(DisplayIndex);*/
 
     if (vdkList->display)
     {
-        fbGetDisplayInfo(vdkList->display,
-             &vdkList->xres, &vdkList->yres, NULL, NULL, NULL);
+        /* fbGetDisplayInfo(vdkList->display,
+             &vdkList->xres, &vdkList->yres, NULL, NULL, NULL); */
     }
 
     return vdkList->display;
@@ -624,7 +624,7 @@ vdkGetDisplayInfo(
         return 0;
     }
 
-    fbGetDisplayInfo(Display, Width, Height, Physical, Stride, BitsPerPixel);
+    /* fbGetDisplayInfo(Display, Width, Height, Physical, Stride, BitsPerPixel); */
     return 1;
 }
 
@@ -633,8 +633,7 @@ vdkDestroyDisplay(
     vdkDisplay Display
     )
 {
-    fbDestroyDisplay(Display);
-
+    /*fbDestroyDisplay(Display);*/
     vdkResource vdkList = vdkFindResource(_vdk);
 
     if (!vdkList)
@@ -663,10 +662,11 @@ vdkCreateWindow(
     int Height
     )
 {
-    NativeWindowType win;
+    /*NativeWindowType win;
     win = fbCreateWindow(Display, X, Y, Width, Height);
 
-    return win;
+    return win;*/
+    return 0;
 }
 
 VDKAPI int VDKLANG
@@ -680,8 +680,7 @@ vdkGetWindowInfo(
     unsigned int * Offset
     )
 {
-    fbGetWindowInfo(Window, X, Y, Width, Height, BitsPerPixel, Offset);
-
+    /*fbGetWindowInfo(Window, X, Y, Width, Height, BitsPerPixel, Offset);*/
     return 1;
 }
 
@@ -690,7 +689,7 @@ vdkDestroyWindow(
     vdkWindow Window
     )
 {
-    fbDestroyWindow(Window);
+    /*fbDestroyWindow(Window);*/
 }
 
 VDKAPI int VDKLANG
@@ -741,7 +740,7 @@ vdkGetEvent(
                 __func__, __LINE__);
         return 0;
     }
-
+{
     if (vdkList->keyboard == -1)
     {
         static int frames;
@@ -798,6 +797,7 @@ vdkGetEvent(
             }
         }
     }
+}
 
     if (vdkList->mice >= 0)
     {
@@ -912,8 +912,9 @@ vdkCreatePixmap(
     int BitsPerPixel
     )
 {
-    return fbCreatePixmapWithBpp(Display,
-                                  Width, Height, BitsPerPixel);
+    return 0;
+    /* return fbCreatePixmapWithBpp(Display,
+                                  Width, Height, BitsPerPixel); */
 }
 
 VDKAPI int VDKLANG
@@ -926,8 +927,9 @@ vdkGetPixmapInfo(
     void ** Bits
     )
 {
-    fbGetPixmapInfo(Pixmap,
-                     Width, Height, BitsPerPixel, Stride, Bits);
+    /* fbGetPixmapInfo(Pixmap,
+                     Width, Height, BitsPerPixel, Stride, Bits); */
+    return 1;
 }
 
 VDKAPI void VDKLANG
@@ -935,7 +937,7 @@ vdkDestroyPixmap(
     vdkPixmap Pixmap
     )
 {
-    fbDestroyPixmap(Pixmap);
+    /*fbDestroyPixmap(Pixmap);*/
 }
 
 /*******************************************************************************
