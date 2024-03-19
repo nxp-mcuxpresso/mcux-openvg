@@ -141,6 +141,16 @@ static VG_INLINE VGboolean isSupportFormat(VGContext* context, VGImageFormat for
         return !(format == VG_A_1 || format == VG_A_4 || format == VG_BW_1 || format == VG_sL_8 || format == VG_lL_8);
 }
 
+static VG_INLINE void assertConsistency(Color* c)
+{
+    VG_ASSERT(c->r >= 0.0f && c->r <= 1.0f);
+    VG_ASSERT(c->g >= 0.0f && c->g <= 1.0f);
+    VG_ASSERT(c->b >= 0.0f && c->b <= 1.0f);
+    VG_ASSERT(c->a >= 0.0f && c->a <= 1.0f);
+    VG_ASSERT(!(c->m_format & PREMULTIPLIED) || (c->r <= c->a && c->g <= c->a && c->b <= c->a));    //premultiplied colors must have color channels less than or equal to alpha
+    VG_ASSERT(((c->m_format & LUMINANCE) && c->r == c->g && c->r == c->b) || !(c->m_format & LUMINANCE));    //if luminance, r=g=b
+}
+
 static VG_INLINE void clampColor(VGContext* context, Color* c)
 {
     VGfloat u;
@@ -510,10 +520,6 @@ static void setifv(VGContext* context, VGParamType type, VGint count, const void
         if (count != 1)
         { setError(VG_ILLEGAL_ARGUMENT_ERROR); return; }
         context->m_masking = ivalue ? VG_TRUE : VG_FALSE;
-        if (context->m_masking)
-            vg_lite_enable_masklayer();
-        else
-            vg_lite_disable_masklayer();
         break;
 
     case VG_SCISSORING:
@@ -594,6 +600,14 @@ void VG_APIENTRY vgSeti(VGParamType type, VGint value)
                 type == VG_CLEAR_COLOR, VG_ILLEGAL_ARGUMENT_ERROR, VG_NO_RETVAL);    //vector type value
     VGint values[1] = {value};
     setifv(context, type, 1, values, VG_FALSE);
+    if (context->m_masking)
+    {
+        vg_lite_enable_masklayer();
+    }
+    else
+    {
+        vg_lite_disable_masklayer();
+    }
     VG_RETURN(VG_NO_RETVAL);
 }
 
@@ -3978,16 +3992,14 @@ static void updateLinearGrad(VGContext* context, vg_lite_ext_linear_gradient_t* 
         grad_param->Y0 = 0.f;
         grad_param->X1 = 1.f;
         grad_param->Y1 = 0.f;
-
         /* Allocate the color ramp surface. */
-        memset(&grad->image, 0, sizeof(vg_lite_buffer_t));
+        memset(&grad->image, 0, sizeof(grad->image));
         grad->image.width = 1;
         grad->image.height = 1;
         grad->image.stride = 0;
         grad->image.image_mode = VG_LITE_NONE_IMAGE_MODE;
         grad->image.format = VG_LITE_ABGR8888;
         vg_lite_allocate(&grad->image);
-
         /* Set pointer to color array. */
         bits = (uint8_t*)grad->image.memory;
         /* Fill the color array */
@@ -4021,7 +4033,7 @@ static void updateLinearGrad(VGContext* context, vg_lite_ext_linear_gradient_t* 
     grad_param->Y1 = 0.f;
 
     /* Allocate the color ramp surface. */
-    memset(&grad->image, 0, sizeof(vg_lite_buffer_t));
+    memset(&grad->image, 0, sizeof(grad->image));
     grad->image.width = width;
     grad->image.height = 1;
     grad->image.stride = 0;
@@ -4307,16 +4319,14 @@ static void updateRadialGrad(VGContext* context, vg_lite_radial_gradient_t* grad
         grad_param->cy = 0.f;
         grad_param->fx = 0.f;
         grad_param->fy = 0.f;
-
         /* Allocate the color ramp surface. */
-        memset(&grad->image, 0, sizeof(vg_lite_buffer_t));
+        memset(&grad->image, 0, sizeof(grad->image));
         grad->image.width = 1;
         grad->image.height = 1;
         grad->image.stride = 0;
         grad->image.image_mode = VG_LITE_NONE_IMAGE_MODE;
         grad->image.format = VG_LITE_ABGR8888;
         vg_lite_allocate(&grad->image);
-
         /* Set pointer to color array. */
         bits = (uint8_t*)grad->image.memory;
         /* Fill the color array */
@@ -4375,7 +4385,7 @@ static void updateRadialGrad(VGContext* context, vg_lite_radial_gradient_t* grad
     vglMatrixMultiply(grad_m, &tmp_m);
 
     /* Allocate the color ramp surface. */
-    memset(&grad->image, 0, sizeof(vg_lite_buffer_t));
+    memset(&grad->image, 0, sizeof(grad->image));
     grad->image.width = width;
     grad->image.height = 1;
     grad->image.stride = 0;
@@ -5048,6 +5058,42 @@ static void renderStroke(const VGContext* context, int w, int h, int numSamples,
     VGuint* covBuffer = (VGuint*)malloc(w*h);
     memset(covBuffer, 0, w * h * sizeof(VGuint));
     setupRasterizer(rasterizer, 0, 0, w, h, VG_NON_ZERO, NULL, covBuffer);
+
+
+#if 0 // TODO
+    memset(covBuffer, 0, w*h*sizeof(VGuint));
+
+    rasterizer.setup(0, 0, w, h, VG_NON_ZERO, NULL, covBuffer);
+    path->stroke(userToSurface, rasterizer, context->m_strokeDashPattern, context->m_strokeDashPhase, context->m_strokeDashPhaseReset ? VG_TRUE : VG_FALSE,
+                 context->m_strokeLineWidth, context->m_strokeCapStyle, context->m_strokeJoinStyle, VG_MAX(context->m_strokeMiterLimit, 1.0f));    //throws bad_alloc
+
+    int sx,sy,ex,ey;
+    rasterizer.getBBox(sx,sy,ex,ey);
+    VG_ASSERT(sx >= 0 && sx <= w);
+    VG_ASSERT(sy >= 0 && sy <= h);
+    VG_ASSERT(ex >= 0 && ex <= w);
+    VG_ASSERT(ey >= 0 && ey <= h);
+
+    for (int j=sy;j<ey;j++)
+    {
+        for (int i=sx;i<ex;i++)
+        {
+            unsigned int c = covBuffer[j*w+i];
+            if (c)
+            {
+                int coverage = 0;
+                for (int k=0;k<numSamples;k++)
+                {
+                    if (c & (1<<k))
+                        coverage++;
+                }
+                pixelPipe->pixelPipe(i, j, (VGfloat)coverage/(VGfloat)numSamples, c);
+            }
+        }
+    }
+#endif
+
+//    VG_DELETE_ARRAY(covBuffer);
 }
 
 void VG_APIENTRY vgRenderToMask(VGPath path, VGbitfield paintModes, VGMaskOperation operation)
@@ -5644,6 +5690,7 @@ static VGboolean drawPath(VGContext* context, VGPath path, const Matrix3x3 userT
     }
 
     vg_lite_buffer_t* fbbuf = (vg_lite_buffer_t*)drawable->m_color->m_image->m_vglbuf;
+    vg_lite_path_type_t path_type = paintModes;
     vg_lite_fill_t fill_rule = context->m_fillRule;
     vg_lite_blend_t blend = context->m_blendMode;
     Matrix3x3 userToSurfaceFill = userToSurfaceMatrix;
@@ -5719,8 +5766,6 @@ static VGboolean drawPath(VGContext* context, VGPath path, const Matrix3x3 userT
                 setLinearGrad(&grad, paint->m_colorRampStopsCount, vg_color_ramp, linear_gradient, paint->m_colorRampSpreadMode, paint->m_colorRampPremultiplied);
                 updateLinearGrad(context, &grad, &userToSurfaceFill);
                 vg_lite_draw_linear_grad(fbbuf, vglpath, fill_rule, (vg_lite_matrix_t*)&(context->m_pathUserToSurface), &grad, 0, blend, VG_LITE_FILTER_LINEAR);
-                vg_lite_finish();
-                vg_lite_clear_linear_grad(&grad);
                 break;
             }
 
@@ -5740,6 +5785,7 @@ static VGboolean drawPath(VGContext* context, VGPath path, const Matrix3x3 userT
                     vg_lite_uint8_t g = VG_FLOAT_TO_UB(context->m_tileFillColor.g);
                     vg_lite_uint8_t r = VG_FLOAT_TO_UB(context->m_tileFillColor.r);
                     tile_color = (a << 24) | (b << 16) | (g << 8) | (r << 0);
+                    vg_lite_set_path_type(vglpath, path_type);
                     vg_lite_image_mode_t tmp_image_mode = srcbuf->image_mode;
 
                     vg_lite_draw_pattern(fbbuf, vglpath, fill_rule, (vg_lite_matrix_t*)&(context->m_pathUserToSurface), srcbuf, (vg_lite_matrix_t*)&userToSurfaceFill, VG_LITE_BLEND_NONE, paint->m_patternTilingMode, tile_color, 0xFFFFFFFF, VG_LITE_FILTER_POINT);
@@ -5756,6 +5802,7 @@ static VGboolean drawPath(VGContext* context, VGPath path, const Matrix3x3 userT
                     vg_lite_uint8_t g = VG_FLOAT_TO_UB(paint->m_paintColor.g);
                     vg_lite_uint8_t r = VG_FLOAT_TO_UB(paint->m_paintColor.r);
                     fill_color = (a << 24) | (b << 16) | (g << 8) | (r << 0);
+                    vg_lite_set_path_type(vglpath, path_type);
                     vg_lite_draw(fbbuf, vglpath, fill_rule, (vg_lite_matrix_t*)&userToSurfaceFill, blend, fill_color);
                 }
                 break;
@@ -5786,8 +5833,6 @@ static VGboolean drawPath(VGContext* context, VGPath path, const Matrix3x3 userT
                 setRadialGrad(&grad, paint->m_colorRampStopsCount, vg_color_ramp, radialGradient, paint->m_colorRampSpreadMode, paint->m_colorRampPremultiplied);
                 updateRadialGrad(context, &grad, &userToSurfaceFill);
                 vg_lite_draw_radial_grad(fbbuf, vglpath, fill_rule, (vg_lite_matrix_t*)&(context->m_pathUserToSurface), &grad, 0, blend, VG_LITE_FILTER_LINEAR);
-                vg_lite_finish();
-                vg_lite_clear_radial_grad(&grad);
                 break;
             }
 
@@ -5869,8 +5914,6 @@ static VGboolean drawPath(VGContext* context, VGPath path, const Matrix3x3 userT
                     setLinearGrad(&grad, paint->m_colorRampStopsCount, vg_color_ramp, linear_gradient, paint->m_colorRampSpreadMode, paint->m_colorRampPremultiplied);
                     updateLinearGrad(context, &grad, &userToSurfaceStroke);
                     vg_lite_draw_linear_grad(fbbuf, vglpath, fill_rule, (vg_lite_matrix_t*)&(context->m_pathUserToSurface), &grad, 0, blend, VG_LITE_FILTER_LINEAR);
-                    vg_lite_finish();
-                    vg_lite_clear_linear_grad(&grad);
                     break;
                 }
 
@@ -5911,8 +5954,6 @@ static VGboolean drawPath(VGContext* context, VGPath path, const Matrix3x3 userT
                     setRadialGrad(&grad, paint->m_colorRampStopsCount, vg_color_ramp, radialGradient, paint->m_colorRampSpreadMode, paint->m_colorRampPremultiplied);
                     updateRadialGrad(context, &grad, &userToSurfaceStroke);
                     vg_lite_draw_radial_grad(fbbuf, vglpath, fill_rule, (vg_lite_matrix_t*)&(context->m_pathUserToSurface), &grad, 0, blend, VG_LITE_FILTER_LINEAR);
-                    vg_lite_finish();
-                    vg_lite_clear_radial_grad(&grad);
                     break;
                 }
 
@@ -6316,6 +6357,16 @@ VGfloat VG_APIENTRY vgPathLength(VGPath path, VGint startSegment, VGint numSegme
 
     freePathImpl(p_fp32);
 
+#if 0 // TODO
+    try
+    {
+        pathLength = p->getPathLength(startSegment, numSegments);    //throws bad_alloc
+    }
+    catch(std::bad_alloc)
+    {
+        setError(VG_OUT_OF_MEMORY_ERROR);
+    }
+#endif
     VG_RETURN(pathLength);
 }
 
@@ -6826,6 +6877,28 @@ void VG_APIENTRY vgPointAlongPath(VGPath path, VGint startSegment, VGint numSegm
         }
     }
 
+#if 0 // TODO
+    try
+    {
+        Vector2 point, tangent;
+        p->getPointAlong(startSegment, numSegments, distance, point, tangent);    //throws bad_alloc
+        if (x && y)
+        {
+            *x = point.x;
+            *y = point.y;
+        }
+        if (tangentX && tangentY)
+        {
+            tangent.normalize();
+            *tangentX = tangent.x;
+            *tangentY = tangent.y;
+        }
+    }
+    catch (std::bad_alloc)
+    {
+        setError(VG_OUT_OF_MEMORY_ERROR);
+    }
+#endif
     VG_RETURN(VG_NO_RETVAL);
 }
 
@@ -7185,6 +7258,21 @@ void VG_APIENTRY vgPathBounds(VGPath path, VGfloat* minx, VGfloat* miny, VGfloat
     *width = x_max - x_min;
     *height = y_max - y_min;
 
+#if 0 // TODO
+    try
+    {
+        VGfloat pminx, pminy, pmaxx, pmaxy;
+        ((Path*)path)->getPathBounds(pminx, pminy, pmaxx, pmaxy);    //throws bad_alloc
+        *minx = pminx;
+        *miny = pminy;
+        *width = pmaxx - pminx;
+        *height = pmaxy - pminy;
+    }
+    catch (std::bad_alloc)
+    {
+        setError(VG_OUT_OF_MEMORY_ERROR);
+    }
+#endif
     VG_RETURN(VG_NO_RETVAL);
 }
 
@@ -7546,6 +7634,21 @@ void VG_APIENTRY vgPathTransformedBounds(VGPath path, VGfloat* minx, VGfloat* mi
     *width = x_max - x_min;
     *height = y_max - y_min;
 
+#if 0 // TODO
+    try
+    {
+        VGfloat pminx, pminy, pmaxx, pmaxy;
+        ((Path*)path)->getPathTransformedBounds(context->m_pathUserToSurface, pminx, pminy, pmaxx, pmaxy);    //throws bad_alloc
+        *minx = pminx;
+        *miny = pminy;
+        *width = pmaxx - pminx;
+        *height = pmaxy - pminy;
+    }
+    catch (std::bad_alloc)
+    {
+        setError(VG_OUT_OF_MEMORY_ERROR);
+    }
+#endif
     VG_RETURN(VG_NO_RETVAL);
 }
 
@@ -7641,6 +7744,17 @@ VGboolean VG_APIENTRY vgInterpolatePath(VGPath dstPath, VGPath startPath, VGPath
 
     d->m_pathChanged = VG_TRUE;
 
+#if 0 // TODO
+    try
+    {
+        if (((Path*)dstPath)->interpolate((const Path*)startPath, (const Path*)endPath, inputFloat(amount)))    //throws bad_alloc
+            ret = VG_TRUE;
+    }
+    catch (std::bad_alloc)
+    {
+        setError(VG_OUT_OF_MEMORY_ERROR);
+    }
+#endif
     VG_RETURN(VG_TRUE);
 }
 
@@ -7746,10 +7860,14 @@ static void unpackColor(Color *c, VGuint inputData, const ColorDescriptor inputD
             c->b = VG_MIN(c->b, c->a);
         }
     }
+
+    assertConsistency(c);
 }
 
 VGuint packColor(Color* c, const ColorDescriptor outputDesc)
 {
+    assertConsistency(c);
+
     VGint rb = outputDesc.redBits;
     VGint gb = outputDesc.greenBits;
     VGint bb = outputDesc.blueBits;
@@ -8507,6 +8625,7 @@ void VG_APIENTRY vgImageSubData(VGImage image, const void* data, VGint dataStrid
     VG_IF_ERROR(!data || !isFormatAligned(data, dataFormat) || width <= 0 || height <= 0, VG_ILLEGAL_ARGUMENT_ERROR, VG_NO_RETVAL);
 
     vg_lite_buffer_t srcbuf;
+    memset(&srcbuf, 0, sizeof(vg_lite_buffer_t));
     vg_lite_buffer_t* dstbuf ;
     uint32_t mul, div, align;
     dstbuf = (vg_lite_buffer_t*)(img->m_vglbuf);
@@ -8536,7 +8655,6 @@ void VG_APIENTRY vgImageSubData(VGImage image, const void* data, VGint dataStrid
     get_format_bytes(dataFormat, &mul, &div, &align);
     computeBlitRegion(&tmp_sx, &tmp_sy, &tmp_dx, &tmp_dy, &tmp_w, &tmp_h, width, height, ((Image*)img)->m_width, ((Image*)img)->m_height);
 
-    memset(&srcbuf, 0, sizeof(vg_lite_buffer_t));
     srcbuf.format = dataFormat;
     srcbuf.width = width;
     srcbuf.height = height;
@@ -8586,7 +8704,6 @@ void VG_APIENTRY vgGetImageSubData(VGImage image, void* data, VGint dataStride, 
     vg_lite_filter_t filter = VG_LITE_FILTER_POINT;
     vg_lite_blend_t blend = VG_LITE_BLEND_NONE;
 
-    memset(&dstbuf, 0, sizeof(vg_lite_buffer_t));
     dstbuf.width = width;
     dstbuf.height = height;
     dstbuf.format = dataFormat;
@@ -8769,8 +8886,7 @@ static VGboolean drawImage(VGContext* context, VGImage image, const Matrix3x3 us
     multMatrix3x3(&fillPaintToSurfaceFill, &(context->m_fillPaintToUser));
 
     srcbuf->image_mode = context->m_imageMode;
-
-    memset(&tmpbuf, 0, sizeof(vg_lite_buffer_t));
+    memset(&tmpbuf, 0, sizeof(tmpbuf));
     tmpbuf.width = dstbuf->width;
     tmpbuf.height = dstbuf->height;
     tmpbuf.format = dstbuf->format;
@@ -8826,11 +8942,9 @@ static VGboolean drawImage(VGContext* context, VGImage image, const Matrix3x3 us
     }
 
     /* Split child image from parent image. */
-    if (img->m_storageOffsetX > 0 || img->m_storageOffsetY > 0 || img->m_width != srcbuf->width || img->m_height != srcbuf->height)
-    {
+    if (img->m_storageOffsetX > 0 || img->m_storageOffsetY > 0 || img->m_width != srcbuf->width || img->m_height != srcbuf->height) {
         vg_lite_rectangle_t rect = { img->m_storageOffsetX, img->m_storageOffsetY, img->m_width, img->m_height };
 
-        memset(&child, 0, sizeof(vg_lite_buffer_t));
         child.width = img->m_width;
         child.height = img->m_height;
         child.format = srcbuf->format;
@@ -8931,8 +9045,6 @@ static VGboolean drawImage(VGContext* context, VGImage image, const Matrix3x3 us
                 };
                 tmpbuf.image_mode = srcbuf->image_mode;
                 vg_lite_draw_linear_grad(&tmpbuf, &vglpath, VG_LITE_FILL_EVEN_ODD, (vg_lite_matrix_t*)&userToSurfaceMatrix_temp, &grad, 0, blend, VG_LITE_FILTER_LINEAR);
-                vg_lite_finish();
-                vg_lite_clear_linear_grad(&grad);
             }
             else if (srcbuf->paintType == VG_PAINT_TYPE_RADIAL_GRADIENT) {
                 vg_lite_radial_gradient_t grad;
@@ -8975,8 +9087,6 @@ static VGboolean drawImage(VGContext* context, VGImage image, const Matrix3x3 us
                 };
                 tmpbuf.image_mode = srcbuf->image_mode;
                 vg_lite_draw_radial_grad(&tmpbuf, &vglpath, VG_LITE_FILL_EVEN_ODD, (vg_lite_matrix_t*)&userToSurfaceMatrix_temp, &grad, 0, blend, VG_LITE_FILTER_LINEAR);
-                vg_lite_finish();
-                vg_lite_clear_radial_grad(&grad);
             }
             else if (srcbuf->paintType == VG_PAINT_TYPE_PATTERN)
             {
@@ -9115,6 +9225,7 @@ void VG_APIENTRY vgWritePixels(const void * data, VGint dataStride, VGImageForma
     vg_lite_buffer_t* dstbuf = (vg_lite_buffer_t*)drawable->m_color->m_image->m_vglbuf;
 
     vg_lite_buffer_t srcbuf;
+    memset(&srcbuf, 0, sizeof(vg_lite_buffer_t));
     uint32_t mul, div, align, byteOneLine;
     Image* dstimg = drawable->m_color->m_image;
     ColorDescriptor src_desc = formatToDescriptor(dataFormat);
@@ -9138,8 +9249,6 @@ void VG_APIENTRY vgWritePixels(const void * data, VGint dataStride, VGImageForma
     int tmp_h = height;
     computeBlitRegion(&tmp_sx, &tmp_sy, &tmp_dx, &tmp_dy, &tmp_w, &tmp_h, width, height, dstbuf->width, dstbuf->height);
     get_format_bytes(dataFormat, &mul, &div, &align);
-
-    memset(&srcbuf, 0, sizeof(vg_lite_buffer_t));
     srcbuf.format = dataFormat;
     srcbuf.width = width;
     srcbuf.height = height;
@@ -9234,6 +9343,7 @@ void VG_APIENTRY vgReadPixels(void* data, VGint dataStride, VGImageFormat dataFo
     vg_lite_buffer_t dstbuf;
     Image* srcimage = (Image *)drawable->m_color->m_image;
     ColorDescriptor dst_desc = formatToDescriptor(dataFormat);
+    memset(&dstbuf, 0, sizeof(vg_lite_buffer_t));
     /* Special format not support blit, so cpu operation. Currently only support start at (0,0). */
     if ((!isSupportFormat(context, srcbuf->format)) || (!isSupportFormat(context, dataFormat))) {
         Image dstimg = { 0 };
@@ -9253,8 +9363,6 @@ void VG_APIENTRY vgReadPixels(void* data, VGint dataStride, VGImageFormat dataFo
     int tmp_h = height;
     computeBlitRegion(&tmp_sx, &tmp_sy, &tmp_dx, &tmp_dy, &tmp_w, &tmp_h, srcbuf->width, srcbuf->height, width, height);
     get_format_bytes(dataFormat, &mul, &div, &align);
-
-    memset(&dstbuf, 0, sizeof(vg_lite_buffer_t));
     dstbuf.format = dataFormat;
     dstbuf.width = width;
     dstbuf.height = height;
@@ -9477,7 +9585,16 @@ void VG_APIENTRY vgGaussianBlur(VGImage dst, VGImage src, VGfloat stdDeviationX,
         gaussianBlur(dst, src, stdDeviationX, stdDeviationY, context->m_filterFormatLinear ? VG_TRUE : VG_FALSE, context->m_filterFormatPremultiplied ? VG_TRUE : VG_FALSE, 
                      tilingMode, context->m_tileFillColor, context->m_filterChannelMask);
     }
-
+#if 0 // TODO
+    try
+    {
+        d->gaussianBlur(*s, sx, sy, tilingMode, context->m_tileFillColor, context->m_filterFormatLinear ? VG_TRUE : VG_FALSE,
+                        context->m_filterFormatPremultiplied ? VG_TRUE : VG_FALSE, channelMask);
+    }
+    catch(std::bad_alloc)
+    {
+    }
+#endif
     VG_RETURN(VG_NO_RETVAL);
 }
 
