@@ -1,6 +1,8 @@
 /****************************************************************************
 *
 *    Copyright 2022 Vivante Corporation, Santa Clara, California.
+*    Copyright 2024 NXP
+*
 *    All Rights Reserved.
 *
 *    Permission is hereby granted, free of charge, to any person obtaining
@@ -521,27 +523,19 @@ Image* createBlankImage(ColorDescriptor *desc, VGint width, VGint height, VGbitf
     im->m_width = width;
     im->m_height = height;
     im->m_allowedQuality = allowedQuality;
+    im->object.type = OBJECTTYPE_IMAGE;
 
     vg_lite_buffer_t *imgbuf = (vg_lite_buffer_t*)malloc(sizeof(vg_lite_buffer_t));
-    if (imgbuf)
-    {
-        memset(imgbuf, 0, sizeof(vg_lite_buffer_t));
-    }
-    else
-    {
+    if (!imgbuf) {
         // Error out of memory.
         free(im);
         return NULL;
     }
 
+    memset(imgbuf, 0, sizeof(vg_lite_buffer_t));
     imgbuf->width = im->m_width;
     imgbuf->height = im->m_height;
-
-    if (desc->format == -1)
-        imgbuf->format = VG_sRGBA_8888;
-    else
-        imgbuf->format = desc->format;
-
+    imgbuf->format = (desc->format == -1) ? VG_sRGBA_8888 : desc->format;
     vg_lite_allocate(imgbuf);
     memset(imgbuf->memory, 0, imgbuf->stride * imgbuf->height);
 
@@ -620,6 +614,7 @@ void createChildImage(Image* im, Image* parent, int x, int y, int width, int hei
     parent->m_inUse++;
     parent->m_referenceCount++;
     im->m_ownsData = VG_FALSE;
+    im->object.type = OBJECTTYPE_IMAGE;
 }
 
 /*-------------------------------------------------------------------*//*!
@@ -751,6 +746,7 @@ Surface* createSurface(ColorDescriptor* desc, VGint width, VGint height, VGint n
         surf->m_height = height;
         surf->m_numSamples = numSamples;
         surf->m_referenceCount = 0;
+        surf->object.type = OBJECTTYPE_MASK;
 
         surf->m_image = createBlankImage(desc, width * numSamples, height, 0);
         if (surf->m_image)
@@ -933,7 +929,7 @@ void clearSurface(Surface* surface, VGuint x, VGuint y, VGuint w, VGuint h)
     dstbuf->stride = surface->m_image->m_stride;
     vg_lite_rectangle_t rect = { x, y, w, h };
     vg_lite_clear(dstbuf, &rect, 0xffffffff); //temporarily set to white, and class "Color" to do
-    vg_lite_finish();
+    vg_lite_flush();
 }
 
 /*-------------------------------------------------------------------*//*!
@@ -1114,16 +1110,6 @@ void resizeDrawable(Drawable* draw, VGint newWidth, VGint newHeight)
     VGint wmin = VG_INT_MIN(newWidth,oldWidth);
     VGint hmin = VG_INT_MIN(newHeight,oldHeight);
 
-#if 0 // TODO
-    m_color->clear(Color(0.0f, 0.0f, 0.0f, 0.0f, getDescriptor().internalFormat), 0, 0, m_color->getWidth(), m_color->getHeight());
-    m_color->blit(oldcolor, 0, 0, 0, 0, wmin, hmin);
-    if (m_mask)
-    {
-        m_mask->clear(Color(1.0f, 1.0f, 1.0f, 1.0f, getDescriptor().internalFormat), 0, 0, m_mask->getWidth(), m_mask->getHeight());
-        m_mask->blit(oldmask, 0, 0, 0, 0, wmin, hmin);
-    }
-#endif
-
     oldcolor->m_referenceCount--; VG_ASSERT(oldcolor->m_referenceCount >= 0);
     if (!oldcolor->m_referenceCount)
         destroySurface(oldcolor);
@@ -1202,7 +1188,7 @@ void initDrawable(Drawable* drawable, ColorDescriptor desc, VGuint width, VGuint
     }
 }
 
-static VGfloat gamma(VGfloat c)
+static VGfloat vg_gamma(VGfloat c)
 {
     if (c <= 0.00304f)
         c *= 12.92f;
@@ -1211,7 +1197,7 @@ static VGfloat gamma(VGfloat c)
     return c;
 }
 
-static VGfloat invgamma(VGfloat c)
+static VGfloat inv_vg_gamma(VGfloat c)
 {
     if (c <= 0.03928f)
         c /= 12.92f;
@@ -1256,20 +1242,8 @@ void colorPremultiply(Color* color)
     }
 }
 
-void assertConsistency(Color* color)
-{
-    VG_ASSERT(color->r >= 0.0f && color->r <= 1.0f);
-    VG_ASSERT(color->g >= 0.0f && color->g <= 1.0f);
-    VG_ASSERT(color->b >= 0.0f && color->b <= 1.0f);
-    VG_ASSERT(color->a >= 0.0f && color->a <= 1.0f);
-    VG_ASSERT(!isPremultiplied(color) || (color->r <= color->a && color->g <= color->a && color->b <= color->a));
-    VG_ASSERT((isLuminance(color) && (color->r == color->g) && (color->r == color->b)) || !isLuminance(color));
-}
-
 void colorConvert(Color* color, InternalFormat outputFormat)
 {
-    assertConsistency(color);
-
     if (color->m_format == outputFormat)
         return;
 
@@ -1284,18 +1258,18 @@ void colorConvert(Color* color, InternalFormat outputFormat)
     VGuint conversion = (color->m_format & (NONLINEAR | LUMINANCE)) | ((outputFormat & (NONLINEAR | LUMINANCE)) << shift);
     switch (conversion)
     {
-        case lRGBA | (sRGBA << shift) : color->r = gamma(color->r); color->g = gamma(color->g); color->b = gamma(color->b); break;
+        case lRGBA | (sRGBA << shift) : color->r = vg_gamma(color->r); color->g = vg_gamma(color->g); color->b = vg_gamma(color->b); break;
         case lRGBA | (lLA << shift) : color->r = color->g = color->b = lRGBtoL(color->r, color->g, color->b); break;
-        case lRGBA | (sLA << shift) : color->r = color->g = color->b = gamma(lRGBtoL(color->r, color->g, color->b)); break;
-        case sRGBA | (lRGBA << shift) : color->r = invgamma(color->r); color->g = invgamma(color->g); color->b = invgamma(color->b); break;
-        case sRGBA | (lLA << shift) : color->r = color->g = color->b = lRGBtoL(invgamma(color->r), invgamma(color->g), invgamma(color->b)); break;
-        case sRGBA | (sLA << shift) : color->r = color->g = color->b = gamma(lRGBtoL(invgamma(color->r), invgamma(color->g), invgamma(color->b))); break;
+        case lRGBA | (sLA << shift) : color->r = color->g = color->b = vg_gamma(lRGBtoL(color->r, color->g, color->b)); break;
+        case sRGBA | (lRGBA << shift) : color->r = inv_vg_gamma(color->r); color->g = inv_vg_gamma(color->g); color->b = inv_vg_gamma(color->b); break;
+        case sRGBA | (lLA << shift) : color->r = color->g = color->b = lRGBtoL(inv_vg_gamma(color->r), inv_vg_gamma(color->g), inv_vg_gamma(color->b)); break;
+        case sRGBA | (sLA << shift) : color->r = color->g = color->b = vg_gamma(lRGBtoL(inv_vg_gamma(color->r), inv_vg_gamma(color->g), inv_vg_gamma(color->b))); break;
         case lLA | (lRGBA << shift) : break;
-        case lLA | (sRGBA << shift) : color->r = color->g = color->b = gamma(color->r); break;
-        case lLA | (sLA << shift) : color->r = color->g = color->b = gamma(color->r); break;
-        case sLA | (lRGBA << shift) : color->r = color->g = color->b = invgamma(color->r); break;
+        case lLA | (sRGBA << shift) : color->r = color->g = color->b = vg_gamma(color->r); break;
+        case lLA | (sLA << shift) : color->r = color->g = color->b = vg_gamma(color->r); break;
+        case sLA | (lRGBA << shift) : color->r = color->g = color->b = inv_vg_gamma(color->r); break;
         case sLA | (sRGBA << shift) : break;
-        case sLA | (lLA << shift) : color->r = color->g = color->b = invgamma(color->r); break;
+        case sLA | (lLA << shift) : color->r = color->g = color->b = inv_vg_gamma(color->r); break;
         default: VG_ASSERT((color->m_format & (LUMINANCE | NONLINEAR)) == (outputFormat & (LUMINANCE | NONLINEAR))); break;
     }
 
@@ -1306,8 +1280,6 @@ void colorConvert(Color* color, InternalFormat outputFormat)
         color->b *= color->a;
     }
     color->m_format = outputFormat;
-
-    assertConsistency(color);
 }
 
 static InternalFormat getProcessingFormat(InternalFormat srcFormat, VGboolean filterFormatLinear, VGboolean filterFormatPremultiplied)
@@ -1392,14 +1364,10 @@ void colorUnpack(Color* color, unsigned int inputData, const ColorDescriptor* in
             color->b = VG_MIN(color->b, color->a);
         }
     }
-
-    assertConsistency(color);
 }
 
 unsigned int colorPack(Color* color, const ColorDescriptor* outputDesc)
 {
-    assertConsistency(color);
-
     int rb = outputDesc->redBits;
     int gb = outputDesc->greenBits;
     int bb = outputDesc->blueBits;
@@ -1725,7 +1693,7 @@ void lookupSingle(Image* dst, const Image* src, const VGuint* lookupTable, VGIma
     }
 }
 
-static Color readTiledPixel(int x, int y, int w, int h, VGTilingMode tilingMode, const ColorArray* image, const Color* edge)
+static Color readTiledPixel(int x, int y, int w, int h, VGTilingMode tilingMode, const Color* image, const Color* edge)
 {
     Color s;
     if (x < 0 || x >= w || y < 0 || y >= h)
@@ -1743,21 +1711,21 @@ static Color readTiledPixel(int x, int y, int w, int h, VGTilingMode tilingMode,
             x = VG_INT_MIN(VG_INT_MAX(x, 0), w - 1);
             y = VG_INT_MIN(VG_INT_MAX(y, 0), h - 1);
             VG_ASSERT(x >= 0 && x < w&& y >= 0 && y < h);
-            s.r = image->color[y * w + x].r;
-            s.g = image->color[y * w + x].g;
-            s.b = image->color[y * w + x].b;
-            s.a = image->color[y * w + x].a;
-            s.m_format = image->color[y * w + x].m_format;
+            s.r = image[y * w + x].r;
+            s.g = image[y * w + x].g;
+            s.b = image[y * w + x].b;
+            s.a = image[y * w + x].a;
+            s.m_format = image[y * w + x].m_format;
             break;
         case VG_TILE_REPEAT:
             x = VG_INT_MOD(x, w);
             y = VG_INT_MOD(y, h);
             VG_ASSERT(x >= 0 && x < w&& y >= 0 && y < h);
-            s.r = image->color[y * w + x].r;
-            s.g = image->color[y * w + x].g;
-            s.b = image->color[y * w + x].b;
-            s.a = image->color[y * w + x].a;
-            s.m_format = image->color[y * w + x].m_format;
+            s.r = image[y * w + x].r;
+            s.g = image[y * w + x].g;
+            s.b = image[y * w + x].b;
+            s.a = image[y * w + x].a;
+            s.m_format = image[y * w + x].m_format;
             break;
         default:
             VG_ASSERT(tilingMode == VG_TILE_REFLECT);
@@ -1766,22 +1734,22 @@ static Color readTiledPixel(int x, int y, int w, int h, VGTilingMode tilingMode,
             if (x >= w) x = w * 2 - 1 - x;
             if (y >= h) y = h * 2 - 1 - y;
             VG_ASSERT(x >= 0 && x < w&& y >= 0 && y < h);
-            s.r = image->color[y * w + x].r;
-            s.g = image->color[y * w + x].g;
-            s.b = image->color[y * w + x].b;
-            s.a = image->color[y * w + x].a;
-            s.m_format = image->color[y * w + x].m_format;
+            s.r = image[y * w + x].r;
+            s.g = image[y * w + x].g;
+            s.b = image[y * w + x].b;
+            s.a = image[y * w + x].a;
+            s.m_format = image[y * w + x].m_format;
             break;
         }
     }
     else
     {
         VG_ASSERT(x >= 0 && x < w&& y >= 0 && y < h);
-        s.r = image->color[y * w + x].r;
-        s.g = image->color[y * w + x].g;
-        s.b = image->color[y * w + x].b;
-        s.a = image->color[y * w + x].a;
-        s.m_format = image->color[y * w + x].m_format;
+        s.r = image[y * w + x].r;
+        s.g = image[y * w + x].g;
+        s.b = image[y * w + x].b;
+        s.a = image[y * w + x].a;
+        s.m_format = image[y * w + x].m_format;
     }
     return s;
 }
@@ -1801,7 +1769,7 @@ void gaussianBlur(VGImage dst, VGImage src, VGfloat stdDeviationX, VGfloat stdDe
     VGfloat kernelY[131];
     VGfloat kernelValue;
     InternalFormat procFormat;
-    ColorArray tmp;
+    Color* tmp;
     Color* edge = &tileFillColor;
 
     if (srcImage->m_desc.format == VG_sRGBX_8888 || srcImage->m_desc.format == VG_lRGBX_8888) {
@@ -1853,6 +1821,7 @@ void gaussianBlur(VGImage dst, VGImage src, VGfloat stdDeviationX, VGfloat stdDe
         kernelY[yk] *= scaleY;
     }
 
+    tmp = (Color*)malloc(width * height * sizeof(Color));
     //copy source region to tmp and do conversion
     for (int j = 0; j < height; j++)
     {
@@ -1861,10 +1830,10 @@ void gaussianBlur(VGImage dst, VGImage src, VGfloat stdDeviationX, VGfloat stdDe
             Color s = imageReadPixel(srcImage, i, j);
             colorConvert(&s, procFormat);
 
-            tmp.color[j * width + i].r = s.r;
-            tmp.color[j * width + i].g = s.g;
-            tmp.color[j * width + i].b = s.b;
-            tmp.color[j * width + i].a = s.a;
+            tmp[j * width + i].r = s.r;
+            tmp[j * width + i].g = s.g;
+            tmp[j * width + i].b = s.b;
+            tmp[j * width + i].a = s.a;
         }
     }
 
@@ -1882,7 +1851,7 @@ void gaussianBlur(VGImage dst, VGImage src, VGfloat stdDeviationX, VGfloat stdDe
                 {
                     int x = i + ki - halfKernelX;
                     int y = j + kj - halfKernelY;
-                    Color s = readTiledPixel(x, y, width, height, tilingMode, &tmp, edge);
+                    Color s = readTiledPixel(x, y, width, height, tilingMode, tmp, edge);
                     Color tmpcolor = {0};
 
                     kernelValue = kernelX[ki] * kernelY[kj];
@@ -1903,6 +1872,8 @@ void gaussianBlur(VGImage dst, VGImage src, VGfloat stdDeviationX, VGfloat stdDe
                 writeFilteredPixel(dstImage, i, j, &sum, filterChannelmask);
         }
     }
+
+    free(tmp);
 }
 
 void colorMatrix(const VGfloat* matrix, Image* src, Image* dst, VGboolean filterFormatLinear, VGboolean filterFormatPremultiplied, VGbitfield channelMask)
@@ -1957,7 +1928,7 @@ void convolve(Image* dst, Image* src, int kernelWidth, int kernelHeight, int shi
     colorClamp(edge);
     colorConvert(edge, procFormat);
 
-    ColorArray tmp;
+    Color* tmp = (Color*)malloc(src->m_width * src->m_height * sizeof(Color));
  
     //copy source region to tmp and do conversion
     for (int j = 0; j < src->m_height; j++)
@@ -1967,10 +1938,10 @@ void convolve(Image* dst, Image* src, int kernelWidth, int kernelHeight, int shi
             Color s = imageReadPixel(src, i, j);
             colorConvert(&s, procFormat);
 
-            tmp.color[j * src->m_width + i].r = s.r;
-            tmp.color[j * src->m_width + i].g = s.g;
-            tmp.color[j * src->m_width + i].b = s.b;
-            tmp.color[j * src->m_width + i].a = s.a;
+            tmp[j * src->m_width + i].r = s.r;
+            tmp[j * src->m_width + i].g = s.g;
+            tmp[j * src->m_width + i].b = s.b;
+            tmp[j * src->m_width + i].a = s.a;
         }
     }
 
@@ -1988,7 +1959,7 @@ void convolve(Image* dst, Image* src, int kernelWidth, int kernelHeight, int shi
                 {
                     int x = i + ki - shiftX;
                     int y = j + kj - shiftY;
-                    Color s = readTiledPixel(x, y, src->m_width, src->m_height, tilingMode, &tmp, edge);
+                    Color s = readTiledPixel(x, y, src->m_width, src->m_height, tilingMode, tmp, edge);
 
                     int kx = kernelWidth - ki - 1;
                     int ky = kernelHeight - kj - 1;
@@ -2020,6 +1991,8 @@ void convolve(Image* dst, Image* src, int kernelWidth, int kernelHeight, int shi
             writeFilteredPixel(dst, i, j, &sum, channelMask);
         }
     }
+
+    free(tmp);
 }
 
 void separableConvolve(Image* dst, Image* src, int kernelWidth, int kernelHeight, int shiftX, int shiftY, const VGshort* kernelX, const VGshort* kernelY, VGfloat scale, VGfloat bias, VGTilingMode tilingMode, Color* edgeFillColor, VGboolean filterFormatLinear, VGboolean filterFormatPremultiplied, VGbitfield channelMask)
@@ -2047,7 +2020,8 @@ void separableConvolve(Image* dst, Image* src, int kernelWidth, int kernelHeight
     colorClamp(edge);
     colorConvert(edge, procFormat);
 
-    ColorArray tmp;
+    Color* tmp = (Color*)malloc(src->m_width * src->m_height * sizeof(Color));
+
     //copy source region to tmp and do conversion
     for (int j = 0; j < src->m_height; j++)
     {
@@ -2055,14 +2029,14 @@ void separableConvolve(Image* dst, Image* src, int kernelWidth, int kernelHeight
         {
             Color s = imageReadPixel(src, i, j);
             colorConvert(&s, procFormat);
-            tmp.color[j * src->m_width + i].r = s.r;
-            tmp.color[j * src->m_width + i].g = s.g;
-            tmp.color[j * src->m_width + i].b = s.b;
-            tmp.color[j * src->m_width + i].a = s.a;
+            tmp [j * src->m_width + i].r = s.r;
+            tmp [j * src->m_width + i].g = s.g;
+            tmp [j * src->m_width + i].b = s.b;
+            tmp [j * src->m_width + i].a = s.a;
         }
     }
 
-    ColorArray tmp2;
+    Color* tmp2 = (Color*)malloc(w * src->m_height * sizeof(Color));;
 
     for (int j = 0; j < src->m_height; j++)
     {
@@ -2074,7 +2048,7 @@ void separableConvolve(Image* dst, Image* src, int kernelWidth, int kernelHeight
             for (int ki = 0; ki < kernelWidth; ki++)
             {
                 int x = i + ki - shiftX;
-                Color s = readTiledPixel(x, j, src->m_width, src->m_height, tilingMode, &tmp, edge);
+                Color s = readTiledPixel(x, j, src->m_width, src->m_height, tilingMode, tmp, edge);
 
                 int kx = kernelWidth - ki - 1;
                 VG_ASSERT(kx >= 0 && kx < kernelWidth);
@@ -2091,10 +2065,10 @@ void separableConvolve(Image* dst, Image* src, int kernelWidth, int kernelHeight
                 sum.b += tmpcolor.b;
                 sum.a += tmpcolor.a;
             }
-            tmp2.color[j * w + i].r = sum.r;
-            tmp2.color[j * w + i].g = sum.g;
-            tmp2.color[j * w + i].b = sum.b;
-            tmp2.color[j * w + i].a = sum.a;
+            tmp2[j * w + i].r = sum.r;
+            tmp2[j * w + i].g = sum.g;
+            tmp2[j * w + i].b = sum.b;
+            tmp2[j * w + i].a = sum.a;
         }
     }
 
@@ -2133,7 +2107,7 @@ void separableConvolve(Image* dst, Image* src, int kernelWidth, int kernelHeight
             for (int kj = 0; kj < kernelHeight; kj++)
             {
                 int y = j + kj - shiftY;
-                Color s = readTiledPixel(i, y, w, src->m_height, tilingMode, &tmp2, edge);
+                Color s = readTiledPixel(i, y, w, src->m_height, tilingMode, tmp2, edge);
 
                 int ky = kernelHeight - kj - 1;
                 VG_ASSERT(ky >= 0 && ky < kernelHeight);
@@ -2162,6 +2136,9 @@ void separableConvolve(Image* dst, Image* src, int kernelWidth, int kernelHeight
             writeFilteredPixel(dst, i, j, &sum, channelMask);
         }
     }
+
+    free(tmp);
+    free(tmp2);
 }
 
 void maskSurface(Drawable* drawable, const Surface* src, VGMaskOperation operation, int x, int y, int w, int h)
@@ -2324,7 +2301,6 @@ void setGlyphToPath(VGFont font, VGuint index, VGPath path, VGboolean isHinted, 
     {
         Path* p = (Path*)path;
         p->m_referenceCount++;
-        addPathResource(context, p);
     }
 }
 
@@ -2547,6 +2523,7 @@ Paint* createdefaultPaint()
     paint->m_inputRadialGradientRadius = 1.0f;
     paint->m_radialGradientRadius = 1.0f;
     paint->m_patternTilingMode = VG_TILE_FILL;
+    paint->object.type = OBJECTTYPE_PAINT;
 
     GradientStop gs;
     gs.offset = 0.0f;

@@ -1,6 +1,8 @@
 /****************************************************************************
 *
 *    Copyright 2022 Vivante Corporation, Santa Clara, California.
+*    Copyright 2024 NXP
+*
 *    All Rights Reserved.
 *
 *    Permission is hereby granted, free of charge, to any person obtaining
@@ -139,16 +141,6 @@ static VG_INLINE VGboolean isFormatAligned(const void* ptr, VGImageFormat format
 
 static VG_INLINE VGboolean isSupportFormat(VGContext* context, VGImageFormat format) {
         return !(format == VG_A_1 || format == VG_A_4 || format == VG_BW_1 || format == VG_sL_8 || format == VG_lL_8);
-}
-
-static VG_INLINE void assertConsistency(Color* c)
-{
-    VG_ASSERT(c->r >= 0.0f && c->r <= 1.0f);
-    VG_ASSERT(c->g >= 0.0f && c->g <= 1.0f);
-    VG_ASSERT(c->b >= 0.0f && c->b <= 1.0f);
-    VG_ASSERT(c->a >= 0.0f && c->a <= 1.0f);
-    VG_ASSERT(!(c->m_format & PREMULTIPLIED) || (c->r <= c->a && c->g <= c->a && c->b <= c->a));    //premultiplied colors must have color channels less than or equal to alpha
-    VG_ASSERT(((c->m_format & LUMINANCE) && c->r == c->g && c->r == c->b) || !(c->m_format & LUMINANCE));    //if luminance, r=g=b
 }
 
 static VG_INLINE void clampColor(VGContext* context, Color* c)
@@ -520,6 +512,10 @@ static void setifv(VGContext* context, VGParamType type, VGint count, const void
         if (count != 1)
         { setError(VG_ILLEGAL_ARGUMENT_ERROR); return; }
         context->m_masking = ivalue ? VG_TRUE : VG_FALSE;
+        if (context->m_masking)
+            vg_lite_enable_masklayer();
+        else
+            vg_lite_disable_masklayer();
         break;
 
     case VG_SCISSORING:
@@ -600,14 +596,6 @@ void VG_APIENTRY vgSeti(VGParamType type, VGint value)
                 type == VG_CLEAR_COLOR, VG_ILLEGAL_ARGUMENT_ERROR, VG_NO_RETVAL);    //vector type value
     VGint values[1] = {value};
     setifv(context, type, 1, values, VG_FALSE);
-    if (context->m_masking)
-    {
-        vg_lite_enable_masklayer();
-    }
-    else
-    {
-        vg_lite_disable_masklayer();
-    }
     VG_RETURN(VG_NO_RETVAL);
 }
 
@@ -3960,6 +3948,7 @@ static void setLinearGrad(vg_lite_ext_linear_gradient_t* grad,
 static void updateLinearGrad(VGContext* context, vg_lite_ext_linear_gradient_t* grad, Matrix3x3* user_m) {
     vg_lite_uint32_t ramp_length, width, stop;
     vg_lite_color_ramp_t* ramp;
+    vg_lite_uint32_t chip_id;
     vg_lite_float_t x0, y0, x1, y1, dx, dy, length, i;
     uint8_t* bits;
     vg_lite_linear_gradient_parameter_t* grad_param;
@@ -3979,7 +3968,13 @@ static void updateLinearGrad(VGContext* context, vg_lite_ext_linear_gradient_t* 
     dx = x1 - x0;
     dy = y1 - y0;
     length = (vg_lite_float_t)sqrt(dx * dx + dy * dy);
-    width = ramp_length * 256;
+    vg_lite_get_product_info(NULL, &chip_id, NULL);
+    if (chip_id == 0x555) {
+        width = ramp_length * 256;
+    }
+    else {
+        width = (vg_lite_uint32_t)length + 1;
+    }
 
     // TODO: free old color ramp surface buffer.
 
@@ -3992,14 +3987,16 @@ static void updateLinearGrad(VGContext* context, vg_lite_ext_linear_gradient_t* 
         grad_param->Y0 = 0.f;
         grad_param->X1 = 1.f;
         grad_param->Y1 = 0.f;
+
         /* Allocate the color ramp surface. */
-        memset(&grad->image, 0, sizeof(grad->image));
+        memset(&grad->image, 0, sizeof(vg_lite_buffer_t));
         grad->image.width = 1;
         grad->image.height = 1;
         grad->image.stride = 0;
         grad->image.image_mode = VG_LITE_NONE_IMAGE_MODE;
         grad->image.format = VG_LITE_ABGR8888;
         vg_lite_allocate(&grad->image);
+
         /* Set pointer to color array. */
         bits = (uint8_t*)grad->image.memory;
         /* Fill the color array */
@@ -4033,7 +4030,7 @@ static void updateLinearGrad(VGContext* context, vg_lite_ext_linear_gradient_t* 
     grad_param->Y1 = 0.f;
 
     /* Allocate the color ramp surface. */
-    memset(&grad->image, 0, sizeof(grad->image));
+    memset(&grad->image, 0, sizeof(vg_lite_buffer_t));
     grad->image.width = width;
     grad->image.height = 1;
     grad->image.stride = 0;
@@ -4056,7 +4053,13 @@ static void updateLinearGrad(VGContext* context, vg_lite_ext_linear_gradient_t* 
     for (i = 0; i < width; ++i) {
         /* Compute gradient for current color array entry. */
         if (baseLength > VG_FLOAT_EPSILON) {
-            gradient = i / baseLength;
+            if (chip_id == 0x555) {
+                gradient = i / (baseLength);
+            }
+            else {
+                gradient = i / (baseLength - 1);
+            }
+
         }
         else {
             if (grad->spread_mode == VG_LITE_GRADIENT_SPREAD_REPEAT)
@@ -4319,14 +4322,16 @@ static void updateRadialGrad(VGContext* context, vg_lite_radial_gradient_t* grad
         grad_param->cy = 0.f;
         grad_param->fx = 0.f;
         grad_param->fy = 0.f;
+
         /* Allocate the color ramp surface. */
-        memset(&grad->image, 0, sizeof(grad->image));
+        memset(&grad->image, 0, sizeof(vg_lite_buffer_t));
         grad->image.width = 1;
         grad->image.height = 1;
         grad->image.stride = 0;
         grad->image.image_mode = VG_LITE_NONE_IMAGE_MODE;
         grad->image.format = VG_LITE_ABGR8888;
         vg_lite_allocate(&grad->image);
+
         /* Set pointer to color array. */
         bits = (uint8_t*)grad->image.memory;
         /* Fill the color array */
@@ -4348,28 +4353,28 @@ static void updateRadialGrad(VGContext* context, vg_lite_radial_gradient_t* grad
     if (grad->radial_grad.r < 1)
     {
         common = 1;
+    }
+    else 
+    {
+        common = (uint32_t)grad->radial_grad.r;
+    }
 
-        for (i = 0; i < ramp_length; ++i)
+    for (i = 0; i < ramp_length; ++i)
+    {
+        if (ramp[i].stop != 0.0f)
         {
-            if (ramp[i].stop != 0.0f)
+            vg_lite_float_t mul = common * ramp[i].stop;
+            vg_lite_float_t frac = mul - (vg_lite_float_t)floor(mul);
+            if (frac > 0.00013f)    /* Suppose error for zero is 0.00013 */
             {
-                vg_lite_float_t mul = common * ramp[i].stop;
-                vg_lite_float_t frac = mul - (vg_lite_float_t)floor(mul);
-                if (frac > 0.00013f)    /* Suppose error for zero is 0.00013 */
-                {
-                    common = VG_INT_MAX(common, (uint32_t)(1.0f / frac + 0.5f));
-                }
+                common = VG_INT_MAX(common, (uint32_t)(1.0f / frac + 0.5f));
             }
         }
+    }
 
-        /* Compute the width of the required color array. */
-        width = common + 1;
-        width = (width + 15) & (~0xf);
-    }
-    else
-    {
-        width = ramp_length * 256;
-    }
+    /* Compute the width of the required color array. */
+    width = common + 1;
+    width = (width + 15) & (~0xf);
 
     /* Set gradient matrix. */
     vg_lite_identity(grad_m);
@@ -4385,7 +4390,7 @@ static void updateRadialGrad(VGContext* context, vg_lite_radial_gradient_t* grad
     vglMatrixMultiply(grad_m, &tmp_m);
 
     /* Allocate the color ramp surface. */
-    memset(&grad->image, 0, sizeof(grad->image));
+    memset(&grad->image, 0, sizeof(vg_lite_buffer_t));
     grad->image.width = width;
     grad->image.height = 1;
     grad->image.stride = 0;
@@ -5041,7 +5046,7 @@ void VG_APIENTRY vgMask(VGHandle mask, VGMaskOperation operation, VGint x, VGint
         //vg_lite_blend_masklayer(masklayer, srcbuf, operation, &rect);
         maskSurface(drawable, (Surface*)mask, operation, x, y, width, height);
     }
-    vg_lite_finish();
+    vg_lite_flush();
     vg_lite_enable_masklayer();
     context->m_masking = VG_TRUE;
     if (context->m_scissoring == VG_TRUE) {
@@ -5058,42 +5063,6 @@ static void renderStroke(const VGContext* context, int w, int h, int numSamples,
     VGuint* covBuffer = (VGuint*)malloc(w*h);
     memset(covBuffer, 0, w * h * sizeof(VGuint));
     setupRasterizer(rasterizer, 0, 0, w, h, VG_NON_ZERO, NULL, covBuffer);
-
-
-#if 0 // TODO
-    memset(covBuffer, 0, w*h*sizeof(VGuint));
-
-    rasterizer.setup(0, 0, w, h, VG_NON_ZERO, NULL, covBuffer);
-    path->stroke(userToSurface, rasterizer, context->m_strokeDashPattern, context->m_strokeDashPhase, context->m_strokeDashPhaseReset ? VG_TRUE : VG_FALSE,
-                 context->m_strokeLineWidth, context->m_strokeCapStyle, context->m_strokeJoinStyle, VG_MAX(context->m_strokeMiterLimit, 1.0f));    //throws bad_alloc
-
-    int sx,sy,ex,ey;
-    rasterizer.getBBox(sx,sy,ex,ey);
-    VG_ASSERT(sx >= 0 && sx <= w);
-    VG_ASSERT(sy >= 0 && sy <= h);
-    VG_ASSERT(ex >= 0 && ex <= w);
-    VG_ASSERT(ey >= 0 && ey <= h);
-
-    for (int j=sy;j<ey;j++)
-    {
-        for (int i=sx;i<ex;i++)
-        {
-            unsigned int c = covBuffer[j*w+i];
-            if (c)
-            {
-                int coverage = 0;
-                for (int k=0;k<numSamples;k++)
-                {
-                    if (c & (1<<k))
-                        coverage++;
-                }
-                pixelPipe->pixelPipe(i, j, (VGfloat)coverage/(VGfloat)numSamples, c);
-            }
-        }
-    }
-#endif
-
-//    VG_DELETE_ARRAY(covBuffer);
 }
 
 void VG_APIENTRY vgRenderToMask(VGPath path, VGbitfield paintModes, VGMaskOperation operation)
@@ -5216,7 +5185,7 @@ void VG_APIENTRY vgRenderToMask(VGPath path, VGbitfield paintModes, VGMaskOperat
             vg_lite_draw(drawbuffer, vglpath, fill_rule, (vg_lite_matrix_t*)&context->m_pathUserToSurface, VG_LITE_BLEND_NONE, 0xFF << 24);
             vg_lite_disable_scissor();
             vg_lite_blend_masklayer(masklayer, drawbuffer, operation, &rect);
-            vg_lite_finish();        
+            vg_lite_finish();
         }
     }
     if (context->m_masking == VG_TRUE) {
@@ -5262,7 +5231,7 @@ VGMaskLayer VG_APIENTRY vgCreateMaskLayer(VGint width, VGint height)
     vg_lite_buffer_t* dstbuffer = (vg_lite_buffer_t*)layer->m_image->m_vglbuf;
     vg_lite_rectangle_t rect = { 0, 0, width, height };
     vg_lite_clear(dstbuffer, &rect, 0xFFFFFFFF);
-    vg_lite_finish();
+    vg_lite_flush();
     addMaskLayerResource(context, layer);
 
     VG_RETURN((VGMaskLayer)layer);
@@ -5335,7 +5304,7 @@ void VG_APIENTRY vgCopyMask(VGMaskLayer maskLayer, VGint dx, VGint dy, VGint sx,
     }
 
     vg_lite_copy_image(dstbuf, srcbuf, dx, dy, sx, sy, width, height);
-    vg_lite_finish();
+    vg_lite_flush();
     if (context->m_masking == VG_TRUE) {
         vg_lite_enable_masklayer();
     }
@@ -5378,7 +5347,7 @@ void VG_APIENTRY vgClear(VGint x, VGint y, VGint width, VGint height)
     rgba = (a << 24) | (b << 16) | (g << 8) | (r << 0);
 
     vg_lite_clear(dstbuf, &rect, rgba);
-    vg_lite_finish();
+    vg_lite_flush();
 
     VG_RETURN(VG_NO_RETVAL);
 }
@@ -5405,6 +5374,7 @@ VGPath VG_APIENTRY vgCreatePath(VGint pathFormat, VGPathDatatype datatype, VGflo
     path->m_scale = s;
     path->m_bias = b;
     path->m_capabilities = capabilities;
+    path->object.type = OBJECTTYPE_PATH;
     path->m_referenceCount = 0;
 
     VG_ASSERT(pathFormat == VG_PATH_FORMAT_STANDARD);
@@ -5473,7 +5443,7 @@ void VG_APIENTRY vgDestroyPath(VGPath path)
 {
     VG_GET_CONTEXT(VG_NO_RETVAL);
     VG_IF_ERROR(!isValidPath(context, path), VG_BAD_HANDLE_ERROR, VG_NO_RETVAL);    //invalid path handle
-
+    vg_lite_finish();
     removePathResource(context, (Path*)path);
 
     Path* p = (Path*)path;
@@ -5690,7 +5660,6 @@ static VGboolean drawPath(VGContext* context, VGPath path, const Matrix3x3 userT
     }
 
     vg_lite_buffer_t* fbbuf = (vg_lite_buffer_t*)drawable->m_color->m_image->m_vglbuf;
-    vg_lite_path_type_t path_type = paintModes;
     vg_lite_fill_t fill_rule = context->m_fillRule;
     vg_lite_blend_t blend = context->m_blendMode;
     Matrix3x3 userToSurfaceFill = userToSurfaceMatrix;
@@ -5739,6 +5708,7 @@ static VGboolean drawPath(VGContext* context, VGPath path, const Matrix3x3 userT
                 vg_lite_uint8_t r = VG_FLOAT_TO_UB(paint->m_paintColor.r);
                 fill_color = (a << 24) | (b << 16) | (g << 8) | (r << 0);
                 vg_lite_draw(fbbuf, vglpath, fill_rule, (vg_lite_matrix_t*)&userToSurfaceFill, blend, fill_color);
+                vg_lite_flush();
                 break;
             }
 
@@ -5762,10 +5732,38 @@ static VGboolean drawPath(VGContext* context, VGPath path, const Matrix3x3 userT
                     vg_color_ramp[i].blue = gradientstop[i].color.b;
                     vg_color_ramp[i].alpha = gradientstop[i].color.a;
                 }
-                memset(&grad, 0, sizeof(grad));
-                setLinearGrad(&grad, paint->m_colorRampStopsCount, vg_color_ramp, linear_gradient, paint->m_colorRampSpreadMode, paint->m_colorRampPremultiplied);
-                updateLinearGrad(context, &grad, &userToSurfaceFill);
-                vg_lite_draw_linear_grad(fbbuf, vglpath, fill_rule, (vg_lite_matrix_t*)&(context->m_pathUserToSurface), &grad, 0, blend, VG_LITE_FILTER_LINEAR);
+                if((linear_gradient.X0 != linear_gradient.X1) || (linear_gradient.Y0 != linear_gradient.Y1))
+                {
+                    memset(&grad, 0, sizeof(grad));
+                    if (paint->grad_image.handle != NULL)
+                    {
+                        vg_lite_finish();
+                        vg_lite_free(&paint->grad_image);
+                    }
+                    setLinearGrad(&grad, paint->m_colorRampStopsCount, vg_color_ramp, linear_gradient, paint->m_colorRampSpreadMode, paint->m_colorRampPremultiplied);
+                    updateLinearGrad(context, &grad, &userToSurfaceFill);
+                    vg_lite_draw_linear_grad(fbbuf, vglpath, fill_rule, (vg_lite_matrix_t*)&(context->m_pathUserToSurface), &grad, 0, blend, VG_LITE_FILTER_LINEAR);
+                    grad.count = 0;
+                    paint->grad_image = grad.image;                
+                }
+                else {
+                    if (paint->m_colorRampSpreadMode == VG_COLOR_RAMP_SPREAD_REPEAT) {
+                        vg_lite_uint8_t a = VG_FLOAT_TO_UB(gradientstop[0].color.a);
+                        vg_lite_uint8_t b = VG_FLOAT_TO_UB(gradientstop[0].color.b);
+                        vg_lite_uint8_t g = VG_FLOAT_TO_UB(gradientstop[0].color.g);
+                        vg_lite_uint8_t r = VG_FLOAT_TO_UB(gradientstop[0].color.r);
+                        fill_color = (a << 24) | (b << 16) | (g << 8) | (r << 0);
+                    }
+                    else {
+                        vg_lite_uint8_t a = VG_FLOAT_TO_UB(gradientstop[paint->m_colorRampStopsCount - 1].color.a);
+                        vg_lite_uint8_t b = VG_FLOAT_TO_UB(gradientstop[paint->m_colorRampStopsCount - 1].color.b);
+                        vg_lite_uint8_t g = VG_FLOAT_TO_UB(gradientstop[paint->m_colorRampStopsCount - 1].color.g);
+                        vg_lite_uint8_t r = VG_FLOAT_TO_UB(gradientstop[paint->m_colorRampStopsCount - 1].color.r);
+                        fill_color = (a << 24) | (b << 16) | (g << 8) | (r << 0);
+                    }
+                    vg_lite_draw(fbbuf, vglpath, fill_rule, (vg_lite_matrix_t*)&(context->m_pathUserToSurface), blend, fill_color);
+                }
+
                 break;
             }
 
@@ -5785,11 +5783,10 @@ static VGboolean drawPath(VGContext* context, VGPath path, const Matrix3x3 userT
                     vg_lite_uint8_t g = VG_FLOAT_TO_UB(context->m_tileFillColor.g);
                     vg_lite_uint8_t r = VG_FLOAT_TO_UB(context->m_tileFillColor.r);
                     tile_color = (a << 24) | (b << 16) | (g << 8) | (r << 0);
-                    vg_lite_set_path_type(vglpath, path_type);
                     vg_lite_image_mode_t tmp_image_mode = srcbuf->image_mode;
 
                     vg_lite_draw_pattern(fbbuf, vglpath, fill_rule, (vg_lite_matrix_t*)&(context->m_pathUserToSurface), srcbuf, (vg_lite_matrix_t*)&userToSurfaceFill, VG_LITE_BLEND_NONE, paint->m_patternTilingMode, tile_color, 0xFFFFFFFF, VG_LITE_FILTER_POINT);
-                    vg_lite_finish();
+                    vg_lite_flush();
                     srcbuf->image_mode = tmp_image_mode;
                     if (context->m_colorTransform) {
                         vg_lite_disable_color_transform();
@@ -5802,7 +5799,6 @@ static VGboolean drawPath(VGContext* context, VGPath path, const Matrix3x3 userT
                     vg_lite_uint8_t g = VG_FLOAT_TO_UB(paint->m_paintColor.g);
                     vg_lite_uint8_t r = VG_FLOAT_TO_UB(paint->m_paintColor.r);
                     fill_color = (a << 24) | (b << 16) | (g << 8) | (r << 0);
-                    vg_lite_set_path_type(vglpath, path_type);
                     vg_lite_draw(fbbuf, vglpath, fill_rule, (vg_lite_matrix_t*)&userToSurfaceFill, blend, fill_color);
                 }
                 break;
@@ -5829,10 +5825,37 @@ static VGboolean drawPath(VGContext* context, VGPath path, const Matrix3x3 userT
                     vg_color_ramp[i].blue = gradientstop[i].color.b;
                     vg_color_ramp[i].alpha = gradientstop[i].color.a;
                 }
-                memset(&grad, 0, sizeof(grad));
-                setRadialGrad(&grad, paint->m_colorRampStopsCount, vg_color_ramp, radialGradient, paint->m_colorRampSpreadMode, paint->m_colorRampPremultiplied);
-                updateRadialGrad(context, &grad, &userToSurfaceFill);
-                vg_lite_draw_radial_grad(fbbuf, vglpath, fill_rule, (vg_lite_matrix_t*)&(context->m_pathUserToSurface), &grad, 0, blend, VG_LITE_FILTER_LINEAR);
+                if (radialGradient.r > 0)
+                {
+                    memset(&grad, 0, sizeof(grad));
+                    if (paint->grad_image.handle != NULL)
+                    {
+                        vg_lite_finish();
+                        vg_lite_free(&paint->grad_image);
+                    }
+                    setRadialGrad(&grad, paint->m_colorRampStopsCount, vg_color_ramp, radialGradient, paint->m_colorRampSpreadMode, paint->m_colorRampPremultiplied);
+                    updateRadialGrad(context, &grad, &userToSurfaceFill);
+                    vg_lite_draw_radial_grad(fbbuf, vglpath, fill_rule, (vg_lite_matrix_t*)&(context->m_pathUserToSurface), &grad, 0, blend, VG_LITE_FILTER_LINEAR);
+                    grad.count = 0;
+                    paint->grad_image = grad.image;
+                }
+                else {
+                    if (paint->m_colorRampSpreadMode == VG_COLOR_RAMP_SPREAD_REPEAT) {
+                        vg_lite_uint8_t a = VG_FLOAT_TO_UB(gradientstop[0].color.a);
+                        vg_lite_uint8_t b = VG_FLOAT_TO_UB(gradientstop[0].color.b);
+                        vg_lite_uint8_t g = VG_FLOAT_TO_UB(gradientstop[0].color.g);
+                        vg_lite_uint8_t r = VG_FLOAT_TO_UB(gradientstop[0].color.r);
+                        fill_color = (a << 24) | (b << 16) | (g << 8) | (r << 0);
+                    }
+                    else {
+                        vg_lite_uint8_t a = VG_FLOAT_TO_UB(gradientstop[paint->m_colorRampStopsCount - 1].color.a);
+                        vg_lite_uint8_t b = VG_FLOAT_TO_UB(gradientstop[paint->m_colorRampStopsCount - 1].color.b);
+                        vg_lite_uint8_t g = VG_FLOAT_TO_UB(gradientstop[paint->m_colorRampStopsCount - 1].color.g);
+                        vg_lite_uint8_t r = VG_FLOAT_TO_UB(gradientstop[paint->m_colorRampStopsCount - 1].color.r);
+                        fill_color = (a << 24) | (b << 16) | (g << 8) | (r << 0);
+                    }
+                    vg_lite_draw(fbbuf, vglpath, fill_rule, (vg_lite_matrix_t*)&(context->m_pathUserToSurface), blend, fill_color);
+                }
                 break;
             }
 
@@ -5847,6 +5870,46 @@ static VGboolean drawPath(VGContext* context, VGPath path, const Matrix3x3 userT
 
     if (paintModes & VG_STROKE_PATH)
     {
+        vg_lite_int8_t status = 0;
+        vg_lite_int8_t cmp = 0;
+        do 
+        {
+            if (vglpath->stroke == NULL) {
+                break;
+            }
+
+            if (!vglpath->stroke_valid) {
+                break;
+            }
+
+            if ((vglpath->stroke->line_width != context->m_strokeLineWidth) ||
+                (vglpath->stroke->miter_limit != context->m_strokeMiterLimit) ||
+                (vglpath->stroke->cap_style != context->m_strokeCapStyle) ||
+                (vglpath->stroke->join_style != context->m_strokeJoinStyle)) {
+                break;
+            }
+
+            if ((vglpath->stroke->pattern_count != (vg_lite_uint32_t)context->m_strokeDashPatternCount) ||
+                (vglpath->stroke->dash_reset != (vg_lite_uint8_t)context->m_strokeDashPhaseReset) ||
+                (vglpath->stroke->dash_phase != context->m_strokeDashPhase)) {
+                break;
+            }
+
+            if (vglpath->stroke->pattern_count != 0) {
+                cmp = memcmp(
+                    vglpath->stroke->dash_pattern,
+                    context->m_strokeDashPattern,
+                    sizeof(float_t) * vglpath->stroke->pattern_count
+                );
+
+                if (cmp != 0) {
+                    break;
+                }
+            }
+            status = 1;
+
+        } while (VG_FALSE);
+
         if (context->m_strokeLineWidth > 0.0f) {
             Paint* paint = (Paint*)context->m_strokePaint;
 
@@ -5864,17 +5927,26 @@ static VGboolean drawPath(VGContext* context, VGPath path, const Matrix3x3 userT
                     vg_lite_uint8_t r = VG_FLOAT_TO_UB(paint->m_paintColor.r);
                     stroke_color = (a << 24) | (b << 16) | (g << 8) | (r << 0);
 
-                    vg_lite_set_stroke(vglpath, context->m_strokeCapStyle,
-                        context->m_strokeJoinStyle,
-                        context->m_strokeLineWidth,
-                        context->m_strokeMiterLimit,
-                        context->m_strokeDashPattern,
-                        context->m_strokeDashPatternCount,
-                        context->m_strokeDashPhase,
-                        stroke_color);
-                    vglpath->stroke->dash_reset = context->m_strokeDashPhaseReset;
-                    vg_lite_update_stroke(vglpath);
+                    do 
+                    {
+                        if (status == 1) {
+                            break;
+                        }
+                        vg_lite_set_stroke(vglpath, context->m_strokeCapStyle,
+                            context->m_strokeJoinStyle,
+                            context->m_strokeLineWidth,
+                            context->m_strokeMiterLimit,
+                            context->m_strokeDashPattern,
+                            context->m_strokeDashPatternCount,
+                            context->m_strokeDashPhase,
+                            stroke_color);
+                        vglpath->stroke->dash_reset = (vg_lite_uint8_t)context->m_strokeDashPhaseReset;
+                        vg_lite_update_stroke(vglpath);
+                        vglpath->stroke_valid = 1;
+                    } while (VG_FALSE);
+
                     vg_lite_draw(fbbuf, vglpath, fill_rule, (vg_lite_matrix_t*)&userToSurfaceStroke, blend, stroke_color);
+                    vg_lite_flush();
                     break;
                 }
 
@@ -5898,22 +5970,58 @@ static VGboolean drawPath(VGContext* context, VGPath path, const Matrix3x3 userT
                         vg_color_ramp[i].blue = gradientstop[i].color.b;
                         vg_color_ramp[i].alpha = gradientstop[i].color.a;
                     }
+                    do
+                    {
+                        if (status == 1) {
+                            break;
+                        }
+                        vg_lite_set_stroke(vglpath, context->m_strokeCapStyle,
+                            context->m_strokeJoinStyle,
+                            context->m_strokeLineWidth,
+                            context->m_strokeMiterLimit,
+                            context->m_strokeDashPattern,
+                            context->m_strokeDashPatternCount,
+                            context->m_strokeDashPhase,
+                            stroke_color);
+                        vglpath->stroke->dash_reset = (vg_lite_uint8_t)context->m_strokeDashPhaseReset;
+                        vg_lite_update_stroke(vglpath);
+                        vglpath->stroke_valid = 1;
 
-                    vg_lite_set_stroke(vglpath, context->m_strokeCapStyle,
-                        context->m_strokeJoinStyle,
-                        context->m_strokeLineWidth,
-                        context->m_strokeMiterLimit,
-                        context->m_strokeDashPattern,
-                        context->m_strokeDashPatternCount,
-                        context->m_strokeDashPhase,
-                        stroke_color);
-                    vglpath->stroke->dash_reset = context->m_strokeDashPhaseReset;
-                    vg_lite_update_stroke(vglpath);
+                    } while (VG_FALSE);
 
-                    memset(&grad, 0, sizeof(grad));
-                    setLinearGrad(&grad, paint->m_colorRampStopsCount, vg_color_ramp, linear_gradient, paint->m_colorRampSpreadMode, paint->m_colorRampPremultiplied);
-                    updateLinearGrad(context, &grad, &userToSurfaceStroke);
-                    vg_lite_draw_linear_grad(fbbuf, vglpath, fill_rule, (vg_lite_matrix_t*)&(context->m_pathUserToSurface), &grad, 0, blend, VG_LITE_FILTER_LINEAR);
+                    if ((linear_gradient.X0 != linear_gradient.X1) || (linear_gradient.Y0 != linear_gradient.Y1))
+                    {
+                        memset(&grad, 0, sizeof(grad));
+                        if (paint->grad_image.handle != NULL)
+                        {
+                            vg_lite_finish();
+                            vg_lite_free(&paint->grad_image);
+                        }
+                        setLinearGrad(&grad, paint->m_colorRampStopsCount, vg_color_ramp, linear_gradient, paint->m_colorRampSpreadMode, paint->m_colorRampPremultiplied);
+                        updateLinearGrad(context, &grad, &userToSurfaceFill);
+                        vg_lite_draw_linear_grad(fbbuf, vglpath, fill_rule, (vg_lite_matrix_t*)&(context->m_pathUserToSurface), &grad, 0, blend, VG_LITE_FILTER_LINEAR);
+                        grad.count = 0;
+                        paint->grad_image = grad.image;
+                    }
+                    else {
+                        if (paint->m_colorRampSpreadMode == VG_COLOR_RAMP_SPREAD_REPEAT) {
+                            vg_lite_uint8_t a = VG_FLOAT_TO_UB(gradientstop[0].color.a);
+                            vg_lite_uint8_t b = VG_FLOAT_TO_UB(gradientstop[0].color.b);
+                            vg_lite_uint8_t g = VG_FLOAT_TO_UB(gradientstop[0].color.g);
+                            vg_lite_uint8_t r = VG_FLOAT_TO_UB(gradientstop[0].color.r);
+                            stroke_color = (a << 24) | (b << 16) | (g << 8) | (r << 0);
+                        }
+                        else {
+                            vg_lite_uint8_t a = VG_FLOAT_TO_UB(gradientstop[paint->m_colorRampStopsCount - 1].color.a);
+                            vg_lite_uint8_t b = VG_FLOAT_TO_UB(gradientstop[paint->m_colorRampStopsCount - 1].color.b);
+                            vg_lite_uint8_t g = VG_FLOAT_TO_UB(gradientstop[paint->m_colorRampStopsCount - 1].color.g);
+                            vg_lite_uint8_t r = VG_FLOAT_TO_UB(gradientstop[paint->m_colorRampStopsCount - 1].color.r);
+                            stroke_color = (a << 24) | (b << 16) | (g << 8) | (r << 0);
+                        }
+
+                        vglpath->stroke_color = stroke_color;
+                        vg_lite_draw(fbbuf, vglpath, fill_rule, (vg_lite_matrix_t*)&(context->m_pathUserToSurface), blend, fill_color);
+                    }
                     break;
                 }
 
@@ -5939,21 +6047,58 @@ static VGboolean drawPath(VGContext* context, VGPath path, const Matrix3x3 userT
                         vg_color_ramp[i].alpha = gradientstop[i].color.a;
                     }
 
-                    vg_lite_set_stroke(vglpath, context->m_strokeCapStyle,
-                        context->m_strokeJoinStyle,
-                        context->m_strokeLineWidth,
-                        context->m_strokeMiterLimit,
-                        context->m_strokeDashPattern,
-                        context->m_strokeDashPatternCount,
-                        context->m_strokeDashPhase,
-                        stroke_color);
-                    vglpath->stroke->dash_reset = context->m_strokeDashPhaseReset;
-                    vg_lite_update_stroke(vglpath);
+                    do
+                    {
+                        if (status == 1) {
+                            break;
+                        }
+                        vg_lite_set_stroke(vglpath, context->m_strokeCapStyle,
+                            context->m_strokeJoinStyle,
+                            context->m_strokeLineWidth,
+                            context->m_strokeMiterLimit,
+                            context->m_strokeDashPattern,
+                            context->m_strokeDashPatternCount,
+                            context->m_strokeDashPhase,
+                            stroke_color);
+                        vglpath->stroke->dash_reset = (vg_lite_uint8_t)context->m_strokeDashPhaseReset;
+                        vg_lite_update_stroke(vglpath);
+                        vglpath->stroke_valid = 1;
 
-                    memset(&grad, 0, sizeof(grad));
-                    setRadialGrad(&grad, paint->m_colorRampStopsCount, vg_color_ramp, radialGradient, paint->m_colorRampSpreadMode, paint->m_colorRampPremultiplied);
-                    updateRadialGrad(context, &grad, &userToSurfaceStroke);
-                    vg_lite_draw_radial_grad(fbbuf, vglpath, fill_rule, (vg_lite_matrix_t*)&(context->m_pathUserToSurface), &grad, 0, blend, VG_LITE_FILTER_LINEAR);
+                    } while (VG_FALSE);
+
+                    if (radialGradient.r > 0)
+                    {
+                        memset(&grad, 0, sizeof(grad));
+                        if (paint->grad_image.handle != NULL)
+                        {
+                            vg_lite_finish();
+                            vg_lite_free(&paint->grad_image);
+                        }
+                        setRadialGrad(&grad, paint->m_colorRampStopsCount, vg_color_ramp, radialGradient, paint->m_colorRampSpreadMode, paint->m_colorRampPremultiplied);
+                        updateRadialGrad(context, &grad, &userToSurfaceFill);
+                        vg_lite_draw_radial_grad(fbbuf, vglpath, fill_rule, (vg_lite_matrix_t*)&(context->m_pathUserToSurface), &grad, 0, blend, VG_LITE_FILTER_LINEAR);
+                        grad.count = 0;
+                        paint->grad_image = grad.image;
+                    }
+                    else {
+                        if (paint->m_colorRampSpreadMode == VG_COLOR_RAMP_SPREAD_REPEAT) {
+                            vg_lite_uint8_t a = VG_FLOAT_TO_UB(gradientstop[0].color.a);
+                            vg_lite_uint8_t b = VG_FLOAT_TO_UB(gradientstop[0].color.b);
+                            vg_lite_uint8_t g = VG_FLOAT_TO_UB(gradientstop[0].color.g);
+                            vg_lite_uint8_t r = VG_FLOAT_TO_UB(gradientstop[0].color.r);
+                            stroke_color = (a << 24) | (b << 16) | (g << 8) | (r << 0);
+                        }
+                        else {
+                            vg_lite_uint8_t a = VG_FLOAT_TO_UB(gradientstop[paint->m_colorRampStopsCount - 1].color.a);
+                            vg_lite_uint8_t b = VG_FLOAT_TO_UB(gradientstop[paint->m_colorRampStopsCount - 1].color.b);
+                            vg_lite_uint8_t g = VG_FLOAT_TO_UB(gradientstop[paint->m_colorRampStopsCount - 1].color.g);
+                            vg_lite_uint8_t r = VG_FLOAT_TO_UB(gradientstop[paint->m_colorRampStopsCount - 1].color.r);
+                            stroke_color = (a << 24) | (b << 16) | (g << 8) | (r << 0);
+                        }
+
+                        vglpath->stroke_color = stroke_color;
+                        vg_lite_draw(fbbuf, vglpath, fill_rule, (vg_lite_matrix_t*)&(context->m_pathUserToSurface), blend, fill_color);
+                    }
                     break;
                 }
 
@@ -5962,16 +6107,25 @@ static VGboolean drawPath(VGContext* context, VGPath path, const Matrix3x3 userT
                 }
             }
             else {
-                vg_lite_set_stroke(vglpath, context->m_strokeCapStyle,
-                context->m_strokeJoinStyle,
-                context->m_strokeLineWidth,
-                context->m_strokeMiterLimit,
-                context->m_strokeDashPattern,
-                context->m_strokeDashPatternCount,
-                context->m_strokeDashPhase,
-                stroke_color);
-                vglpath->stroke->dash_reset = context->m_strokeDashPhaseReset;
-                vg_lite_update_stroke(vglpath);
+                do
+                {
+                    if (status == 1) {
+                        break;
+                    }
+                    vg_lite_set_stroke(vglpath, context->m_strokeCapStyle,
+                    context->m_strokeJoinStyle,
+                    context->m_strokeLineWidth,
+                    context->m_strokeMiterLimit,
+                    context->m_strokeDashPattern,
+                    context->m_strokeDashPatternCount,
+                    context->m_strokeDashPhase,
+                    stroke_color);
+                    vglpath->stroke->dash_reset = (vg_lite_uint8_t)context->m_strokeDashPhaseReset;
+                    vg_lite_update_stroke(vglpath);
+                    vglpath->stroke_valid = 1;
+
+                } while (VG_FALSE);
+
                 vg_lite_draw(fbbuf, vglpath, fill_rule, (vg_lite_matrix_t*)&userToSurfaceStroke, blend, stroke_color);
             }
         }
@@ -6357,16 +6511,6 @@ VGfloat VG_APIENTRY vgPathLength(VGPath path, VGint startSegment, VGint numSegme
 
     freePathImpl(p_fp32);
 
-#if 0 // TODO
-    try
-    {
-        pathLength = p->getPathLength(startSegment, numSegments);    //throws bad_alloc
-    }
-    catch(std::bad_alloc)
-    {
-        setError(VG_OUT_OF_MEMORY_ERROR);
-    }
-#endif
     VG_RETURN(pathLength);
 }
 
@@ -6877,28 +7021,6 @@ void VG_APIENTRY vgPointAlongPath(VGPath path, VGint startSegment, VGint numSegm
         }
     }
 
-#if 0 // TODO
-    try
-    {
-        Vector2 point, tangent;
-        p->getPointAlong(startSegment, numSegments, distance, point, tangent);    //throws bad_alloc
-        if (x && y)
-        {
-            *x = point.x;
-            *y = point.y;
-        }
-        if (tangentX && tangentY)
-        {
-            tangent.normalize();
-            *tangentX = tangent.x;
-            *tangentY = tangent.y;
-        }
-    }
-    catch (std::bad_alloc)
-    {
-        setError(VG_OUT_OF_MEMORY_ERROR);
-    }
-#endif
     VG_RETURN(VG_NO_RETVAL);
 }
 
@@ -7258,21 +7380,6 @@ void VG_APIENTRY vgPathBounds(VGPath path, VGfloat* minx, VGfloat* miny, VGfloat
     *width = x_max - x_min;
     *height = y_max - y_min;
 
-#if 0 // TODO
-    try
-    {
-        VGfloat pminx, pminy, pmaxx, pmaxy;
-        ((Path*)path)->getPathBounds(pminx, pminy, pmaxx, pmaxy);    //throws bad_alloc
-        *minx = pminx;
-        *miny = pminy;
-        *width = pmaxx - pminx;
-        *height = pmaxy - pminy;
-    }
-    catch (std::bad_alloc)
-    {
-        setError(VG_OUT_OF_MEMORY_ERROR);
-    }
-#endif
     VG_RETURN(VG_NO_RETVAL);
 }
 
@@ -7634,21 +7741,6 @@ void VG_APIENTRY vgPathTransformedBounds(VGPath path, VGfloat* minx, VGfloat* mi
     *width = x_max - x_min;
     *height = y_max - y_min;
 
-#if 0 // TODO
-    try
-    {
-        VGfloat pminx, pminy, pmaxx, pmaxy;
-        ((Path*)path)->getPathTransformedBounds(context->m_pathUserToSurface, pminx, pminy, pmaxx, pmaxy);    //throws bad_alloc
-        *minx = pminx;
-        *miny = pminy;
-        *width = pmaxx - pminx;
-        *height = pmaxy - pminy;
-    }
-    catch (std::bad_alloc)
-    {
-        setError(VG_OUT_OF_MEMORY_ERROR);
-    }
-#endif
     VG_RETURN(VG_NO_RETVAL);
 }
 
@@ -7744,17 +7836,6 @@ VGboolean VG_APIENTRY vgInterpolatePath(VGPath dstPath, VGPath startPath, VGPath
 
     d->m_pathChanged = VG_TRUE;
 
-#if 0 // TODO
-    try
-    {
-        if (((Path*)dstPath)->interpolate((const Path*)startPath, (const Path*)endPath, inputFloat(amount)))    //throws bad_alloc
-            ret = VG_TRUE;
-    }
-    catch (std::bad_alloc)
-    {
-        setError(VG_OUT_OF_MEMORY_ERROR);
-    }
-#endif
     VG_RETURN(VG_TRUE);
 }
 
@@ -7770,11 +7851,9 @@ void VG_APIENTRY vgDestroyPaint(VGPaint paint)
 {
     VG_GET_CONTEXT(VG_NO_RETVAL);
     VG_IF_ERROR(!isValidPaint(context, paint), VG_BAD_HANDLE_ERROR, VG_NO_RETVAL);    //invalid paint handle
+    vg_lite_finish();
     removePaintResource(context, (Paint*)paint);
     ((Paint*)paint)->m_referenceCount--;
-    if (context->m_fillPaint && ((Paint*)paint)->m_referenceCount) {
-        ((Paint*)paint)->m_referenceCount--;
-    }
 
     if (paint != VG_INVALID_HANDLE && !((Paint*)paint)->m_referenceCount)
     {
@@ -7860,14 +7939,10 @@ static void unpackColor(Color *c, VGuint inputData, const ColorDescriptor inputD
             c->b = VG_MIN(c->b, c->a);
         }
     }
-
-    assertConsistency(c);
 }
 
 VGuint packColor(Color* c, const ColorDescriptor outputDesc)
 {
-    assertConsistency(c);
-
     VGint rb = outputDesc.redBits;
     VGint gb = outputDesc.greenBits;
     VGint bb = outputDesc.blueBits;
@@ -7981,7 +8056,7 @@ void VG_APIENTRY vgDestroyImage(VGImage image)
 {
     VG_GET_CONTEXT(VG_NO_RETVAL);
     VG_IF_ERROR(!isValidImage(context, image), VG_BAD_HANDLE_ERROR, VG_NO_RETVAL);
-
+    vg_lite_finish();
     Image* img = (Image*)image;
 
     /***
@@ -7992,6 +8067,7 @@ void VG_APIENTRY vgDestroyImage(VGImage image)
     longer be used. When those uses cease, the images resources will automatically
     be deallocated.
     */
+    removeImageResource(context, (Image*)image);
     img->m_referenceCount--;
     VG_ASSERT(img->m_referenceCount >= 0);
 
@@ -7999,7 +8075,6 @@ void VG_APIENTRY vgDestroyImage(VGImage image)
     {
         destroyImage(&img, context);
     }
-    removeImageResource(context, (Image*)image);
 
     VG_RETURN(VG_NO_RETVAL);
 }
@@ -8157,7 +8232,7 @@ void VG_APIENTRY vgClearImage(VGImage image, VGint x, VGint y, VGint width, VGin
         VGuint rgba = (a << 24) | (b << 16) | (g << 8) | (r << 0);
 
         vg_lite_clear(dstbuf, &rect, rgba);
-        vg_lite_finish();
+        vg_lite_flush();
     }
     VG_RETURN(VG_NO_RETVAL);
 }
@@ -8222,7 +8297,7 @@ void computeBlitRegion(int* sx, int* sy, int* dx, int* dy, int* w, int* h, int s
     *dx = dstsx;
     *dy = dstsy;
 }
-VGfloat gamma(VGfloat c)
+VGfloat vg_gamma(VGfloat c)
 {
     if( c <= 0.00304f )
         c *= 12.92f;
@@ -8231,7 +8306,7 @@ VGfloat gamma(VGfloat c)
     return c;
 }
 
-VGfloat invgamma(VGfloat c)
+VGfloat inv_vg_gamma(VGfloat c)
 {
     if (c <= 0.03928f)
         c /= 12.92f;
@@ -8281,30 +8356,30 @@ void convert(InternalFormat srcFormat, InternalFormat dstFormat, Color* c)
     }
 
     //From Section 3.4.2 of OpenVG spec
-    //1: sRGB = gamma(lRGB)
-    //2: lRGB = invgamma(sRGB)
+    //1: sRGB = vg_gamma(lRGB)
+    //2: lRGB = inv_vg_gamma(sRGB)
     //3: lL = 0.2126 lR + 0.7152 lG + 0.0722 lB
     //4: lRGB = lL
-    //5: sL = gamma(lL)
-    //6: lL = invgamma(sL)
+    //5: sL = vg_gamma(lL)
+    //6: lL = inv_vg_gamma(sL)
     //7: sRGB = sL
 
     unsigned int conversion = (srcFormat & (NONLINEAR | LUMINANCE)) | ((dstFormat & (NONLINEAR | LUMINANCE)) << 3);
 
     switch (conversion)
     {
-        case lRGBA | (sRGBA << 3) : c->r = gamma(c->r); c->g = gamma(c->g); c->b = gamma(c->b); break;
+        case lRGBA | (sRGBA << 3) : c->r = vg_gamma(c->r); c->g = vg_gamma(c->g); c->b = vg_gamma(c->b); break;
         case lRGBA | (lLA << 3) : c->r = c->g = c->b = lRGBtoL(c->r, c->g, c->b); break;
-        case lRGBA | (sLA << 3) : c->r = c->g = c->b = gamma(lRGBtoL(c->r, c->g, c->b)); break;
-        case sRGBA | (lRGBA << 3) : c->r = invgamma(c->r); c->g = invgamma(c->g); c->b = invgamma(c->b); break;
-        case sRGBA | (lLA << 3) : c->r = c->g = c->b = lRGBtoL(invgamma(c->r), invgamma(c->g), invgamma(c->b)); break;
-        case sRGBA | (sLA << 3) : c->r = c->g = c->b = gamma(lRGBtoL(invgamma(c->r), invgamma(c->g), invgamma(c->b))); break;
+        case lRGBA | (sLA << 3) : c->r = c->g = c->b = vg_gamma(lRGBtoL(c->r, c->g, c->b)); break;
+        case sRGBA | (lRGBA << 3) : c->r = inv_vg_gamma(c->r); c->g = inv_vg_gamma(c->g); c->b = inv_vg_gamma(c->b); break;
+        case sRGBA | (lLA << 3) : c->r = c->g = c->b = lRGBtoL(inv_vg_gamma(c->r), inv_vg_gamma(c->g), inv_vg_gamma(c->b)); break;
+        case sRGBA | (sLA << 3) : c->r = c->g = c->b = vg_gamma(lRGBtoL(inv_vg_gamma(c->r), inv_vg_gamma(c->g), inv_vg_gamma(c->b))); break;
         case lLA | (lRGBA << 3) : break;
-        case lLA | (sRGBA << 3) : c->r = gamma(c->r); c->g = gamma(c->g); c->b = gamma(c->b); break;
-        case lLA | (sLA << 3) : c->r = c->g = c->b = gamma(c->r); break;
-        case sLA | (lRGBA << 3) : c->r = c->g = c->b = invgamma(c->r); break;
+        case lLA | (sRGBA << 3) : c->r = vg_gamma(c->r); c->g = vg_gamma(c->g); c->b = vg_gamma(c->b); break;
+        case lLA | (sLA << 3) : c->r = c->g = c->b = vg_gamma(c->r); break;
+        case sLA | (lRGBA << 3) : c->r = c->g = c->b = inv_vg_gamma(c->r); break;
         case sLA | (sRGBA << 3) : break;
-        case sLA | (lLA << 3) : c->r = c->g = c->b = invgamma(c->r); break;
+        case sLA | (lLA << 3) : c->r = c->g = c->b = inv_vg_gamma(c->r); break;
         default:  break;
     }
 
@@ -8625,7 +8700,6 @@ void VG_APIENTRY vgImageSubData(VGImage image, const void* data, VGint dataStrid
     VG_IF_ERROR(!data || !isFormatAligned(data, dataFormat) || width <= 0 || height <= 0, VG_ILLEGAL_ARGUMENT_ERROR, VG_NO_RETVAL);
 
     vg_lite_buffer_t srcbuf;
-    memset(&srcbuf, 0, sizeof(vg_lite_buffer_t));
     vg_lite_buffer_t* dstbuf ;
     uint32_t mul, div, align;
     dstbuf = (vg_lite_buffer_t*)(img->m_vglbuf);
@@ -8655,6 +8729,7 @@ void VG_APIENTRY vgImageSubData(VGImage image, const void* data, VGint dataStrid
     get_format_bytes(dataFormat, &mul, &div, &align);
     computeBlitRegion(&tmp_sx, &tmp_sy, &tmp_dx, &tmp_dy, &tmp_w, &tmp_h, width, height, ((Image*)img)->m_width, ((Image*)img)->m_height);
 
+    memset(&srcbuf, 0, sizeof(vg_lite_buffer_t));
     srcbuf.format = dataFormat;
     srcbuf.width = width;
     srcbuf.height = height;
@@ -8704,6 +8779,7 @@ void VG_APIENTRY vgGetImageSubData(VGImage image, void* data, VGint dataStride, 
     vg_lite_filter_t filter = VG_LITE_FILTER_POINT;
     vg_lite_blend_t blend = VG_LITE_BLEND_NONE;
 
+    memset(&dstbuf, 0, sizeof(vg_lite_buffer_t));
     dstbuf.width = width;
     dstbuf.height = height;
     dstbuf.format = dataFormat;
@@ -8857,7 +8933,7 @@ void VG_APIENTRY vgCopyImage(VGImage dst, VGint dx, VGint dy, VGImage src, VGint
         }
 
         vg_lite_copy_image(dstbuf, srcbuf, (VGint)(tmp_dx + ((Image*)dst)->m_storageOffsetX), (VGint)(tmp_dy + ((Image*)dst)->m_storageOffsetX), rect.x, rect.y, rect.width, rect.height);
-        vg_lite_finish();
+        vg_lite_flush();
     }
 
     VG_RETURN(VG_NO_RETVAL);
@@ -8886,7 +8962,8 @@ static VGboolean drawImage(VGContext* context, VGImage image, const Matrix3x3 us
     multMatrix3x3(&fillPaintToSurfaceFill, &(context->m_fillPaintToUser));
 
     srcbuf->image_mode = context->m_imageMode;
-    memset(&tmpbuf, 0, sizeof(tmpbuf));
+
+    memset(&tmpbuf, 0, sizeof(vg_lite_buffer_t));
     tmpbuf.width = dstbuf->width;
     tmpbuf.height = dstbuf->height;
     tmpbuf.format = dstbuf->format;
@@ -8942,9 +9019,11 @@ static VGboolean drawImage(VGContext* context, VGImage image, const Matrix3x3 us
     }
 
     /* Split child image from parent image. */
-    if (img->m_storageOffsetX > 0 || img->m_storageOffsetY > 0 || img->m_width != srcbuf->width || img->m_height != srcbuf->height) {
+    if (img->m_storageOffsetX > 0 || img->m_storageOffsetY > 0 || img->m_width != srcbuf->width || img->m_height != srcbuf->height)
+    {
         vg_lite_rectangle_t rect = { img->m_storageOffsetX, img->m_storageOffsetY, img->m_width, img->m_height };
 
+        memset(&child, 0, sizeof(vg_lite_buffer_t));
         child.width = img->m_width;
         child.height = img->m_height;
         child.format = srcbuf->format;
@@ -8965,7 +9044,7 @@ static VGboolean drawImage(VGContext* context, VGImage image, const Matrix3x3 us
         else {
             vg_lite_disable_scissor();
             vg_lite_blit_rect(&child, srcbuf, &rect, NULL, VG_LITE_BLEND_NONE, 0, filter);
-            vg_lite_finish();
+            vg_lite_flush();
             if (context->m_scissoring && context->m_scissorCount > 0) {
                 vg_lite_enable_scissor();
             }
@@ -9009,7 +9088,7 @@ static VGboolean drawImage(VGContext* context, VGImage image, const Matrix3x3 us
                 vg_lite_linear_gradient_parameter_t linear_gradient;
                 vg_lite_color_ramp_t vg_color_ramp[VIV_MAX_COLOR_RAMP_STOPS];
                 GradientStop* gradientstop = paint->m_colorRampStops;
-
+                vg_lite_color_t fill_color = 0xFF000000;
                 linear_gradient.X0 = paint->m_linearGradientPoint0.x;
                 linear_gradient.Y0 = paint->m_linearGradientPoint0.y;
                 linear_gradient.X1 = paint->m_linearGradientPoint1.x;
@@ -9023,10 +9102,6 @@ static VGboolean drawImage(VGContext* context, VGImage image, const Matrix3x3 us
                     vg_color_ramp[i].blue = gradientstop[i].color.b;
                     vg_color_ramp[i].alpha = gradientstop[i].color.a;
                 }
-                memset(&grad, 0, sizeof(grad));
-                setLinearGrad(&grad, paint->m_colorRampStopsCount, vg_color_ramp, linear_gradient, paint->m_colorRampSpreadMode, paint->m_colorRampPremultiplied);
-                updateLinearGrad(context, &grad, (Matrix3x3*)&userToSurfaceMatrix_temp);
-
                 char path_data[] = {
                     2, 0, 0,
                     4, srcbuf->width, 0,
@@ -9043,15 +9118,47 @@ static VGboolean drawImage(VGContext* context, VGImage image, const Matrix3x3 us
                     path_data, // path data
                     1
                 };
-                tmpbuf.image_mode = srcbuf->image_mode;
-                vg_lite_draw_linear_grad(&tmpbuf, &vglpath, VG_LITE_FILL_EVEN_ODD, (vg_lite_matrix_t*)&userToSurfaceMatrix_temp, &grad, 0, blend, VG_LITE_FILTER_LINEAR);
+                if ((linear_gradient.X0 != linear_gradient.X1) || (linear_gradient.Y0 != linear_gradient.Y1))
+                {
+                    memset(&grad, 0, sizeof(grad));
+                    if (paint->grad_image.handle != NULL)
+                    {
+                        vg_lite_finish();
+                        vg_lite_free(&paint->grad_image);
+                    }
+                    setLinearGrad(&grad, paint->m_colorRampStopsCount, vg_color_ramp, linear_gradient, paint->m_colorRampSpreadMode, paint->m_colorRampPremultiplied);
+                    updateLinearGrad(context, &grad, (Matrix3x3*)&userToSurfaceMatrix_temp);
+                    tmpbuf.image_mode = srcbuf->image_mode;
+                    vg_lite_draw_linear_grad(&tmpbuf, &vglpath, VG_LITE_FILL_EVEN_ODD, (vg_lite_matrix_t*)&userToSurfaceMatrix_temp, &grad, 0x0, blend, VG_LITE_FILTER_LINEAR);
+                    grad.count = 0;
+                    paint->grad_image = grad.image;
+                }
+                else {
+                    if (paint->m_colorRampSpreadMode == VG_COLOR_RAMP_SPREAD_REPEAT) {
+                        vg_lite_uint8_t a = VG_FLOAT_TO_UB(gradientstop[0].color.a);
+                        vg_lite_uint8_t b = VG_FLOAT_TO_UB(gradientstop[0].color.b);
+                        vg_lite_uint8_t g = VG_FLOAT_TO_UB(gradientstop[0].color.g);
+                        vg_lite_uint8_t r = VG_FLOAT_TO_UB(gradientstop[0].color.r);
+                        fill_color = (a << 24) | (b << 16) | (g << 8) | (r << 0);
+                    }
+                    else {
+                        vg_lite_uint8_t a = VG_FLOAT_TO_UB(gradientstop[paint->m_colorRampStopsCount - 1].color.a);
+                        vg_lite_uint8_t b = VG_FLOAT_TO_UB(gradientstop[paint->m_colorRampStopsCount - 1].color.b);
+                        vg_lite_uint8_t g = VG_FLOAT_TO_UB(gradientstop[paint->m_colorRampStopsCount - 1].color.g);
+                        vg_lite_uint8_t r = VG_FLOAT_TO_UB(gradientstop[paint->m_colorRampStopsCount - 1].color.r);
+                        fill_color = (a << 24) | (b << 16) | (g << 8) | (r << 0);
+                    }
+                    tmpbuf.image_mode = srcbuf->image_mode;
+                    vg_lite_draw(&tmpbuf, &vglpath, VG_LITE_FILL_EVEN_ODD, (vg_lite_matrix_t*)&userToSurfaceMatrix_temp, blend, fill_color);
+                }
+
             }
             else if (srcbuf->paintType == VG_PAINT_TYPE_RADIAL_GRADIENT) {
                 vg_lite_radial_gradient_t grad;
                 vg_lite_radial_gradient_parameter_t radialGradient;
                 vg_lite_color_ramp_t vg_color_ramp[VIV_MAX_COLOR_RAMP_STOPS];
                 GradientStop* gradientstop = paint->m_colorRampStops;
-
+                vg_lite_color_t fill_color = 0xFF000000;
                 radialGradient.cx = paint->m_radialGradientCenter.x;
                 radialGradient.cy = paint->m_radialGradientCenter.y;
                 radialGradient.fx = paint->m_radialGradientFocalPoint.x;
@@ -9066,9 +9173,6 @@ static VGboolean drawImage(VGContext* context, VGImage image, const Matrix3x3 us
                     vg_color_ramp[i].blue = gradientstop[i].color.b;
                     vg_color_ramp[i].alpha = gradientstop[i].color.a;
                 }
-                memset(&grad, 0, sizeof(grad));
-                setRadialGrad(&grad, paint->m_colorRampStopsCount, vg_color_ramp, radialGradient, paint->m_colorRampSpreadMode, paint->m_colorRampPremultiplied);
-                updateRadialGrad(context, &grad, (Matrix3x3*)&userToSurfaceMatrix_temp);
                 char path_data[] = {
                     2, 0, 0,
                     4, srcbuf->width, 0,
@@ -9085,8 +9189,40 @@ static VGboolean drawImage(VGContext* context, VGImage image, const Matrix3x3 us
                     path_data, // path data
                     1
                 };
-                tmpbuf.image_mode = srcbuf->image_mode;
-                vg_lite_draw_radial_grad(&tmpbuf, &vglpath, VG_LITE_FILL_EVEN_ODD, (vg_lite_matrix_t*)&userToSurfaceMatrix_temp, &grad, 0, blend, VG_LITE_FILTER_LINEAR);
+                if (radialGradient.r > 0)
+                {
+                    memset(&grad, 0, sizeof(grad));
+                    if (paint->grad_image.handle != NULL)
+                    {
+                        vg_lite_finish();
+                        vg_lite_free(&paint->grad_image);
+                    }
+                    setRadialGrad(&grad, paint->m_colorRampStopsCount, vg_color_ramp, radialGradient, paint->m_colorRampSpreadMode, paint->m_colorRampPremultiplied);
+                    updateRadialGrad(context, &grad, (Matrix3x3*)&userToSurfaceMatrix_temp);
+                    tmpbuf.image_mode = srcbuf->image_mode;
+                    vg_lite_draw_radial_grad(&tmpbuf, &vglpath, VG_LITE_FILL_EVEN_ODD, (vg_lite_matrix_t*)&userToSurfaceMatrix_temp, &grad, 0, blend, VG_LITE_FILTER_LINEAR);
+                    grad.count = 0;
+                    paint->grad_image = grad.image;
+                }
+                else {
+                    if (paint->m_colorRampSpreadMode == VG_COLOR_RAMP_SPREAD_REPEAT) {
+                        vg_lite_uint8_t a = VG_FLOAT_TO_UB(gradientstop[0].color.a);
+                        vg_lite_uint8_t b = VG_FLOAT_TO_UB(gradientstop[0].color.b);
+                        vg_lite_uint8_t g = VG_FLOAT_TO_UB(gradientstop[0].color.g);
+                        vg_lite_uint8_t r = VG_FLOAT_TO_UB(gradientstop[0].color.r);
+                        fill_color = (a << 24) | (b << 16) | (g << 8) | (r << 0);
+                    }
+                    else {
+                        vg_lite_uint8_t a = VG_FLOAT_TO_UB(gradientstop[paint->m_colorRampStopsCount - 1].color.a);
+                        vg_lite_uint8_t b = VG_FLOAT_TO_UB(gradientstop[paint->m_colorRampStopsCount - 1].color.b);
+                        vg_lite_uint8_t g = VG_FLOAT_TO_UB(gradientstop[paint->m_colorRampStopsCount - 1].color.g);
+                        vg_lite_uint8_t r = VG_FLOAT_TO_UB(gradientstop[paint->m_colorRampStopsCount - 1].color.r);
+                        fill_color = (a << 24) | (b << 16) | (g << 8) | (r << 0);
+                    }
+                    tmpbuf.image_mode = srcbuf->image_mode;
+                    vg_lite_draw(&tmpbuf, &vglpath, VG_LITE_FILL_EVEN_ODD, (vg_lite_matrix_t*)&userToSurfaceMatrix_temp, blend, fill_color);
+                }
+
             }
             else if (srcbuf->paintType == VG_PAINT_TYPE_PATTERN)
             {
@@ -9127,7 +9263,7 @@ static VGboolean drawImage(VGContext* context, VGImage image, const Matrix3x3 us
             vg_lite_blit(dstbuf, dstbuf, NULL, OPENVG_BLEND_SRC, 0, VG_LITE_FILTER_POINT);
         }
         vg_lite_blit(dstbuf, srcbuf, (vg_lite_matrix_t*)&userToSurfaceMatrix_temp, blend, srcColor, filter);
-        vg_lite_finish();
+        vg_lite_flush();
     }
 
     context->m_image = VG_FALSE;
@@ -9203,7 +9339,7 @@ void VG_APIENTRY vgSetPixels(VGint dx, VGint dy, VGImage src, VGint sx, VGint sy
         vg_lite_blit(srcbuf, srcbuf, NULL, OPENVG_BLEND_SRC, 0, VG_LITE_FILTER_POINT);
     }
     vg_lite_copy_image(dstbuf, srcbuf, (VGint)tmp_dx, (VGint)tmp_dy, rect.x, rect.y, rect.width, rect.height);
-    vg_lite_finish();
+    vg_lite_flush();
     if (context->m_masking) {
         vg_lite_enable_masklayer();
     }
@@ -9225,7 +9361,6 @@ void VG_APIENTRY vgWritePixels(const void * data, VGint dataStride, VGImageForma
     vg_lite_buffer_t* dstbuf = (vg_lite_buffer_t*)drawable->m_color->m_image->m_vglbuf;
 
     vg_lite_buffer_t srcbuf;
-    memset(&srcbuf, 0, sizeof(vg_lite_buffer_t));
     uint32_t mul, div, align, byteOneLine;
     Image* dstimg = drawable->m_color->m_image;
     ColorDescriptor src_desc = formatToDescriptor(dataFormat);
@@ -9249,6 +9384,8 @@ void VG_APIENTRY vgWritePixels(const void * data, VGint dataStride, VGImageForma
     int tmp_h = height;
     computeBlitRegion(&tmp_sx, &tmp_sy, &tmp_dx, &tmp_dy, &tmp_w, &tmp_h, width, height, dstbuf->width, dstbuf->height);
     get_format_bytes(dataFormat, &mul, &div, &align);
+
+    memset(&srcbuf, 0, sizeof(vg_lite_buffer_t));
     srcbuf.format = dataFormat;
     srcbuf.width = width;
     srcbuf.height = height;
@@ -9302,6 +9439,7 @@ void VG_APIENTRY vgGetPixels(VGImage dst, VGint dx, VGint dy, VGint sx, VGint sy
 
     /* Special format not support blit, so cpu operation. Currently only support start at (0,0). */
     if ((!isSupportFormat(context, srcbuf->format)) || (!isSupportFormat(context, dstbuf->format))) {
+        vg_lite_finish();
         imgSetPixel((Image*)dst, drawable->m_color->m_image, sx, sy, dx, dy, width, height, VG_FALSE);
 
         VG_RETURN(VG_NO_RETVAL);
@@ -9322,7 +9460,7 @@ void VG_APIENTRY vgGetPixels(VGImage dst, VGint dx, VGint dy, VGint sx, VGint sy
     }
 
     vg_lite_copy_image(dstbuf, srcbuf, (VGint)(tmp_dx + img->m_storageOffsetX), (VGint)(tmp_dy + img->m_storageOffsetY), rect.x, rect.y, rect.width, rect.height);
-    vg_lite_finish();
+    vg_lite_flush();
 
     VG_RETURN(VG_NO_RETVAL);
 }
@@ -9343,7 +9481,6 @@ void VG_APIENTRY vgReadPixels(void* data, VGint dataStride, VGImageFormat dataFo
     vg_lite_buffer_t dstbuf;
     Image* srcimage = (Image *)drawable->m_color->m_image;
     ColorDescriptor dst_desc = formatToDescriptor(dataFormat);
-    memset(&dstbuf, 0, sizeof(vg_lite_buffer_t));
     /* Special format not support blit, so cpu operation. Currently only support start at (0,0). */
     if ((!isSupportFormat(context, srcbuf->format)) || (!isSupportFormat(context, dataFormat))) {
         Image dstimg = { 0 };
@@ -9363,6 +9500,8 @@ void VG_APIENTRY vgReadPixels(void* data, VGint dataStride, VGImageFormat dataFo
     int tmp_h = height;
     computeBlitRegion(&tmp_sx, &tmp_sy, &tmp_dx, &tmp_dy, &tmp_w, &tmp_h, srcbuf->width, srcbuf->height, width, height);
     get_format_bytes(dataFormat, &mul, &div, &align);
+
+    memset(&dstbuf, 0, sizeof(vg_lite_buffer_t));
     dstbuf.format = dataFormat;
     dstbuf.width = width;
     dstbuf.height = height;
@@ -9445,7 +9584,6 @@ void VG_APIENTRY vgCopyPixels(VGint dx, VGint dy, VGint sx, VGint sy, VGint widt
     vg_lite_translate((VGfloat)(tmp_dx + drawable->m_color->m_image->m_storageOffsetX), (VGfloat)(tmp_dy + drawable->m_color->m_image->m_storageOffsetY), &n);
 
     vg_lite_blit_rect(&dstbuf, srcbuf, &rect, &n, blend, 0, filter);
-    vg_lite_finish();
 
     vg_lite_rectangle_t rect1 = { tmp_dx + drawable->m_color->m_image->m_storageOffsetX, tmp_dy + drawable->m_color->m_image->m_storageOffsetY, tmp_w, tmp_h };
     vg_lite_identity(&n);
@@ -9482,6 +9620,7 @@ void VG_APIENTRY vgColorMatrix(VGImage dst, VGImage src, const VGfloat * matrix)
     state = vg_lite_set_pixel_matrix(m, (vg_lite_pixel_channel_enable_t*)&channelMask);
     if (state == VG_LITE_NOT_SUPPORT)
     {
+        vg_lite_finish();
         colorMatrix(m, s, d, context->m_filterFormatLinear ? VG_TRUE : VG_FALSE, context->m_filterFormatPremultiplied ? VG_TRUE : VG_FALSE, channelMask);
         VG_RETURN(VG_NO_RETVAL);
     }
@@ -9507,7 +9646,7 @@ void VG_APIENTRY vgConvolve(VGImage dst, VGImage src, VGint kernelWidth, VGint k
     VG_IF_ERROR(!kernel || !isAligned(kernel,2) || kernelWidth <= 0 || kernelHeight <= 0 || kernelWidth > VIV_MAX_KERNEL_SIZE || kernelHeight > VIV_MAX_KERNEL_SIZE, VG_ILLEGAL_ARGUMENT_ERROR, VG_NO_RETVAL);
     VG_IF_ERROR(tilingMode < VG_TILE_FILL || tilingMode > VG_TILE_REFLECT, VG_ILLEGAL_ARGUMENT_ERROR, VG_NO_RETVAL);
     unsigned int channelMask = context->m_filterChannelMask & (VG_RED|VG_GREEN|VG_BLUE|VG_ALPHA);    //undefined bits are ignored
-
+    vg_lite_finish();
     convolve(d, s, kernelWidth, kernelHeight, shiftX, shiftY, (const VGshort*)kernel, inputFloat(scale), inputFloat(bias),
         tilingMode, &context->m_tileFillColor, context->m_filterFormatLinear ? VG_TRUE : VG_FALSE,
         context->m_filterFormatPremultiplied ? VG_TRUE : VG_FALSE, channelMask);
@@ -9527,7 +9666,7 @@ void VG_APIENTRY vgSeparableConvolve(VGImage dst, VGImage src, VGint kernelWidth
     VG_IF_ERROR(!kernelX || !kernelY || !isAligned(kernelX,2) || !isAligned(kernelY,2) || kernelWidth <= 0 || kernelHeight <= 0 || kernelWidth > VIV_MAX_SEPARABLE_KERNEL_SIZE || kernelHeight > VIV_MAX_SEPARABLE_KERNEL_SIZE, VG_ILLEGAL_ARGUMENT_ERROR, VG_NO_RETVAL);
     VG_IF_ERROR(tilingMode < VG_TILE_FILL || tilingMode > VG_TILE_REFLECT, VG_ILLEGAL_ARGUMENT_ERROR, VG_NO_RETVAL);
     unsigned int channelMask = context->m_filterChannelMask & (VG_RED|VG_GREEN|VG_BLUE|VG_ALPHA);    //undefined bits are ignored
-
+    vg_lite_finish();
     separableConvolve(d, s, kernelWidth, kernelHeight, shiftX, shiftY, (const VGshort*)kernelX, (const VGshort*)kernelY,
         inputFloat(scale), inputFloat(bias), tilingMode, &context->m_tileFillColor, context->m_filterFormatLinear ? VG_TRUE : VG_FALSE,
         context->m_filterFormatPremultiplied ? VG_TRUE : VG_FALSE, channelMask);
@@ -9575,26 +9714,18 @@ void VG_APIENTRY vgGaussianBlur(VGImage dst, VGImage src, VGfloat stdDeviationX,
         state = vg_lite_gaussian_filter(w0, w1, w2);
         if (state != VG_LITE_NOT_SUPPORT){
             vg_lite_blit(dstbuf, srcbuf, (vg_lite_matrix_t*)&n, blend, color, filter);
-            vg_lite_finish();
+            vg_lite_flush();
             flag = VG_FALSE;
         }
     }
 
     /* If the standard deviation in the xand y directions is not the same, use software processing. */
     if (flag) {
+        vg_lite_finish();
         gaussianBlur(dst, src, stdDeviationX, stdDeviationY, context->m_filterFormatLinear ? VG_TRUE : VG_FALSE, context->m_filterFormatPremultiplied ? VG_TRUE : VG_FALSE, 
                      tilingMode, context->m_tileFillColor, context->m_filterChannelMask);
     }
-#if 0 // TODO
-    try
-    {
-        d->gaussianBlur(*s, sx, sy, tilingMode, context->m_tileFillColor, context->m_filterFormatLinear ? VG_TRUE : VG_FALSE,
-                        context->m_filterFormatPremultiplied ? VG_TRUE : VG_FALSE, channelMask);
-    }
-    catch(std::bad_alloc)
-    {
-    }
-#endif
+
     VG_RETURN(VG_NO_RETVAL);
 }
 
@@ -9608,7 +9739,7 @@ void VG_APIENTRY vgLookup(VGImage dst, VGImage src, const VGubyte * redLUT, cons
     VG_IF_ERROR(imageOverlaps(d, s), VG_ILLEGAL_ARGUMENT_ERROR, VG_NO_RETVAL);
     VG_IF_ERROR(!redLUT || !greenLUT || !blueLUT || !alphaLUT, VG_ILLEGAL_ARGUMENT_ERROR, VG_NO_RETVAL);
     unsigned int channelMask = context->m_filterChannelMask & (VG_RED|VG_GREEN|VG_BLUE|VG_ALPHA);    //undefined bits are ignored
-
+    vg_lite_finish();
     lookup(d, s, (const VGubyte*)redLUT, (const VGubyte*)greenLUT, (const VGubyte*)blueLUT, (const VGubyte*)alphaLUT,
            outputLinear ? VG_TRUE : VG_FALSE, outputPremultiplied ? VG_TRUE : VG_FALSE, context->m_filterFormatLinear ? VG_TRUE : VG_FALSE,
            context->m_filterFormatPremultiplied ? VG_TRUE : VG_FALSE, channelMask);
@@ -9630,7 +9761,7 @@ void VG_APIENTRY vgLookupSingle(VGImage dst, VGImage src, const VGuint * lookupT
     //give an error if src is in rgb format and the source channel is not valid
     VG_IF_ERROR((!(desc->internalFormat & LUMINANCE) && !isAlphaOnly(desc)) && (sourceChannel != VG_RED && sourceChannel != VG_GREEN && sourceChannel != VG_BLUE && sourceChannel != VG_ALPHA), VG_ILLEGAL_ARGUMENT_ERROR, VG_NO_RETVAL);
     unsigned int channelMask = context->m_filterChannelMask & (VG_RED|VG_GREEN|VG_BLUE|VG_ALPHA);    //undefined bits are ignored
-
+    vg_lite_finish();
     lookupSingle(d, s, (const VGuint*)lookupTable, sourceChannel, outputLinear ? VG_TRUE : VG_FALSE, outputPremultiplied ? VG_TRUE : VG_FALSE,
                  context->m_filterFormatLinear ? VG_TRUE : VG_FALSE, context->m_filterFormatPremultiplied ? VG_TRUE : VG_FALSE, channelMask); 
 
@@ -9701,6 +9832,7 @@ VGFont VG_APIENTRY vgCreateFont(VGint glyphCapacityHint)
         VG_RETURN(VG_INVALID_HANDLE);
     }
     font->m_glyphArraySize = glyphCapacityHint;
+    font->object.type = OBJECTTYPE_FONT;
     addFontResource(context, font);
 
     VG_RETURN((VGFont)font);
@@ -9710,6 +9842,7 @@ void VG_APIENTRY vgDestroyFont(VGFont font)
 {
     VG_GET_CONTEXT(VG_NO_RETVAL);
     VG_IF_ERROR(!isValidFont(context, font), VG_BAD_HANDLE_ERROR, VG_NO_RETVAL);    //invalid font handle
+    vg_lite_finish();
     removeFontResource(context, (Font*)font);
     if (font != VG_INVALID_HANDLE)
     {

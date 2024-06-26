@@ -1,0 +1,41 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.32228.343
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libOpenVG", "openvg_drv.vcxproj", "{0821B125-D039-413A-A85B-AA8A1EE991D4}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libVDK", "vdk\vdk.vcxproj", "{335CBDA3-7927-413F-94AD-BC995F5D8A5B}"
+	ProjectSection(ProjectDependencies) = postProject
+		{0821B125-D039-413A-A85B-AA8A1EE991D4} = {0821B125-D039-413A-A85B-AA8A1EE991D4}
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{0821B125-D039-413A-A85B-AA8A1EE991D4}.Debug|x64.ActiveCfg = Debug|x64
+		{0821B125-D039-413A-A85B-AA8A1EE991D4}.Debug|x86.ActiveCfg = Debug|Win32
+		{0821B125-D039-413A-A85B-AA8A1EE991D4}.Debug|x86.Build.0 = Debug|Win32
+		{0821B125-D039-413A-A85B-AA8A1EE991D4}.Release|x64.ActiveCfg = Release|x64
+		{0821B125-D039-413A-A85B-AA8A1EE991D4}.Release|x86.ActiveCfg = Release|Win32
+		{0821B125-D039-413A-A85B-AA8A1EE991D4}.Release|x86.Build.0 = Release|Win32
+		{335CBDA3-7927-413F-94AD-BC995F5D8A5B}.Debug|x64.ActiveCfg = All_Debug|x64
+		{335CBDA3-7927-413F-94AD-BC995F5D8A5B}.Debug|x86.ActiveCfg = All_Debug|Win32
+		{335CBDA3-7927-413F-94AD-BC995F5D8A5B}.Debug|x86.Build.0 = All_Debug|Win32
+		{335CBDA3-7927-413F-94AD-BC995F5D8A5B}.Release|x64.ActiveCfg = All_Release|x64
+		{335CBDA3-7927-413F-94AD-BC995F5D8A5B}.Release|x86.ActiveCfg = All_Release|Win32
+		{335CBDA3-7927-413F-94AD-BC995F5D8A5B}.Release|x86.Build.0 = All_Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		        SolutionGuid = {05989C21-7AE8-4FA5-9260-471F17B4A681}
+		SolutionGuid = {B9E161BA-BF63-4269-B236-AC7D7D4901C0}
+	EndGlobalSection
+EndGlobal

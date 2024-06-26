@@ -29,6 +29,7 @@ ZC702)
     export ARCH=arm
     export ENABLE_PCIE=0
     export EGL_API_FBDEV=1
+	export CC=${CROSS_COMPILE}gcc
     export VG_LITE_SDK=$AQROOT/../build.s2c/sdk
 ;;
 
@@ -51,7 +52,7 @@ X86_51510)
     export EGL_API_FBDEV=1
     export CPU_ARCH=0
     export ARCH=x86
-    export VG_LITE_SDK=$AQROOT/../Hubi.dev/build
+    export VG_LITE_SDK=$AQROOT/../build.s2c/sdk
 ;;
 
 IMX6Q35)
@@ -63,7 +64,7 @@ IMX6Q35)
     export CPU_TYPE=cortex-a9
     export CPU_ARCH=0
     export ARCH=arm
-    export VG_LITE_SDK=$AQROOT/../Hubi.dev/build
+    export VG_LITE_SDK=$AQROOT/../build.s2c/sdk
     export ENABLE_PCIE=0
     export EGL_API_FBDEV=1
     export CFLAGS="--sysroot=$SYSROOT_DIR -D__ARM_PCS_VFP"

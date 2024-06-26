@@ -99,6 +99,7 @@ static VG_INLINE float getFloatMax()
 #define VIV_MAX_EDGES                       262144
 #define VIV_MAX_SAMPLES                     32
 #define VIV_NUM_TESSELLATED_SEGMENTS        256
+#define VIV_OBJECTS_HASH                    512
 
 #define VG_FRAMEBUFFER_COUNT                1
 
