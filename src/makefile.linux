@@ -17,6 +17,7 @@ CFLAGS += -I$(SYSROOT_DIR)/usr/include -I../include -I../include/Vivante -I../in
 LDFLAGS += $(addprefix -l,$(LIBS))
 LDFLAGS += -fPIC -shared -Wl,-z,defs
 LDFLAGS += -L$(VG_LITE_SDK)/drivers -lvg_lite
+LDFLAGS += -Wl,-rpath $(SDK_DIR)/drivers
 LDFLAGS += -lpthread -lrt -lm
 
 all: $(OBJDIR)/$(NAME)

@@ -14,7 +14,6 @@ endif
 
 CFLAGS += -I$(SYSROOT_DIR)/usr/include -I../include -I../include/Vivante -I../include/EGL -I../include/VG -I../include/VDK -I$(VG_LITE_SDK)/inc
 
-LDFLAGS += $(addprefix -l,$(LIBS))
 LDFLAGS += -fPIC -shared -Wl,-z,defs
 LDFLAGS += -L$(SDK_DIR)/drivers -lOpenVG
 LDFLAGS += -ldl
