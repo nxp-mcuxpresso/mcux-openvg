@@ -1,0 +1,21 @@
+######################################################
+# Include global difinitions.
+
+include makefile.linux.def
+
+######################################################
+# Components of the project.
+
+#SAMPLES	:= 01_ClearTarget 02_LetterA tiger
+SAMPLES	:= 01_ClearTarget
+
+######################################################
+# Define the macros used in the common file.
+
+MODULES		:= $(SAMPLES)
+MAIN_MODULE	:= $(SAMPLES)
+
+######################################################
+# Include the common makefile.
+
+include $(AQROOT)/common.node

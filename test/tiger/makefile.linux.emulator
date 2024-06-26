@@ -1,0 +1,26 @@
+
+################################################################################
+# Include the common difinitions.
+
+include ../makefile.linux.def.emulator
+
+################################################################################
+# Define the program.
+
+PROGRAM		:= 1
+TARGET_NAME	:= tiger
+
+################################################################################
+# Describe object files.
+
+OBJECTS = $(OBJ_DIR)/tiger.o $(OBJ_DIR)/main.o
+
+################################################################################
+# Define the macros used in the common makefile.
+
+INSTALL_DIR	:= $(SDK_DIR)/samples/vdk
+
+################################################################################
+# Include the common makefile.
+
+include $(AQROOT)/common.target

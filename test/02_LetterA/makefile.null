@@ -1,0 +1,40 @@
+#-------------------------------------------------------------------------------
+# Export OPENVG_LOC as a environment variable if OpenVG is
+# in a different location e.g.
+# export OPENVG_LOC=/home/devuser/projects/openvg
+#-------------------------------------------------------------------------------
+
+# OPENVG_LOC=/mnt/EXT/P4WS/SW/VGLite/OpenVG/build
+
+#-------------------------------------------------------------------------------
+# Source Path Definitions
+#-------------------------------------------------------------------------------
+CASE_SRC    = ./
+#-------------------------------------------------------------------------------
+# Compiler Environment Definitions
+#-------------------------------------------------------------------------------
+DEBUG  ?= 0
+CC 	   ?= gcc
+INC        = -I$(OPENVG_LOC)/inc -I$(CASE_SRC)
+LD_FLAGS   = -L$(OPENVG_LOC)/drivers
+LIBS       = -lOpenVG -lvg_lite  -lVDK -lm
+CFLAGS     += $(INC) -O -g
+ifeq ($(DEBUG), 1)
+CFLAGS += -g -O -DDEBUG -D_DEBUG
+endif
+#-------------------------------------------------------------------------------
+# Source & Object Lists
+#-------------------------------------------------------------------------------
+TARGET     = ./LetterA
+
+SRCS       = ./*.c
+#-------------------------------------------------------------------------------
+# Module Specific Rules
+#-------------------------------------------------------------------------------
+all :	
+	$(CC) $(CFLAGS) $(SRCS) -o $(TARGET) $(LD_FLAGS) $(LIBS)
+
+clean:
+	rm -f ./LetterA
+
+
