@@ -81,11 +81,6 @@ void* OSGetCurrentThreadID(void)
     return (void*)GetCurrentThreadId();
 }
 
-void OSDestroyDisplay(void* display)
-{
-    return;
-}
-
 VGEGLDisplay* OSGetDisplay(EGLNativeDisplayType display_id)
 {
     int bpp;
@@ -107,9 +102,16 @@ VGEGLDisplay* OSGetDisplay(EGLNativeDisplayType display_id)
     }
 
     newDisplay = (VGEGLDisplay*)malloc(sizeof(VGEGLDisplay));
+    memset(newDisplay, 0, sizeof(VGEGLDisplay));
+
     newDisplay->m_id = display_id;
 
     return newDisplay;
+}
+
+void OSDestroyDisplay(void* display)
+{
+    free(display);
 }
 
 void* OSCreateWindowContext(EGLNativeWindowType window)

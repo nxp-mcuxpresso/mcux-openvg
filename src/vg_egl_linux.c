@@ -208,7 +208,6 @@ struct eglFbPlatform
                          NativePixmapType Pixmap,
                          int * Width,
                          int * Height,
-                         VGImageFormat* Format,
                          int * BitsPerPixel,
                          int * Stride,
                          void** Bits
@@ -1593,7 +1592,7 @@ int fbdev_CreatePixmap(NativeDisplayType display, int width, int height, int bit
     return 0;
 }
 
-static int fbdev_GetPixmapInfo(NativeDisplayType display, NativePixmapType pixmap, int* width, int* height, VGImageFormat* format,
+static int fbdev_GetPixmapInfo(NativeDisplayType display, NativePixmapType pixmap, int* width, int* height,
                          int* bitsPerPixel, int* stride, void** bits)
 {
     struct _FBPixmap* pmap = (struct _FBPixmap*)pixmap;
@@ -1610,9 +1609,6 @@ static int fbdev_GetPixmapInfo(NativeDisplayType display, NativePixmapType pixma
     if (height)
         *height = (int)pmap->height;
 
-    if (format)
-        *format = pmap->format;
-
     if (bitsPerPixel)
         *bitsPerPixel = (int)pmap->bpp;
 
@@ -1623,7 +1619,6 @@ static int fbdev_GetPixmapInfo(NativeDisplayType display, NativePixmapType pixma
         *bits = (void*)pmap->bits;
 
     return 0;
-
 }
 
 static int fbdev_DestroyPixmap(NativeDisplayType display, NativePixmapType pixmap)
@@ -1674,7 +1669,7 @@ fbGetBackends(
 }
 
 void *
-fbGetDisplay()
+fbGetDisplay(void *context)
 {
     NativeDisplayType display = NULL;
     fbGetBackends(&fbBackend);
@@ -1814,7 +1809,7 @@ fbGetPixmapGeometry(
     )
 {
     fbGetBackends(&fbBackend);
-    fbBackend->GetPixmapInfo(NULL, (NativePixmapType)pixmap, width, height, NULL, NULL, NULL, NULL);
+    fbBackend->GetPixmapInfo(NULL, (NativePixmapType)pixmap, width, height, NULL, NULL, NULL);
 }
 
 void
@@ -1822,14 +1817,13 @@ fbGetPixmapInfo(
     void* pixmap,
     int* width,
     int* height,
-    VGImageFormat *format,
     int* bitsPerPixel,
     int* stride,
     void** bits
     )
 {
     fbGetBackends(&fbBackend);
-    fbBackend->GetPixmapInfo(NULL, (NativeDisplayType)pixmap, width, height, format, bitsPerPixel, stride, bits);
+    fbBackend->GetPixmapInfo(NULL, (NativeDisplayType)pixmap, width, height, bitsPerPixel, stride, bits);
 }
 
 void
@@ -1970,6 +1964,8 @@ VGEGLDisplay* OSGetDisplay(NativeDisplayType display_id)
 void OSDestroyDisplay(VGEGLDisplay* vdisplay)
 {
     fbDestroyDisplay(vdisplay->nativeDisplay);
+
+    free(vdisplay);
 }
 
 void* OSCreateWindowContext(NativeWindowType window)
@@ -2094,11 +2090,31 @@ void OSBlitToWindow(void* context, const Drawable* drawable)
     Image * im = drawable->m_color->m_image;
     struct _FBWindow* win = ctx->window;
     struct _FBDisplay* display = ctx->display;
-
     pthread_mutex_lock(&displayMutex);
 
+#if 1
     {
-       int swapInterval = win->swapInterval;
+        int width = drawable->m_color->m_width;
+        int height = drawable->m_color->m_height;
+        vg_lite_buffer_t tmpbuf = {0};
+        char *dpy_mem;
+        char *buf_ptr;
+        tmpbuf.width = display->width;
+        tmpbuf.height = height ;
+        tmpbuf.format = display->format;
+        tmpbuf.stride = display->stride;
+        vg_lite_disable_scissor();
+        tmpbuf.address = display->physical;
+        tmpbuf.memory = display->memory;
+        /* Convert drawable "m_vglbuf->format" to display window format "win->format" */
+        vg_lite_set_mirror(VG_LITE_ORIENTATION_BOTTOM_TOP);
+        vg_lite_copy_image(&tmpbuf, im->m_vglbuf, 0, 0, 0, 0, width, height);
+        vg_lite_finish();
+        vg_lite_set_mirror(VG_LITE_ORIENTATION_TOP_BOTTOM);
+    }
+#else
+    {
+        int swapInterval = win->swapInterval;
         if (swapInterval != 0 || !display->panVsync)
         {
             pthread_mutex_lock(&display->condMutex);
@@ -2122,13 +2138,15 @@ void OSBlitToWindow(void* context, const Drawable* drawable)
             pthread_mutex_unlock(&display->condMutex);
         }
     }
+#endif
 
     pthread_mutex_unlock(&displayMutex);
 }
 
 VGuint OSGetPixmapInfo(NativePixmapType pixmap, VGuint* width, VGuint* height, VGImageFormat* format, VGuint* bitsPerPixel, VGuint* stride, VGubyte** bits)
 {
-    fbGetPixmapInfo(pixmap, width,height, format, bitsPerPixel, stride, (void**)bits);
+    fbGetPixmapInfo(pixmap, width, height, bitsPerPixel, stride, (void**)bits);
 
     return 0;
 }
+

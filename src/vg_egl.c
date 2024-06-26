@@ -894,26 +894,10 @@ EGLAPI EGLDisplay EGLAPIENTRY eglGetDisplay(EGLNativeDisplayType display_id)
 
     newDisplay = getEglDisplay(display_id);
 
-    if (newDisplay == NULL && display_id == (void *) EGL_DEFAULT_DISPLAY)
+    if (newDisplay == NULL)
     {
         newDisplay= OSGetDisplay(display_id);
 
-        // init display eglconfigs
-        initEGLDisplayConfigs(newDisplay);
-        addEglDisplay(newDisplay);
-
-        EGL_RETURN(EGL_SUCCESS, (EGLDisplay)newDisplay);
-    }
-    
-    if (newDisplay == NULL)
-    {
-        newDisplay = (VGEGLDisplay*)malloc(sizeof(VGEGLDisplay));
-        memset(newDisplay, 0, sizeof(VGEGLDisplay));
-
-        newDisplay->m_id          = display_id;
-        newDisplay->m_contexts    = NULL;
-        newDisplay->m_surfaces    = NULL;
-        
         // init display eglconfigs
         initEGLDisplayConfigs(newDisplay);
         addEglDisplay(newDisplay);
@@ -955,7 +939,7 @@ EGLAPI EGLBoolean EGLAPIENTRY eglTerminate(EGLDisplay dpy)
     vg_lite_close();
 
     removeEglDisplay(display);
-    free(display);
+
     EGL_RETURN(EGL_SUCCESS, EGL_TRUE);
 }
 
@@ -1414,6 +1398,8 @@ EGLAPI EGLBoolean EGLAPIENTRY eglGetConfigAttrib(EGLDisplay dpy, EGLConfig confi
 * \note        
 *//*-------------------------------------------------------------------*/
 
+#define OPENGL_VGLITE_CMDBUF_SIZE (256 << 10)
+
 EGLAPI EGLSurface EGLAPIENTRY eglCreateWindowSurface(EGLDisplay dpy, EGLConfig config, EGLNativeWindowType win, const EGLint *attrib_list)
 {
     EGL_GET_DISPLAY(dpy, EGL_NO_SURFACE);
@@ -1470,6 +1456,9 @@ EGLAPI EGLSurface EGLAPIENTRY eglCreateWindowSurface(EGLDisplay dpy, EGLConfig c
             EGL_IF_ERROR(!isWindow, EGL_BAD_NATIVE_WINDOW, EGL_NO_SURFACE);
             EGL_IF_ERROR(windowWidth <= 0 || windowHeight <= 0, EGL_BAD_NATIVE_WINDOW, EGL_NO_SURFACE);
         }
+
+        /* VGMark needs at least 256K command buffer size for VGLite */
+        vg_lite_set_command_buffer_size(OPENGL_VGLITE_CMDBUF_SIZE);
 
         /* Initialize VGLite API here */
         if (vg_lite_init(windowWidth, windowHeight) != VG_LITE_SUCCESS)
@@ -1575,6 +1564,9 @@ EGLAPI EGLSurface EGLAPIENTRY eglCreatePbufferSurface(EGLDisplay dpy, EGLConfig 
     EGL_IF_ERROR(width <= 0 || height <= 0, EGL_BAD_ATTRIBUTE, EGL_NO_SURFACE);
     VGEGLSurface* s = NULL;
     Drawable* d = NULL;
+
+    /* VGMark needs at least 256K command buffer size for VGLite */
+    vg_lite_set_command_buffer_size(OPENGL_VGLITE_CMDBUF_SIZE);
 
     /* Initialize VGLite API here */
     if (vg_lite_init(width, height) != VG_LITE_SUCCESS)
@@ -1965,6 +1957,13 @@ EGLAPI EGLBoolean EGLAPIENTRY eglMakeCurrent(EGLDisplay dpy, EGLSurface draw, EG
     VGEGLSurface* s = (VGEGLSurface*)draw;
     VGEGLContext* c = (VGEGLContext*)ctx;
 
+    //Return if context/draw are already current
+    VGEGLThread* thread = getEglCurrentThread();
+    if (thread && thread->m_context == c && thread->m_surface == s)
+    {
+        EGL_RETURN(EGL_SUCCESS, EGL_TRUE);
+    }
+
     if (draw != EGL_NO_SURFACE && ctx != EGL_NO_CONTEXT)
     {
         EGL_IF_ERROR(!display, EGL_NOT_INITIALIZED, EGL_FALSE);
@@ -1997,7 +1996,6 @@ EGLAPI EGLBoolean EGLAPIENTRY eglMakeCurrent(EGLDisplay dpy, EGLSurface draw, EG
     }
 
     //check if the thread is current
-    VGEGLThread* thread = getEglCurrentThread();
     if (thread)
     {    //thread is current, release the old bindinds and remove the thread from the current thread list
         VGEGLContext* pc = thread->m_context;
