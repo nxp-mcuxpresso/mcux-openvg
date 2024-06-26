@@ -1,0 +1,44 @@
+ifeq ($(gcdSTATIC_LINK), 1)
+# Default appendix for GL name collision.
+GL_11_APPENDIX ?= _es11
+GL_2_APPENDIX  ?= _es2
+endif
+
+##############################################
+# Include the global difinitions.
+
+include $(AQROOT)/makefile.linux.def
+
+OBJ_DIR  ?= bin_r
+################################################################################
+# Supply additional include directories.
+
+INCLUDE += -I$(AQROOT)/include
+ifeq ($(EGL_API_DRI), 1)
+	INCLUDE += -I$(X11_ARM_DIR)/include
+endif
+ifeq ($(EGL_API_X), 1)
+	INCLUDE += -I$(X11_ARM_DIR)/include
+endif
+
+CFLAGS += $(INCLUDE)
+
+LDFLAGS += -L$(SYSROOT_DIR)
+################################################################################
+# Supply necessary libraries.
+ifeq ($(gcdSTATIC_LINK), 1)
+  LIBS += $(AQROOT)/sdk/vivante/$(OBJ_DIR)/libVIVANTE.a
+else
+  LIBS += -L$(SDK_DIR)/drivers -lOpenVG -lVDK -L$(VG_LITE_SDK)/drivers -lvg_lite
+endif
+
+LIBS += -lm -lpthread -ldl -lrt
+ifeq ($(EGL_API_DRI), 1)
+  LIBS += -Wl,-rpath-link,$(X11_ARM_DIR)/lib
+endif
+ifeq ($(EGL_API_X), 1)
+  LIBS += -Wl,-rpath-link,$(X11_ARM_DIR)/lib
+endif
+ifeq ($(EGL_API_DFB), 1)
+  LIBS += -Wl,-rpath-link,$(DFB_DIR)/lib
+endif
