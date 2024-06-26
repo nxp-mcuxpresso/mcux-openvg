@@ -139,6 +139,12 @@ typedef void              *EGLNativeDisplayType;
 typedef khronos_uintptr_t  EGLNativePixmapType;
 typedef khronos_uintptr_t  EGLNativeWindowType;
 
+#elif defined(__FREERTOS__)
+
+typedef void *EGLNativeDisplayType;
+typedef void *EGLNativePixmapType;
+typedef void *EGLNativeWindowType;
+
 #else
 #error "Platform not recognized"
 #endif
@@ -165,5 +171,7 @@ typedef khronos_int32_t EGLint;
 #else
 #define EGL_CAST(type, value) ((type) (value))
 #endif
+
+#include <EGL/eglvivante.h>
 
 #endif /* __eglplatform_h */

@@ -90,7 +90,28 @@ typedef struct {
     VGint                   bitsPerPixel;
 } ColorDescriptor;
 
+typedef enum _ObjectType
+{
+    OBJECTTYPE_PATH = 0,
+    OBJECTTYPE_IMAGE,
+    OBJECTTYPE_MASK,
+    OBJECTTYPE_FONT,
+    OBJECTTYPE_PAINT,
+    OBJECTTYPE_COUNT
+} ObjectType;
+
+typedef struct _Object_list* Objectptr;
+
+typedef struct _Object_list
+{
+    Objectptr prev;
+    Objectptr next;
+    ObjectType type;
+    VGint name;
+} Object_list;
+
 typedef struct ImageRec {
+    Object_list             object;
     ColorDescriptor         m_desc;
     VGint                   m_width;
     VGint                   m_height;
@@ -110,6 +131,7 @@ typedef struct ImageRec {
 
 typedef struct
 {
+    Object_list             object;
     struct
     {
         int                 x;
@@ -141,23 +163,12 @@ typedef struct {
 } Color;
 
 typedef struct {
-
-    struct {
-        VGfloat                 r;
-        VGfloat                 g;
-        VGfloat                 b;
-        VGfloat                 a;
-        InternalFormat          m_format;
-    }color[64*64]; //test image's max_width * max_height
-} ColorArray;
-
-typedef struct {
     VGfloat                 offset;
     Color                   color;
 } GradientStop;
 
 typedef struct {
-
+    Object_list             object;
     VGPaintType             m_paintType;
     Color                   m_paintColor;
     Color                   m_inputPaintColor;
@@ -180,6 +191,7 @@ typedef struct {
     VGTilingMode            m_patternTilingMode;
     Image*                  m_pattern;
     VGint                   m_referenceCount;
+    vg_lite_buffer_t        grad_image;
 } Paint;
 
 typedef struct {
@@ -240,7 +252,9 @@ typedef struct {
 
 typedef struct {
 
-    //input data
+    /* Embedded object */
+    Object_list               object;
+    /* Object states. */
     VGint                   m_format;
     VGPathDatatype          m_datatype;
     VGfloat                 m_scale;
@@ -270,6 +284,7 @@ typedef struct
 } Glyph;
 
 typedef struct {
+    Object_list             object;
     Glyph*                  m_glyphs;
     VGint                   m_glyphArraySize;
     VGint                   m_glyphSize;

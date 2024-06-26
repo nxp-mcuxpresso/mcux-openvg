@@ -169,6 +169,8 @@ VGContext* createVgContext(VGContext* shareContext)
             goto VgContextErr;
         }
         memset(vgctx->m_imageManager, 0, sizeof(VGImageManager));
+        vgctx->m_imageManager->m_resources = (VGImageEntry*)malloc(sizeof(VGImageEntry));
+        memset(vgctx->m_imageManager->m_resources, 0, sizeof(VGImageEntry));
 
         vgctx->m_pathManager = (VGPathManager*)malloc(sizeof(VGPathManager));
         if (!vgctx->m_pathManager)
@@ -177,6 +179,8 @@ VGContext* createVgContext(VGContext* shareContext)
             goto VgContextErr;
         }
         memset(vgctx->m_pathManager, 0, sizeof(VGPathManager));
+        vgctx->m_pathManager->m_resources = (VGPathEntry*)malloc(sizeof(VGPathEntry));
+        memset(vgctx->m_pathManager->m_resources, 0, sizeof(VGPathEntry));
 
         vgctx->m_paintManager = (VGPaintManager*)malloc(sizeof(VGPaintManager));
         if (!vgctx->m_paintManager)
@@ -193,6 +197,8 @@ VGContext* createVgContext(VGContext* shareContext)
             goto VgContextErr;
         }
         memset(vgctx->m_fontManager, 0, sizeof(VGFontManager));
+        vgctx->m_fontManager->m_resources = (VGFontEntry*)malloc(sizeof(VGFontEntry));
+        memset(vgctx->m_fontManager->m_resources, 0, sizeof(VGFontEntry));
 
         vgctx->m_maskLayerManager = (VGMaskLayerManager*)malloc(sizeof(VGMaskLayerManager));
         if (!vgctx->m_maskLayerManager)
@@ -201,7 +207,8 @@ VGContext* createVgContext(VGContext* shareContext)
             goto VgContextErr;
         }
         memset(vgctx->m_maskLayerManager, 0, sizeof(VGMaskLayerManager));
-
+        vgctx->m_maskLayerManager->m_resources = (VGMaskLayerEntry*)malloc(sizeof(VGMaskLayerEntry));
+        memset(vgctx->m_maskLayerManager->m_resources, 0, sizeof(VGMaskLayerEntry));
     }
     VG_ASSERT(vgctx->m_imageManager);
     VG_ASSERT(vgctx->m_pathManager);
@@ -244,99 +251,149 @@ void setDefaultDrawable(VGContext* ctx, Drawable* drawable)
 
 VGboolean isValidImage(VGContext* ctx, VGImage image)
 {
-    VGImageEntry* resptr = NULL;
-
-    if (ctx && ctx->m_imageManager && ctx->m_imageManager->m_resources)
+    if (image == NULL)
+        return VG_FALSE;
+    VGuint handle;;
+    VGint index;
+    Objectptr current;
+    handle = (VGuint)image;
+    if ((handle < ctx->m_imageManager->lohandle) ||
+        (handle > ctx->m_imageManager->hihandle))
     {
-        resptr = ctx->m_imageManager->m_resources;
-        while (resptr)
-        {
-            if (resptr->resource == (Image*)image)
-            {
-                return VG_TRUE;
-            }
-            resptr = resptr->next;
-        }
+        return VG_FALSE;
     }
+    Objectptr object_image = (Objectptr)image;
+     if ((object_image->type >= OBJECTTYPE_COUNT) || (object_image->type != OBJECTTYPE_IMAGE))
+         return VG_FALSE;
+    index = object_image->name % VIV_OBJECTS_HASH;
+    current = ctx->m_imageManager->m_resources->m_array[index];
 
-    return VG_FALSE;
+    /* Search teh cache for the object. */
+    while (current != NULL)
+    {
+        if (object_image == current)
+        {
+            break;
+        }
+        current = current->next;
+    }
+    if (current == NULL)
+        return VG_FALSE;
+    /* Move to the head of teh list. */
+    if (current->prev != NULL)
+    {
+        /*Remove from the chain*/
+        current->prev->next = current->next;
+        if (current->next != NULL)
+        {
+            current->next->prev = current->prev;
+        }
+        /* Insert to the head. */
+        current->prev = NULL;
+        current->next = ctx->m_imageManager->m_resources->m_array[index];
+        ctx->m_imageManager->m_resources->m_array[index]->prev = current;
+        ctx->m_imageManager->m_resources->m_array[index] = current;
+    }
+    return VG_TRUE;
 }
 
 void addImageResource(VGContext* ctx, Image* image)
 {
-    VGImageEntry* resptr = NULL;
+    VGint index;
+    VGuint handle;
+    Objectptr head;
+    Objectptr object_image = (Objectptr)image;
+    ctx->m_imageManager->m_resources->count++;
+    object_image->name = ctx->m_imageManager->m_resources->count;
+    VG_ASSERT(object_image->name);
+    VG_ASSERT(object_image->type < OBJECTTYPE_COUNT);
+    index = object_image->name % VIV_OBJECTS_HASH;
+    head = ctx->m_imageManager->m_resources->m_array[index];
 
-    if (ctx && ctx->m_imageManager)
+    /* Insert to the head*/
+    object_image->prev = NULL;
+    if (head == NULL)
     {
-        resptr = ctx->m_imageManager->m_resources;
-        while (resptr)
-        {
-            if (resptr->resource == image) {
-                image->m_referenceCount++;
-                return;
-            }
-
-            resptr = resptr->next;
-        }
-
-        resptr = (VGImageEntry*)malloc(sizeof(VGImageEntry));
-        if (!resptr)
-        {
-            setError(VG_OUT_OF_MEMORY_ERROR);
-            return;
-        }
-        resptr->resource = image;
-        resptr->next = ctx->m_imageManager->m_resources;
-        ctx->m_imageManager->m_resources = resptr;
-        image->m_referenceCount++;
+        object_image->next = NULL;
+    }
+    else
+    {
+        object_image->next = head;
+        head->prev = object_image;
+    }
+    ctx->m_imageManager->m_resources->m_array[index] = object_image;
+    image->m_referenceCount++;
+    handle = (VGuint)object_image;
+    if (handle < ctx->m_imageManager->lohandle)
+    {
+        ctx->m_imageManager->lohandle = handle;
+    }
+    if (handle > ctx->m_imageManager->hihandle)
+    {
+        ctx->m_imageManager->hihandle = handle;
     }
 }
 
 void removeImageResource(VGContext* ctx, Image* image)
 {
-    VGImageEntry *resptr, *prep;
-
-    if (ctx && ctx->m_imageManager)
+    VGint index;
+    Objectptr object_image = (Objectptr)image;
+    index = object_image->name % VIV_OBJECTS_HASH;
+    /* Remove from the chain */
+    if (object_image == ctx->m_imageManager->m_resources->m_array[index])
     {
-        resptr = ctx->m_imageManager->m_resources;
-        prep = resptr;
-
-        while (resptr)
+        ctx->m_imageManager->m_resources->m_array[index] = object_image->next;
+    }
+    else
+    {
+        if (object_image->prev)
         {
-            if (resptr->resource == image)
-            {
-                if (resptr == ctx->m_imageManager->m_resources)
-                {
-                    ctx->m_imageManager->m_resources = resptr->next;
-                }
-                else
-                {
-                    prep->next = resptr->next;
-                }
-                free(resptr);
-                break;
-            }
-
-            prep = resptr;
-            resptr = resptr->next;
+            object_image->prev->next = object_image->next;
         }
     }
+    if (object_image->next)
+    {
+        object_image->next->prev = object_image->prev;
+    }
+    object_image->prev = object_image->next = NULL;
 }
 
 void destroyImageManager(VGContext* ctx)
 {
-    VGImageEntry* resptr;
-
+    VGint index;
+    Objectptr object_image;
     if (ctx && ctx->m_imageManager)
     {
-        resptr = ctx->m_imageManager->m_resources;
-        while (resptr)
+        for (int i = 0; i < VIV_OBJECTS_HASH; i++)
         {
-            ctx->m_imageManager->m_resources = resptr->next;
-            free(resptr);
-            resptr = ctx->m_imageManager->m_resources;
-        }
+            if (ctx->m_imageManager->m_resources->m_array[i] != NULL)
+                /* Delete the objects*/
+                while (ctx->m_imageManager->m_resources->m_array[i])
+                {
+                    /* Copy the head object */
+                    object_image = ctx->m_imageManager->m_resources->m_array[i];
+                    index = object_image->name % VIV_OBJECTS_HASH;
 
+                    /* Remove from the chain */
+                    if (object_image == ctx->m_imageManager->m_resources->m_array[i])
+                    {
+                        ctx->m_imageManager->m_resources->m_array[i] = object_image->next;
+                    }
+                    else
+                    {
+                        if (object_image->prev)
+                        {
+                            object_image->prev->next = object_image->prev;
+                        }
+                    }
+                    if (object_image->next)
+                    {
+                        object_image->next->prev = object_image->prev;
+                    }
+                    object_image->prev = object_image->next = NULL;
+                }
+        }
+        free(ctx->m_imageManager->m_resources);
         free(ctx->m_imageManager);
         ctx->m_imageManager = NULL;
     }
@@ -344,93 +401,148 @@ void destroyImageManager(VGContext* ctx)
 
 VGboolean isValidMaskLayer(VGContext* ctx, VGHandle mask)
 {
-    VGMaskLayerEntry* resptr = NULL;
-
-    if (ctx && ctx->m_maskLayerManager && ctx->m_maskLayerManager->m_resources)
+    if (mask == NULL)
+        return VG_FALSE;
+    VGint index;
+    VGuint handle;
+    Objectptr current;
+    handle = (VGuint)mask;
+    if ((handle < ctx->m_maskLayerManager->lohandle) ||
+        (handle > ctx->m_maskLayerManager->hihandle))
     {
-        resptr = ctx->m_maskLayerManager->m_resources;
-        while (resptr)
-        {
-            if (resptr->resource == (Surface*)mask)
-            {
-                return VG_TRUE;
-            }
-            resptr = resptr->next;
-        }
+        return VG_FALSE;
     }
+    Objectptr object_mask = (Objectptr)mask;
+    if ((object_mask->type >= OBJECTTYPE_COUNT) || (object_mask->type != OBJECTTYPE_MASK))
+          return VG_FALSE;
+    index = object_mask->name % VIV_OBJECTS_HASH;
+    current = ctx->m_maskLayerManager->m_resources->m_array[index];
 
-    return VG_FALSE;
+    /* Search teh cache for the object. */
+    while (current != NULL)
+    {
+        if (object_mask == current)
+        {
+            break;
+        }
+        current = current->next;
+    }
+    if (current == NULL)
+        return VG_FALSE;
+    /* Move to the head of teh list. */
+    if (current->prev != NULL)
+    {
+        /*Remove from the chain*/
+        current->prev->next = current->next;
+        if (current->next != NULL)
+        {
+            current->next->prev = current->prev;
+        }
+        /* Insert to the head. */
+        current->prev = NULL;
+        current->next = ctx->m_maskLayerManager->m_resources->m_array[index];
+        ctx->m_maskLayerManager->m_resources->m_array[index]->prev = current;
+        ctx->m_maskLayerManager->m_resources->m_array[index] = current;
+    }
+    return VG_TRUE;
 }
 
 void addMaskLayerResource(VGContext* ctx, Surface* layer)
 {
-    VGMaskLayerEntry* resptr = NULL;
+    VGint index;
+    VGuint handle;
+    Objectptr head;
+    Objectptr object_mask = (Objectptr)layer;
+    ctx->m_maskLayerManager->m_resources->count++;
+    object_mask->name = ctx->m_maskLayerManager->m_resources->count;
+    VG_ASSERT(object_mask->name);
+    VG_ASSERT(object_mask->type < OBJECTTYPE_COUNT);
+    index = object_mask->name % VIV_OBJECTS_HASH;
+    head = ctx->m_maskLayerManager->m_resources->m_array[index];
 
-    if (ctx && ctx->m_maskLayerManager)
+    /* Insert to the head*/
+    object_mask->prev = NULL;
+    if (head == NULL)
     {
-        resptr = ctx->m_maskLayerManager->m_resources;
-        while (resptr)
-        {
-            if (resptr->resource == layer) return;
-            resptr = resptr->next;
-        }
-
-        resptr = (VGMaskLayerEntry*)malloc(sizeof(VGMaskLayerEntry));
-        if (!resptr)
-        {
-            setError(VG_OUT_OF_MEMORY_ERROR);
-            return;
-        }
-        resptr->resource = layer;
-        resptr->next = ctx->m_maskLayerManager->m_resources;
-        ctx->m_maskLayerManager->m_resources = resptr;
+        object_mask->next = NULL;
+    }
+    else
+    {
+        object_mask->next = head;
+        head->prev = object_mask;
+    }
+    ctx->m_maskLayerManager->m_resources->m_array[index] = object_mask;
+    handle = (VGuint)object_mask;
+    if (handle < ctx->m_maskLayerManager->lohandle)
+    {
+        ctx->m_maskLayerManager->lohandle = handle;
+    }
+    if (handle > ctx->m_maskLayerManager->hihandle)
+    {
+        ctx->m_maskLayerManager->hihandle = handle;
     }
 }
 
 void removeMaskLayerResource(VGContext* ctx, Surface* layer)
 {
-    VGMaskLayerEntry* resptr, * prep;
-
-    if (ctx && ctx->m_maskLayerManager)
+    VGint index;
+    Objectptr object_mask = (Objectptr)layer;
+    index = object_mask->name % VIV_OBJECTS_HASH;
+    /* Remove from the chain */
+    if (object_mask == ctx->m_maskLayerManager->m_resources->m_array[index])
     {
-        resptr = ctx->m_maskLayerManager->m_resources;
-        prep = resptr;
-
-        while (resptr)
+        ctx->m_maskLayerManager->m_resources->m_array[index] = object_mask->next;
+    }
+    else
+    {
+        if (object_mask->prev)
         {
-            if (resptr->resource == layer)
-            {
-                if (resptr == ctx->m_maskLayerManager->m_resources)
-                {
-                    ctx->m_maskLayerManager->m_resources = resptr->next;
-                }
-                else
-                {
-                    prep->next = resptr->next;
-                }
-                free(resptr);
-                break;
-            }
-            prep = resptr;
-            resptr = resptr->next;
+            object_mask->prev->next = object_mask->next;
         }
     }
+    if (object_mask->next)
+    {
+        object_mask->next->prev = object_mask->prev;
+    }
+    object_mask->prev = object_mask->next = NULL;
 }
 
 void destroyMaskLayerManager(VGContext* ctx)
 {
-    VGMaskLayerEntry* resptr;
-
+    VGint index;
+    Objectptr object_mask;
     if (ctx && ctx->m_maskLayerManager)
     {
-        resptr = ctx->m_maskLayerManager->m_resources;
-        while (resptr)
+        for (int i = 0; i < VIV_OBJECTS_HASH; i++)
         {
-            ctx->m_maskLayerManager->m_resources = resptr->next;
-            free(resptr);
-            resptr = ctx->m_maskLayerManager->m_resources;
-        }
+            if (ctx->m_maskLayerManager->m_resources->m_array[i] != NULL)
+                /* Delete the objects*/
+                while (ctx->m_maskLayerManager->m_resources->m_array[i])
+                {
+                    /* Copy the head object */
+                    object_mask = ctx->m_maskLayerManager->m_resources->m_array[i];
+                    index = object_mask->name % VIV_OBJECTS_HASH;
 
+                    /* Remove from the chain */
+                    if (object_mask == ctx->m_maskLayerManager->m_resources->m_array[i])
+                    {
+                        ctx->m_maskLayerManager->m_resources->m_array[i] = object_mask->next;
+                    }
+                    else
+                    {
+                        if (object_mask->prev)
+                        {
+                            object_mask->prev->next = object_mask->prev;
+                        }
+                    }
+                    if (object_mask->next)
+                    {
+                        object_mask->next->prev = object_mask->prev;
+                    }
+                    object_mask->prev = object_mask->next = NULL;
+                }
+        }
+        free(ctx->m_maskLayerManager->m_resources);
         free(ctx->m_maskLayerManager);
         ctx->m_maskLayerManager = NULL;
     }
@@ -438,97 +550,150 @@ void destroyMaskLayerManager(VGContext* ctx)
 
 VGboolean isValidPath(VGContext* ctx, VGPath path)
 {
-    VGPathEntry* resptr = NULL;
-
-    if (ctx && ctx->m_pathManager && ctx->m_pathManager->m_resources)
+    if (path == NULL)
+        return VG_FALSE;
+    VGint index;
+    VGuint handle;
+    Objectptr current;
+    handle = (VGuint)path;
+    if ((handle < ctx->m_pathManager->lohandle) ||
+        (handle > ctx->m_pathManager->hihandle))
     {
-        resptr = ctx->m_pathManager->m_resources;
-        while (resptr)
-        {
-            if (resptr->resource == (Path*)path)
-            {
-                return VG_TRUE;
-            }
-            resptr = resptr->next;
-        }
+        return VG_FALSE;
     }
+    Objectptr object_path = (Objectptr)path;
+     if ((object_path->type >= OBJECTTYPE_COUNT) || (object_path->type != OBJECTTYPE_PATH))
+         return VG_FALSE;
+    index = object_path->name % VIV_OBJECTS_HASH;
+    current = ctx->m_pathManager->m_resources->m_array[index];
 
-    return VG_FALSE;
+    /* Search teh cache for the object. */
+    while (current != NULL)
+    {
+        if (object_path == current)
+        {
+            break;
+        }
+        current = current->next;
+    }
+    if (current == NULL)
+        return VG_FALSE;
+    /* Move to the head of teh list. */
+    if (current->prev != NULL)
+    {
+        /*Remove from the chain*/
+        current->prev->next = current->next;
+        if (current->next != NULL)
+        {
+            current->next->prev = current->prev;
+        }
+        /* Insert to the head. */
+        current->prev = NULL;
+        current->next = ctx->m_pathManager->m_resources->m_array[index];
+        ctx->m_pathManager->m_resources->m_array[index]->prev = current;
+        ctx->m_pathManager->m_resources->m_array[index] = current;
+    }
+    return VG_TRUE;
 }
 
 void addPathResource(VGContext* ctx, Path* path)
 {
-    VGPathEntry* resptr = NULL;
+    VGint index;
+    VGuint handle;
+    Objectptr head;
+    Objectptr object_path = (Objectptr)path;
+    ctx->m_pathManager->m_resources->count++;
+    object_path->name = ctx->m_pathManager->m_resources->count;
+    VG_ASSERT(object_path->name);
+    VG_ASSERT(object_path->type < OBJECTTYPE_COUNT);
+    index = object_path->name % VIV_OBJECTS_HASH;
+    head = ctx->m_pathManager->m_resources->m_array[index];
 
-    if (ctx && ctx->m_pathManager)
+    /* Insert to the head*/
+    object_path->prev = NULL;
+    if (head == NULL)
     {
-        resptr = ctx->m_pathManager->m_resources;
-        while (resptr)
-        {
-            if (resptr->resource == path) return;
-            resptr = resptr->next;
-        }
-
-        resptr = (VGPathEntry*)malloc(sizeof(VGPathEntry));
-        if (!resptr)
-        {
-            setError(VG_OUT_OF_MEMORY_ERROR);
-            return;
-        }
-        resptr->resource = path;
-        resptr->next = ctx->m_pathManager->m_resources;
-        ctx->m_pathManager->m_resources = resptr;
+        object_path->next = NULL;
     }
+    else
+    {
+        object_path->next = head;
+        head->prev = object_path;
+    }
+    ctx->m_pathManager->m_resources->m_array[index] = object_path;
+    handle = (VGuint)object_path;
+    if (handle < ctx->m_pathManager->lohandle)
+    {
+        ctx->m_pathManager->lohandle = handle;
+    }
+    if (handle > ctx->m_pathManager->hihandle)
+    {
+        ctx->m_pathManager->hihandle = handle;
+    }
+
 }
 
 void removePathResource(VGContext* ctx, Path* path)
 {
-    VGPathEntry* resptr, * prep;
-
-    if (ctx && ctx->m_pathManager)
+    VGint index;
+    Objectptr object_path = (Objectptr)path;
+    index = object_path->name % VIV_OBJECTS_HASH;
+    /* Remove from the chain */
+    if (object_path == ctx->m_pathManager->m_resources->m_array[index])
     {
-        resptr = ctx->m_pathManager->m_resources;
-        prep = resptr;
-
-        while (resptr)
+        ctx->m_pathManager->m_resources->m_array[index] = object_path->next;
+    }
+    else
+    {
+        if (object_path->prev)
         {
-            if (resptr->resource == path)
-            {
-                if (resptr == ctx->m_pathManager->m_resources)
-                {
-                    ctx->m_pathManager->m_resources = resptr->next;
-                }
-                else
-                {
-                    prep->next = resptr->next;
-                }
-                free(resptr);
-                break;
-            }
-            prep = resptr;
-            resptr = resptr->next;
+            object_path->prev->next = object_path->next;
         }
     }
+    if (object_path->next)
+    {
+        object_path->next->prev = object_path->prev;
+    }
+    object_path->prev = object_path->next = NULL;
 }
 
 void destroyPathManager(VGContext* ctx)
 {
-    VGPathEntry* resptr;
-
+    VGint index;
+    Objectptr object_path;
     if (ctx && ctx->m_pathManager)
     {
-        resptr = ctx->m_pathManager->m_resources;
-        while (resptr)
+        for (int i = 0; i < VIV_OBJECTS_HASH; i++)
         {
-            ctx->m_pathManager->m_resources = resptr->next;
-            if (resptr->resource)
-            {
-                freePathImpl((Path*)resptr->resource);
-            }
-            free(resptr);
-            resptr = ctx->m_pathManager->m_resources;
-        }
+            if (ctx->m_pathManager->m_resources->m_array[i] != NULL)
+                /* Delete the objects*/
+                while (ctx->m_pathManager->m_resources->m_array[i])
+                {
+                    /* Copy the head object */
+                    object_path = ctx->m_pathManager->m_resources->m_array[i];
+                    index = object_path->name % VIV_OBJECTS_HASH;
 
+                    /* Remove from the chain */
+                    if (object_path == ctx->m_pathManager->m_resources->m_array[i])
+                    {
+                        ctx->m_pathManager->m_resources->m_array[i] = object_path->next;
+                    }
+                    else
+                    {
+                        if (object_path->prev)
+                        {
+                            object_path->prev->next = object_path->prev;
+                        }
+                    }
+                    if (object_path->next)
+                    {
+                        object_path->next->prev = object_path->prev;
+                    }
+                    object_path->prev = object_path->next = NULL;
+                    freePathImpl((Path*)object_path);
+                }
+        }
+        free(ctx->m_pathManager->m_resources);
         free(ctx->m_pathManager);
         ctx->m_pathManager = NULL;
     }
@@ -647,6 +812,54 @@ void releasePaint(VGContext* ctx, VGbitfield paintModes)
     }
 }
 
+VGboolean isValidFont(VGContext* ctx, VGFont font)
+{
+    if (font == NULL)
+        return VG_FALSE;
+    VGint index;
+    VGuint handle;
+    Objectptr current;
+    handle = (VGuint)font;
+    if ((handle < ctx->m_fontManager->lohandle) ||
+        (handle > ctx->m_fontManager->hihandle))
+    {
+        return VG_FALSE;
+    }
+    Objectptr object_font = (Objectptr)font;
+    if ((object_font->type >= OBJECTTYPE_COUNT) || (object_font->type != OBJECTTYPE_FONT))
+          return VG_FALSE;
+    index = object_font->name % VIV_OBJECTS_HASH;
+    current = ctx->m_fontManager->m_resources->m_array[index];
+
+    /* Search teh cache for the object. */
+    while (current != NULL)
+    {
+        if (object_font == current)
+        {
+            break;
+        }
+        current = current->next;
+    }
+    if (current == NULL)
+        return VG_FALSE;
+    /* Move to the head of teh list. */
+    if (current->prev != NULL)
+    {
+        /*Remove from the chain*/
+        current->prev->next = current->next;
+        if (current->next != NULL)
+        {
+            current->next->prev = current->prev;
+        }
+        /* Insert to the head. */
+        current->prev = NULL;
+        current->next = ctx->m_fontManager->m_resources->m_array[index];
+        ctx->m_fontManager->m_resources->m_array[index]->prev = current;
+        ctx->m_fontManager->m_resources->m_array[index] = current;
+    }
+    return VG_TRUE;
+}
+
 void destroyPaintManager(VGContext* ctx)
 {
     VGPaintEntry* resptr;
@@ -670,100 +883,104 @@ void destroyPaintManager(VGContext* ctx)
     }
 }
 
-VGboolean isValidFont(VGContext* ctx, VGFont font)
-{
-    VGFontEntry* resptr = NULL;
-
-    if (ctx && ctx->m_fontManager && ctx->m_fontManager->m_resources)
-    {
-        resptr = ctx->m_fontManager->m_resources;
-        while (resptr)
-        {
-            if (resptr->resource == (Font*)font)
-            {
-                return VG_TRUE;
-            }
-            resptr = resptr->next;
-        }
-    }
-
-    return VG_FALSE;
-}
-
 void addFontResource(VGContext* ctx, Font* font)
 {
-    VGFontEntry* resptr = NULL;
+    VGint index;
+    VGuint handle;
+    Objectptr head;
+    Objectptr object_font = (Objectptr)font;
+    ctx->m_fontManager->m_resources->count++;
+    object_font->name = ctx->m_fontManager->m_resources->count;
+    VG_ASSERT(object_font->name);
+    VG_ASSERT(object_font->type < OBJECTTYPE_COUNT);
+    index = object_font->name % VIV_OBJECTS_HASH;
+    head = ctx->m_fontManager->m_resources->m_array[index];
 
-    if (ctx && ctx->m_fontManager)
+    /* Insert to the head*/
+    object_font->prev = NULL;
+    if (head == NULL)
     {
-        resptr = ctx->m_fontManager->m_resources;
-        while (resptr)
-        {
-            if (resptr->resource == font) return;
-            resptr = resptr->next;
-        }
-
-        resptr = (VGFontEntry*)malloc(sizeof(VGFontEntry));
-        if (!resptr)
-        {
-            setError(VG_OUT_OF_MEMORY_ERROR);
-            return;
-        }
-        resptr->resource = font;
-        resptr->next = ctx->m_fontManager->m_resources;
-        ctx->m_fontManager->m_resources = resptr;
-        font->m_referenceCount++;
+        object_font->next = NULL;
+    }
+    else
+    {
+        object_font->next = head;
+        head->prev = object_font;
+    }
+    ctx->m_fontManager->m_resources->m_array[index] = object_font;
+    font->m_referenceCount++;
+    handle = (VGuint)object_font;
+    if (handle < ctx->m_fontManager->lohandle)
+    {
+        ctx->m_fontManager->lohandle = handle;
+    }
+    if (handle > ctx->m_fontManager->hihandle)
+    {
+        ctx->m_fontManager->hihandle = handle;
     }
 }
 
 void removeFontResource(VGContext* ctx, Font* font)
 {
-    VGFontEntry* resptr, * prep;
-
-    if (ctx && ctx->m_fontManager)
+    VGint index;
+    Objectptr object_font = (Objectptr)font;
+    index = object_font->name % VIV_OBJECTS_HASH;
+    /* Remove from the chain */
+    if (object_font == ctx->m_fontManager->m_resources->m_array[index])
     {
-        resptr = ctx->m_fontManager->m_resources;
-        prep = resptr;
-
-        while (resptr)
+        ctx->m_fontManager->m_resources->m_array[index] = object_font->next;
+    }
+    else
+    {
+        if (object_font->prev)
         {
-            if (resptr->resource == font)
-            {
-                if (resptr == ctx->m_fontManager->m_resources)
-                {
-                    ctx->m_fontManager->m_resources = resptr->next;
-                }
-                else
-                {
-                    prep->next = resptr->next;
-                }
-                free(resptr);
-                break;
-            }
-            prep = resptr;
-            resptr = resptr->next;
+            object_font->prev->next = object_font->next;
         }
     }
+    if (object_font->next)
+    {
+        object_font->next->prev = object_font->prev;
+    }
+    object_font->prev = object_font->next = NULL;
 }
 
 void destroyFontManager(VGContext* ctx)
 {
-    VGFontEntry* resptr;
-
+    VGint index;
+    Objectptr object_font;
     if (ctx && ctx->m_fontManager)
     {
-        resptr = ctx->m_fontManager->m_resources;
-        while (resptr)
+        for (int i = 0; i < VIV_OBJECTS_HASH; i++)
         {
-            ctx->m_fontManager->m_resources = resptr->next;
-            if (resptr->resource)
-            {
-                freeFontImpl((Font*)resptr->resource);
-            }
-            free(resptr);
-            resptr = ctx->m_fontManager->m_resources;
-        }
+            if (ctx->m_fontManager->m_resources->m_array[i] != NULL)
+                /* Delete the objects*/
+                while (ctx->m_fontManager->m_resources->m_array[i])
+                {
+                    /* Copy the head object */
+                    object_font = ctx->m_fontManager->m_resources->m_array[i];
+                    index = object_font->name % VIV_OBJECTS_HASH;
 
+                    /* Remove from the chain */
+                    if (object_font == ctx->m_fontManager->m_resources->m_array[i])
+                    {
+                        ctx->m_fontManager->m_resources->m_array[i] = object_font->next;
+                    }
+                    else
+                    {
+                        if (object_font->prev)
+                        {
+                            object_font->prev->next = object_font->prev;
+                        }
+                    }
+                    if (object_font->next)
+                    {
+                        object_font->next->prev = object_font->prev;
+                    }
+                    object_font->prev = object_font->next = NULL;
+                    freeFontImpl((Font*)object_font);
+                }
+        }
+        free(ctx->m_fontManager->m_resources);
         free(ctx->m_fontManager);
         ctx->m_fontManager = NULL;
     }
@@ -835,17 +1052,14 @@ void freePaintImpl(Paint* paint)
 {
     if (paint->m_pattern)
     {
-        if (paint->m_pattern->m_vglbuf)
-        {
-            vg_lite_free(paint->m_pattern->m_vglbuf);
-            free(paint->m_pattern->m_vglbuf);
-            paint->m_pattern->m_vglbuf = NULL;
-            paint->m_pattern->m_data = NULL;
-        }
-        free(paint->m_pattern);
+        paint->m_pattern->m_referenceCount--;
+        paint->m_pattern->m_inUse--;
         paint->m_pattern = NULL;
     }
-
+    if (paint->grad_image.handle != NULL)
+    {
+        vg_lite_free(&paint->grad_image);
+    }
     free(paint);
 
 }

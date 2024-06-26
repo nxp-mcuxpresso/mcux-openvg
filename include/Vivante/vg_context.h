@@ -70,38 +70,44 @@ extern void  OSReleaseMutex(void);
 
 typedef struct VGImageEntryRec
 {
-    Image*                          resource;
-    struct VGImageEntryRec*         next;
+    Objectptr                      m_array[VIV_OBJECTS_HASH];
+    VGint                          count;
 } VGImageEntry;
 
 typedef struct
 {
     VGImageEntry*                   m_resources;
     VGint                           m_referenceCount;
+    VGuint                          lohandle;
+    VGuint                          hihandle;
 } VGImageManager;
 
 typedef struct VGMaskLayerEntryRec
 {
-    Surface*                        resource;
-    struct VGMaskLayerEntryRec*     next;
+    Objectptr                       m_array[VIV_OBJECTS_HASH];
+    VGint                           count;
 } VGMaskLayerEntry;
 
 typedef struct
 {
     VGMaskLayerEntry*               m_resources;
     VGint                           m_referenceCount;
+    VGuint                          lohandle;
+    VGuint                          hihandle;
 } VGMaskLayerManager;
 
 typedef struct VGPathEntryRec
 {
-    Path*                           resource;
-    struct VGPathEntryRec*          next;
+    Objectptr                       m_array[VIV_OBJECTS_HASH];
+    VGint                           count;
 } VGPathEntry;
 
 typedef struct
 {
     VGPathEntry*                    m_resources;
     VGint                           m_referenceCount;
+    VGuint                          lohandle;
+    VGuint                          hihandle;
 } VGPathManager;
 
 typedef struct VGPaintEntryRec
@@ -118,14 +124,16 @@ typedef struct
 
 typedef struct VGFontEntryRec
 {
-    Font*                           resource;
-    struct VGFontEntryRec*          next;
+    Objectptr                       m_array[VIV_OBJECTS_HASH];
+    VGint                           count;
 } VGFontEntry;
 
 typedef struct
 {
     VGFontEntry*                    m_resources;
     VGint                           m_referenceCount;
+    VGuint                          lohandle;
+    VGuint                          hihandle;
 } VGFontManager;
 
 typedef struct __VGcontextRec
