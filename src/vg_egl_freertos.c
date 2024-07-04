@@ -696,6 +696,7 @@ out:
 void OSDestroyDisplay(VGEGLDisplay *vdisplay)
 {
     fbDestroyDisplay(vdisplay->nativeDisplay);
+    free(vdisplay);
 }
 
 void* OSCreateWindowContext(NativeWindowType window)
