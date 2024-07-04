@@ -97,8 +97,8 @@ struct eglFbPlatform
                         int BitsPerPixel, NativePixmapType *Pixmap);
 
     int (*GetPixmapInfo)(NativeDisplayType Display, NativePixmapType Pixmap,
-                         int *Width, int *Height, VGImageFormat *Format,
-                         int *BitsPerPixel, int *Stride, void **Bits);
+                         int *Width, int *Height, int *BitsPerPixel,
+                         int *Stride, void **Bits);
 
     int (*DestroyPixmap)(NativeDisplayType Display, NativePixmapType Pixmap);
 
@@ -386,8 +386,8 @@ int CreatePixmap(NativeDisplayType display, int width, int height,
 }
 
 static int GetPixmapInfo(NativeDisplayType display, NativePixmapType pixmap,
-                         int *width, int *height, VGImageFormat *format,
-                         int *bitsPerPixel, int *stride, void **bits)
+                         int *width, int *height, int *bitsPerPixel,
+                         int *stride, void **bits)
 {
     struct fr_pixmap *pmap = (struct fr_pixmap*)pixmap;
 
@@ -402,9 +402,6 @@ static int GetPixmapInfo(NativeDisplayType display, NativePixmapType pixmap,
 
     if (height)
         *height = (int)pmap->imgbuf->height;
-
-    if (format)
-        *format = (VGImageFormat)pmap->imgbuf->format;
 
     if (bitsPerPixel)
         *bitsPerPixel = (int)pmap->bpp;
@@ -585,7 +582,7 @@ fbGetPixmapGeometry(
 {
     fbGetBackends(&fbBackend);
     fbBackend->GetPixmapInfo(NULL, (NativePixmapType)pixmap, width, height,
-                             NULL, NULL, NULL, NULL);
+                             NULL, NULL, NULL);
 }
 
 void
@@ -593,7 +590,6 @@ fbGetPixmapInfo(
     void *pixmap,
     int *width,
     int *height,
-    VGImageFormat *format,
     int *bitsPerPixel,
     int *stride,
     void **bits
@@ -601,7 +597,7 @@ fbGetPixmapInfo(
 {
     fbGetBackends(&fbBackend);
     fbBackend->GetPixmapInfo(NULL, (NativeDisplayType)pixmap, width, height,
-                             format, bitsPerPixel, stride, bits);
+                             bitsPerPixel, stride, bits);
 }
 
 void
@@ -783,7 +779,7 @@ VGuint OSGetPixmapInfo(NativePixmapType pixmap, VGuint *width, VGuint *height,
                        VGImageFormat *format, VGuint *bitsPerPixel,
                        VGuint *stride, VGubyte **bits)
 {
-    fbGetPixmapInfo(pixmap, (int*)width, (int*)height, format,
-                    (int*)bitsPerPixel, (int*)stride, (void**)bits);
+    fbGetPixmapInfo(pixmap, (int*)width, (int*)height, (int*)bitsPerPixel,
+                    (int*)stride, (void**)bits);
     return 0;
 }
