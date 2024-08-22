@@ -1,6 +1,7 @@
 /****************************************************************************
 *
 *    Copyright 2022 Vivante Corporation, Santa Clara, California.
+*    Copyright 2024 NXP
 *    All Rights Reserved.
 *
 *    Permission is hereby granted, free of charge, to any person obtaining
@@ -334,8 +335,6 @@ static VG_INLINE VGboolean isValidImageFormat(int f)
 }
 
 #endif /* __VG_IMAGE_H__ */
-
-void get_format_bytes(vg_lite_buffer_format_t format, uint32_t* mul, uint32_t* div, uint32_t* bytes_align);
 
 VGuint vgFormatTovgliteFormat(VGImageFormat format);
 
