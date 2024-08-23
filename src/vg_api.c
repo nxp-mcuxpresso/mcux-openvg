@@ -8238,7 +8238,7 @@ void VG_APIENTRY vgDestroyImage(VGImage image)
     VG_RETURN(VG_NO_RETVAL);
 }
 
-void writePixel(Image* dst, int x, int y, Color c, VGboolean display)
+static void writePixel(Image* dst, int x, int y, Color c, VGboolean display)
 {
     int rb = dst->m_desc.redBits;
     int gb = dst->m_desc.greenBits;
@@ -8551,7 +8551,7 @@ void convert(InternalFormat srcFormat, InternalFormat dstFormat, Color* c)
 
 }
 
-Color readPixel(Image* src, int x, int y)
+static Color readPixel(Image* src, int x, int y)
 {
 
     unsigned int p = 0;
