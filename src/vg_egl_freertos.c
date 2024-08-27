@@ -663,6 +663,7 @@ void OSDeinitMutex(void)
         return;
 
     vSemaphoreDelete(mutex);
+    mutex = NULL;
 }
 
 VGEGLDisplay* OSGetDisplay(NativeDisplayType display_id)
