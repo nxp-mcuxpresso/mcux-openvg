@@ -747,33 +747,9 @@ void OSBlitToWindow(void *context, const Drawable *drawable)
     vg_lite_buffer_t *vglbuf = drawable->m_color->m_image->m_vglbuf;
     OSWindowContext *ctx = (OSWindowContext*)context;
     struct fr_window *win = ctx->window;
-    vg_lite_buffer_t tmp = {0};
-    vg_lite_error_t err;
-    void *src, *dest;
-    int i;
-
-    tmp.width = vglbuf->width;
-    tmp.height = vglbuf->height;
-    tmp.format = vglbuf->format;
-    err = vg_lite_allocate(&tmp);
-    if (err != VG_LITE_SUCCESS)
-        return;
-
-    /* Vertical flip the buffer to account for the different coordinate systems
-     * between OpenVG and VGLite.
-     */
-    src = vglbuf->memory;
-    dest = tmp.memory + (vglbuf->height - 1) * vglbuf->stride;
-    for (i = 0; i < vglbuf->height; i ++) {
-        memcpy(dest, src, vglbuf->stride);
-        src += vglbuf->stride;
-        dest -= vglbuf->stride;
-    }
 
     vgFinish();
-    FBDEV_SetFrameBuffer(&win->display->g_fbdev, tmp.memory, 0);
-
-    vg_lite_free(&tmp);
+    FBDEV_SetFrameBuffer(&win->display->g_fbdev, vglbuf->memory, 0);
 }
 
 VGuint OSGetPixmapInfo(NativePixmapType pixmap, VGuint *width, VGuint *height,
