@@ -1,0 +1,5 @@
+menu "openvg"
+    config MCUX_COMPONENT_middleware.openvg
+        bool "OpenVG over VGLite"
+        select MCUX_COMPONENT_middleware.vglite
+endmenu
