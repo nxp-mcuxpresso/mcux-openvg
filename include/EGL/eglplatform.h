@@ -3,6 +3,7 @@
 
 /*
 ** Copyright 2007-2020 The Khronos Group Inc.
+** Copyright 2024 NXP
 ** SPDX-License-Identifier: Apache-2.0
 */
 
@@ -139,7 +140,7 @@ typedef void              *EGLNativeDisplayType;
 typedef khronos_uintptr_t  EGLNativePixmapType;
 typedef khronos_uintptr_t  EGLNativeWindowType;
 
-#elif defined(__FREERTOS__)
+#elif defined(SDK_OS_FREE_RTOS)
 
 typedef void *EGLNativeDisplayType;
 typedef void *EGLNativePixmapType;
