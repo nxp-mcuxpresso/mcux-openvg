@@ -120,8 +120,6 @@ static const uint8_t _vglOpcodes[] = {
 #define CMD_TO_SEGMENT(cmd) (cmd & 0xFE)
 #define CMD_IS_ABS(cmd) ((cmd & 0x01) == 0x00) 
 
-static vg_lite_buffer_t tmpbuf;
-
 static void get_format_bytes(vg_lite_buffer_format_t format,
     uint32_t* mul,
     uint32_t* div,
@@ -1667,7 +1665,7 @@ static void biasScaleTransform(Path* path, VGuint startIndex, VGuint numSegments
     }
 }
 
-static VGfloat __calAngle(VGfloat x, VGfloat y) {
+__attribute__((unused)) static VGfloat __calAngle(VGfloat x, VGfloat y) {
     VGfloat ml;
     if (y >= 0) {
         ml = sqrtf(x * x + y * y);
@@ -1679,7 +1677,7 @@ static VGfloat __calAngle(VGfloat x, VGfloat y) {
     }
 }
 
-static VGfloat __calTrigonomatricAngle(VGfloat SIN, VGfloat COS) {
+__attribute__((unused)) static VGfloat __calTrigonomatricAngle(VGfloat SIN, VGfloat COS) {
     if (COS > 0.f)
         return asinf(SIN);
     else if (SIN > 0.f)
@@ -4456,7 +4454,7 @@ static void updateRadialGrad(VGContext* context, vg_lite_radial_gradient_t* grad
     uint32_t common, stop;
     uint32_t i, width;
     uint8_t* bits;
-    vg_lite_float_t r, fx, fy;
+    vg_lite_float_t r;
     vg_lite_matrix_t* grad_m;
     vg_lite_radial_gradient_parameter_t* grad_param;
     vg_lite_matrix_t tmp_m;
@@ -4467,8 +4465,6 @@ static void updateRadialGrad(VGContext* context, vg_lite_radial_gradient_t* grad
     grad_m = &grad->matrix;
     grad_param = &grad->radial_grad;
     r = grad_param->r;
-    fx = grad_param->fx;
-    fy = grad_param->fy;
 
     // TODO: free old color ramp surface buffer.
 
@@ -5129,7 +5125,6 @@ void VG_APIENTRY vgMask(VGHandle mask, VGMaskOperation operation, VGint x, VGint
     }
 
     vg_lite_filter_t filter = VG_LITE_FILTER_POINT;
-    vg_lite_blend_t blend = context->m_blendMode;
     vg_lite_rectangle_t rect;
     rect.x = x;
     rect.y = y;
@@ -5215,7 +5210,7 @@ void VG_APIENTRY vgMask(VGHandle mask, VGMaskOperation operation, VGint x, VGint
     VG_RETURN(VG_NO_RETVAL);
 }
 
-static void renderStroke(const VGContext* context, int w, int h, int numSamples, Path* path, Rasterizer* rasterizer, const PixelPipe* pixelPipe, const Matrix3x3 userToSurface)
+__attribute__((unused)) static void renderStroke(const VGContext* context, int w, int h, int numSamples, Path* path, Rasterizer* rasterizer, const PixelPipe* pixelPipe, __attribute__((unused)) const Matrix3x3 userToSurface)
 {
     VG_ASSERT(context);
     VG_ASSERT(w > 0 && h > 0 && numSamples >= 1 && numSamples <= 32);
@@ -5243,8 +5238,6 @@ void VG_APIENTRY vgRenderToMask(VGPath path, VGbitfield paintModes, VGMaskOperat
     if (context->m_scissoring == VG_TRUE) {
         vg_lite_disable_scissor();
     }
-    Matrix3x3 userToSurface;
-    userToSurface = context->m_pathUserToSurface;
 
     Path* p = (Path*)path;
     vg_lite_path_t* vglpath = (vg_lite_path_t*)((Path*)path)->m_vglPath;
@@ -5825,7 +5818,6 @@ static VGboolean drawPath(VGContext* context, VGPath path, const Matrix3x3 userT
     Matrix3x3 userToSurfaceStroke = userToSurfaceMatrix;
     vg_lite_color_t fill_color = 0xFF000000;
     vg_lite_color_t stroke_color = 0xFF000000;
-    vg_lite_color_t input_color = 0xFFFFFFFF;
 
     if (context->m_masking) {
         vg_lite_enable_masklayer();
@@ -6684,16 +6676,10 @@ void VG_APIENTRY vgPointAlongPath(VGPath path, VGint startSegment, VGint numSegm
     VG_IF_ERROR(startSegment < 0 || numSegments <= 0 || VG_INT_ADDSATURATE(startSegment, numSegments) > p->m_numSegments, VG_ILLEGAL_ARGUMENT_ERROR, VG_NO_RETVAL);
     VG_IF_ERROR(!isAligned(x, 4) || !isAligned(y, 4) || !isAligned(tangentX, 4) || !isAligned(tangentY, 4), VG_ILLEGAL_ARGUMENT_ERROR, VG_NO_RETVAL);
     VGfloat factor = 0;
-    VGfloat o_tangentX = 0;
-    VGfloat o_tangentY = 0;
     VGfloat incomingTangentX = 0;
     VGfloat incomingTangentY = 0;
     VGfloat incomingX = 0;
     VGfloat incomingY = 0;
-    VGfloat tangentX1 = 0;
-    VGfloat tangentY1 = 0;
-    VGfloat tangentX2 = 0;
-    VGfloat tangentY2 = 0;
 
     /* Clamp distance. */
     VGfloat distance_max = vgPathLength(path, startSegment, numSegments);
@@ -9845,7 +9831,7 @@ void VG_APIENTRY vgGaussianBlur(VGImage dst, VGImage src, VGfloat stdDeviationX,
     VGfloat sy = inputFloat(stdDeviationY);
     VG_IF_ERROR(sx <= 0.0f || sy <= 0.0f || sx > (VGfloat)VIV_MAX_GAUSSIAN_DEVIATION || sy > (VGfloat)VIV_MAX_GAUSSIAN_DEVIATION, VG_ILLEGAL_ARGUMENT_ERROR, VG_NO_RETVAL);
     VG_IF_ERROR(tilingMode < VG_TILE_FILL || tilingMode > VG_TILE_REFLECT, VG_ILLEGAL_ARGUMENT_ERROR, VG_NO_RETVAL);
-    unsigned int channelMask = context->m_filterChannelMask & (VG_RED | VG_GREEN | VG_BLUE | VG_ALPHA);    //undefined bits are ignored
+    //unsigned int channelMask = context->m_filterChannelMask & (VG_RED | VG_GREEN | VG_BLUE | VG_ALPHA);    //undefined bits are ignored
     vg_lite_buffer_t* dstbuf = (vg_lite_buffer_t*)d->m_vglbuf;
     vg_lite_buffer_t* srcbuf = (vg_lite_buffer_t*)s->m_vglbuf;
     vg_lite_filter_t filter = VG_LITE_FILTER_GAUSSIAN;
@@ -9854,8 +9840,6 @@ void VG_APIENTRY vgGaussianBlur(VGImage dst, VGImage src, VGfloat stdDeviationX,
     Matrix3x3 n;
     initMatrix3x3(&n, 1, 0, 0, 0, 1, 0, 0, 0, 1);
     VGfloat expX = -1.0f / (2.0f * sx * sx);
-    VGfloat expY = -1.0f / (2.0f * sy * sy);
-    VGfloat expXY = -1.0f / (2.0f * sx * sy);
     vg_lite_error_t state;
     VGboolean flag = VG_TRUE;
 
@@ -10016,7 +10000,6 @@ void VG_APIENTRY vgSetGlyphToPath(VGFont font, VGuint glyphIndex, VGPath path, V
     VG_IF_ERROR(!isValidFont(context, font), VG_BAD_HANDLE_ERROR, VG_NO_RETVAL);    //invalid font handle
     VG_IF_ERROR((!isValidPath(context, path) && path != VG_INVALID_HANDLE), VG_BAD_HANDLE_ERROR, VG_NO_RETVAL);    //invalid path handle
     VG_IF_ERROR(!glyphOrigin || !escapement || !isAligned(glyphOrigin,sizeof(VGfloat)) || !isAligned(escapement,sizeof(VGfloat)), VG_ILLEGAL_ARGUMENT_ERROR, VG_NO_RETVAL);
-    Font* f = (Font*)font;
     Vector2 tmp_glyphorigin, tmp_escapment;
     tmp_glyphorigin.x = inputFloat(glyphOrigin[0]);
     tmp_glyphorigin.y = inputFloat(glyphOrigin[1]);
@@ -10075,7 +10058,6 @@ void VG_APIENTRY vgSetGlyphToImage(VGFont font, VGuint glyphIndex, VGImage image
         VG_IF_ERROR(isEglVgInUse((Image*)image), VG_IMAGE_IN_USE_ERROR, VG_NO_RETVAL); //image in use
     }
     VG_IF_ERROR(!glyphOrigin || !escapement || !isAligned(glyphOrigin,sizeof(VGfloat)) || !isAligned(escapement,sizeof(VGfloat)), VG_ILLEGAL_ARGUMENT_ERROR, VG_NO_RETVAL);
-    Font* f = (Font*)font;
     Vector2 tmp_origin, tmp_escapement;
     tmp_origin.x = inputFloat(glyphOrigin[0]);
     tmp_origin.y = inputFloat(glyphOrigin[1]);
