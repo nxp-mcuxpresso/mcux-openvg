@@ -1,6 +1,7 @@
 /****************************************************************************
 *
 *    Copyright 2022 Vivante Corporation, Santa Clara, California.
+*    Copyright 2024 NXP
 *    All Rights Reserved.
 *
 *    Permission is hereby granted, free of charge, to any person obtaining
@@ -40,7 +41,7 @@
 
 #if defined (_MSC_VER)
 #    define VG_INLINE __forceinline
-#elif defined __APPLE__ || defined (__GNUC__) || defined (__GCC32__)
+#elif defined __APPLE__ || defined (__GNUC__) || defined (__GCC32__) || defined(__ICCARM__)
 #    define VG_INLINE inline
 #endif
 
