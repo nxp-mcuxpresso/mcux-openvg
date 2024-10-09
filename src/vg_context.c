@@ -1,6 +1,7 @@
 /****************************************************************************
 *
 *    Copyright 2022 Vivante Corporation, Santa Clara, California.
+*    Copyright 2024 NXP
 *    All Rights Reserved.
 *
 *    Permission is hereby granted, free of charge, to any person obtaining
@@ -360,7 +361,6 @@ void removeImageResource(VGContext* ctx, Image* image)
 
 void destroyImageManager(VGContext* ctx)
 {
-    VGint index;
     Objectptr object_image;
     if (ctx && ctx->m_imageManager)
     {
@@ -372,7 +372,6 @@ void destroyImageManager(VGContext* ctx)
                 {
                     /* Copy the head object */
                     object_image = ctx->m_imageManager->m_resources->m_array[i];
-                    index = object_image->name % VIV_OBJECTS_HASH;
 
                     /* Remove from the chain */
                     if (object_image == ctx->m_imageManager->m_resources->m_array[i])
@@ -509,7 +508,6 @@ void removeMaskLayerResource(VGContext* ctx, Surface* layer)
 
 void destroyMaskLayerManager(VGContext* ctx)
 {
-    VGint index;
     Objectptr object_mask;
     if (ctx && ctx->m_maskLayerManager)
     {
@@ -521,7 +519,6 @@ void destroyMaskLayerManager(VGContext* ctx)
                 {
                     /* Copy the head object */
                     object_mask = ctx->m_maskLayerManager->m_resources->m_array[i];
-                    index = object_mask->name % VIV_OBJECTS_HASH;
 
                     /* Remove from the chain */
                     if (object_mask == ctx->m_maskLayerManager->m_resources->m_array[i])
@@ -659,7 +656,6 @@ void removePathResource(VGContext* ctx, Path* path)
 
 void destroyPathManager(VGContext* ctx)
 {
-    VGint index;
     Objectptr object_path;
     if (ctx && ctx->m_pathManager)
     {
@@ -671,7 +667,6 @@ void destroyPathManager(VGContext* ctx)
                 {
                     /* Copy the head object */
                     object_path = ctx->m_pathManager->m_resources->m_array[i];
-                    index = object_path->name % VIV_OBJECTS_HASH;
 
                     /* Remove from the chain */
                     if (object_path == ctx->m_pathManager->m_resources->m_array[i])
@@ -946,7 +941,6 @@ void removeFontResource(VGContext* ctx, Font* font)
 
 void destroyFontManager(VGContext* ctx)
 {
-    VGint index;
     Objectptr object_font;
     if (ctx && ctx->m_fontManager)
     {
@@ -958,7 +952,6 @@ void destroyFontManager(VGContext* ctx)
                 {
                     /* Copy the head object */
                     object_font = ctx->m_fontManager->m_resources->m_array[i];
-                    index = object_font->name % VIV_OBJECTS_HASH;
 
                     /* Remove from the chain */
                     if (object_font == ctx->m_fontManager->m_resources->m_array[i])
