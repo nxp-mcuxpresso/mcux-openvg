@@ -1,0 +1,13 @@
+NXP Software Content Register
+
+Package: mcux-openvg
+Version: 4.0.90
+Outgoing License: MIT
+License File: LICENSE
+Type of content: source code
+Description and comments: VeriSilicon's OpenVG over VGLite library
+Release Location: https://github.com/nxp-mcuxpresso/mcux-openvg
+Origin: NXP (MIT and BSD-3-Clause)
+        VeriSilicon (MIT) - VSI internal, not publicly accessible
+        The Khronos Group Inc. (Apache and MIT) - http://www.khronos.org/
+        Amazon (MIT) - https://github.com/FreeRTOS/FreeRTOS-Kernel
