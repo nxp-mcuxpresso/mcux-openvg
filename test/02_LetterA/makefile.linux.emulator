@@ -1,25 +1,3 @@
-#
-#	OpenVG Sample: LetterA
-#
-#	The sample opens a window, sets the title and draws a "rotating" letter A.
-#	The sample is implemented based on Vivante Development Kit (VDK) to reduce
-#	the porting effort between different platforms and environments.
-#
-#	Copyright (C) 2009 Vivante Corporation
-#
-#	This program is free software: you can redistribute it and/or modify
-#	it under the terms of the GNU General Public License as published by
-#	the Free Software Foundation, either version 3 of the License, or
-#	(at your option) any later version.
-#
-#	This program is distributed in the hope that it will be useful,
-#	but WITHOUT ANY WARRANTY; without even the implied warranty of
-#	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#	GNU General Public License for more details.
-#
-#	You should have received a copy of the GNU General Public License
-#	along with this program.  If not, see <http://www.gnu.org/licenses/>.
-#
 
 ################################################################################
 # Include the common difinitions.
