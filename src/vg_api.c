@@ -3860,7 +3860,7 @@ static __inline char ptInBound(const float* pt, float* bound) {
 }
 
 static void findQuadBound(float* bound, const float* curve) {
-    char i;
+    unsigned char i;
     double n, d, t, t2, mt, mt2, b;
     const float* v0 = &curve[0];
     const float* v1 = &curve[2];
@@ -3893,7 +3893,7 @@ static void findQuadBound(float* bound, const float* curve) {
 }
 
 static void findCubicBound(float* bound, const float* curve) {
-    char i, j, count;
+    unsigned char i, j, count;
     double roots[2], a, b, c, b2ac, t, v, mt;
     const float* v0 = &curve[0];
     const float* v1 = &curve[2];
