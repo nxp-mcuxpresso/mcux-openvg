@@ -392,7 +392,7 @@ VGUErrorCode VG_APIENTRY vguComputeWarpQuadToSquare(VGfloat sx0, VGfloat sy0, VG
     /* Matrix3x3 m(mat[0], mat[3], mat[6], mat[1], mat[4], mat[7], mat[2], mat[5], mat[8]); */
     Matrix3x3 m;
     initMatrix3x3(&m, mat[0], mat[3], mat[6], mat[1], mat[4], mat[7], mat[2], mat[5], mat[8]);
-    Matrix3x3 result;
+    Matrix3x3 result = {0};
     inverseMatrix3x3(&result, &m);
 #if 0 //TODO
     VGbool nonsingular = m.invert();

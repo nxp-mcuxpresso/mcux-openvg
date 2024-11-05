@@ -1984,7 +1984,7 @@ void maskSurface(Drawable* drawable, const Surface* src, VGMaskOperation operati
         vg_lite_color_t color = 0;
         vg_lite_rectangle_t rect;
         if (operation == VG_FILL_MASK)
-            color = 0xFF << 24;
+            color = (vg_lite_color_t)(0xFF << 24);
         rect.x = x;
         rect.y = y;
         rect.width = w;

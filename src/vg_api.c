@@ -315,7 +315,7 @@ static VG_INLINE void clampColor(VGContext* context, Color* c)
     c->b = VG_CLAMP(c->b, 0.0f, u);
 }
 
-static VG_INLINE void premultiplyColor(Color* c)
+__attribute__((unused)) static VG_INLINE void premultiplyColor(Color* c)
 {
     if (!(c->m_format & PREMULTIPLIED))
     {
@@ -357,7 +357,7 @@ static VG_INLINE void multMatrix3x3(Matrix3x3* matrix, Matrix3x3* mult)
     memcpy(matrix, &temp, sizeof(temp));
 }
 
-static VG_INLINE void multVector3ByMatrix3x3(Vector3* vector, Matrix3x3* mult)
+__attribute__((unused)) static VG_INLINE void multVector3ByMatrix3x3(Vector3* vector, Matrix3x3* mult)
 {
     Vector3 temp;
 
@@ -433,7 +433,7 @@ static VG_INLINE Vector2 inputVector2(const Vector2 v)
     return outV2;
 }
 
-static VG_INLINE Color inputColor(const Color c)
+__attribute__((unused)) static VG_INLINE Color inputColor(const Color c)
 {
     Color r = c;
     r.r = inputFloat(r.r);
@@ -5312,7 +5312,7 @@ void VG_APIENTRY vgRenderToMask(VGPath path, VGbitfield paintModes, VGMaskOperat
         vg_lite_fill_t fill_rule = context->m_fillRule;
         if (paintModes & VG_FILL_PATH) {
             vglpath->path_type = VG_LITE_DRAW_FILL_PATH;
-            vg_lite_draw(drawbuffer, vglpath, fill_rule, (vg_lite_matrix_t*)&context->m_pathUserToSurface, VG_LITE_BLEND_NONE, 0xFF << 24);
+            vg_lite_draw(drawbuffer, vglpath, fill_rule, (vg_lite_matrix_t*)&context->m_pathUserToSurface, VG_LITE_BLEND_NONE, (vg_lite_color_t)0xFF << 24);
             vg_lite_disable_scissor();
             vg_lite_blend_masklayer(masklayer, drawbuffer, operation, &rect);
             vg_lite_finish();
@@ -5334,7 +5334,7 @@ void VG_APIENTRY vgRenderToMask(VGPath path, VGbitfield paintModes, VGMaskOperat
                 0XFFFFFFFF);
             vglpath->stroke->dash_reset = context->m_strokeDashPhaseReset;
             vg_lite_update_stroke(vglpath);
-            vg_lite_draw(drawbuffer, vglpath, fill_rule, (vg_lite_matrix_t*)&context->m_pathUserToSurface, VG_LITE_BLEND_NONE, 0xFF << 24);
+            vg_lite_draw(drawbuffer, vglpath, fill_rule, (vg_lite_matrix_t*)&context->m_pathUserToSurface, VG_LITE_BLEND_NONE, (vg_lite_color_t)0xFF << 24);
             vg_lite_disable_scissor();
             vg_lite_blend_masklayer(masklayer, drawbuffer, operation, &rect);
             vg_lite_finish();
@@ -6329,7 +6329,7 @@ VGfloat VG_APIENTRY vgPathLength(VGPath path, VGint startSegment, VGint numSegme
     VGubyte** data_list = p_fp32->m_data;
     float* data_ptr, px = 0, py = 0, ox = 0, oy = 0, sx = 0, sy = 0, x0 = 0, y0 = 0, x1 = 0, y1 = 0, x2 = 0, y2 = 0,
         t, x_old, y_old, x_new, y_new, seg_len;
-    VGboolean is_large, is_clockwise, is_relative;
+    VGboolean is_large = VG_FALSE, is_clockwise = VG_FALSE, is_relative = VG_FALSE;
     VGPathCommand cmd;
     for (int i = 0; i < startSegment + numSegments; ++i) {
         data_ptr = (float*)(*data_list++);
@@ -6705,7 +6705,7 @@ void VG_APIENTRY vgPointAlongPath(VGPath path, VGint startSegment, VGint numSegm
         t, x_old, y_old, x_new, y_new, seg_length;
     VGint endSegment = startSegment + numSegments - 1;
     VGPathCommand cmd, next_cmd;
-    VGboolean is_large, is_clockwise, is_relative;
+    VGboolean is_large = VG_FALSE, is_clockwise = VG_FALSE, is_relative = VG_FALSE;
     for (VGint i = 0; i <= endSegment; ++i) {
         data_ptr = (float*)(*data_list++);
         cmd = *seg_ptr++;
@@ -7211,7 +7211,7 @@ void VG_APIENTRY vgPathBounds(VGPath path, VGfloat* minx, VGfloat* miny, VGfloat
     /* Calculate bounds. */
     float px = 0, py = 0, ox = 0, oy = 0, sx = 0, sy = 0, x0 = 0, y0 = 0, x1 = 0, y1 = 0, x2 = 0, y2 = 0,
         x, y;
-    VGboolean is_large, is_clockwise, is_relative;
+    VGboolean is_large = VG_FALSE, is_clockwise = VG_FALSE, is_relative = VG_FALSE;
     VGPathCommand cmd;
     for (int i = 0; i < p_fp32->m_numSegments; ++i) {
         data_ptr = (float*)(*data_list++);
@@ -7571,7 +7571,7 @@ void VG_APIENTRY vgPathTransformedBounds(VGPath path, VGfloat* minx, VGfloat* mi
     /* Calculate bounds. */
     float px = 0, py = 0, ox = 0, oy = 0, sx = 0, sy = 0, x0 = 0, y0 = 0, x1 = 0, y1 = 0, x2 = 0, y2 = 0,
         x, y;
-    VGboolean is_large, is_clockwise, is_relative;
+    VGboolean is_large = VG_FALSE, is_clockwise = VG_FALSE, is_relative = VG_FALSE;
     VGPathCommand cmd;
     for (int i = 0; i < p_fp32->m_numSegments; ++i) {
         data_ptr = (float*)(*data_list++);

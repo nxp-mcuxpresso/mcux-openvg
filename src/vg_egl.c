@@ -528,7 +528,7 @@ VGEGLDisplay* getEglDisplay(EGLDisplay display)
     return NULL; //error: the display hasn't been eglInitialized
 }
 
-const EGLDisplay findEglDisplay(EGLContext ctx)
+EGLDisplay findEglDisplay(EGLContext ctx)
 {
     VGEGL* egl = getEGL();
     VGEGLDisplay* dpy = egl->m_displays;
@@ -2245,7 +2245,7 @@ EGLAPI EGLBoolean EGLAPIENTRY eglSwapBuffers(EGLDisplay dpy, EGLSurface surface)
 
     if (windowWidth != drawable->m_color->m_width || windowHeight != drawable->m_color->m_height)
     {    //resize the back buffer
-        VGEGLContext* c = currentThread->m_context;
+        VGEGLContext* c __attribute__((unused)) = currentThread->m_context;
         VG_ASSERT(c);
 #if 0 // TODO support resize
         try
