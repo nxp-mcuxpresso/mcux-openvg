@@ -720,7 +720,7 @@ VGboolean isPixmapInUse(EGLNativePixmapType pixmap )
     VGEGLSurface * surface = egl->m_displays->m_surfaces;
     unsigned int width, height, stride, bitsPerPixel;
     VGubyte * bits;
-    VGImageFormat format;
+    VGImageFormat format = {0};
 
     OSGetPixmapInfo(pixmap, &width, &height, &format, &bitsPerPixel, &stride, &bits);
     for (;surface != NULL;)
@@ -1464,6 +1464,7 @@ EGLAPI EGLSurface EGLAPIENTRY eglCreateWindowSurface(EGLDisplay dpy, EGLConfig c
         if (vg_lite_init(windowWidth, windowHeight) != VG_LITE_SUCCESS)
         {
             printf("OpenVG driver fails to initialize VGLite API!\n");
+            OSDestroyWindowContext(wc);
             EGL_RETURN(EGL_NOT_INITIALIZED, EGL_NO_SURFACE);
         }
 
@@ -1690,7 +1691,7 @@ EGLAPI EGLSurface EGLAPIENTRY eglCreatePixmapSurface(EGLDisplay dpy, EGLConfig c
     Drawable* d = NULL;
     VGEGLSurface* s = NULL;
     VGuint width, height, stride, bitsPerPixel;
-    VGImageFormat format;
+    VGImageFormat format = {0};
     VGubyte *bits;
     OSGetPixmapInfo(pixmap, &width, &height, &format, &bitsPerPixel, &stride, &bits);
 
