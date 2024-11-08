@@ -1655,6 +1655,8 @@ void gaussianBlur(VGImage dst, VGImage src, VGfloat stdDeviationX, VGfloat stdDe
     }
 
     tmp = (Color*)malloc(width * height * sizeof(Color));
+    memset(tmp, 0, width * height * sizeof(Color));
+
     //copy source region to tmp and do conversion
     for (int j = 0; j < height; j++)
     {
@@ -1762,7 +1764,8 @@ void convolve(Image* dst, Image* src, int kernelWidth, int kernelHeight, int shi
     colorConvert(edge, procFormat);
 
     Color* tmp = (Color*)malloc(src->m_width * src->m_height * sizeof(Color));
- 
+    memset(tmp, 0, src->m_width * src->m_height * sizeof(Color));
+
     //copy source region to tmp and do conversion
     for (int j = 0; j < src->m_height; j++)
     {
@@ -1854,6 +1857,7 @@ void separableConvolve(Image* dst, Image* src, int kernelWidth, int kernelHeight
     colorConvert(edge, procFormat);
 
     Color* tmp = (Color*)malloc(src->m_width * src->m_height * sizeof(Color));
+    memset(tmp, 0, src->m_width * src->m_height * sizeof(Color));
 
     //copy source region to tmp and do conversion
     for (int j = 0; j < src->m_height; j++)
@@ -1869,7 +1873,8 @@ void separableConvolve(Image* dst, Image* src, int kernelWidth, int kernelHeight
         }
     }
 
-    Color* tmp2 = (Color*)malloc(w * src->m_height * sizeof(Color));;
+    Color* tmp2 = (Color*)malloc(w * src->m_height * sizeof(Color));
+    memset(tmp2, 0, w * src->m_height * sizeof(Color));
 
     for (int j = 0; j < src->m_height; j++)
     {
@@ -2077,7 +2082,7 @@ void clearGlyph(Glyph* g)
         if (!p->m_referenceCount)
             destroyImage(&p, NULL);
     }
-    Glyph a;
+    Glyph a = {0};
     a.m_state = GLYPH_UNINITIALIZED;
     a.m_path = VG_INVALID_HANDLE;
     a.m_image = VG_INVALID_HANDLE;
