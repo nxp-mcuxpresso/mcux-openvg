@@ -1446,8 +1446,8 @@ static void vglMatrixMultiply(vg_lite_matrix_t* matrix, vg_lite_matrix_t* mult)
 }
 
 static void biasScaleTransform(Path* path, VGuint startIndex, VGuint numSegments) {
-    float bias = path->m_bias;
-    float scale = path->m_scale;
+    double bias = path->m_bias;
+    double scale = path->m_scale;
     if (bias == 0.f && scale == 1.f) return;
 
     VGubyte* seg_ptr = path->m_segments + startIndex;
@@ -1463,7 +1463,7 @@ static void biasScaleTransform(Path* path, VGuint startIndex, VGuint numSegments
             data_ptr_s8 = (int8_t*)(*data_list++);
             VGuint command_size = _commandSize[*seg_ptr++];
             for (VGuint j = 0; j < command_size; ++j) {
-                *data_ptr_s8 = (int8_t)(*data_ptr_s8 * scale + bias);
+                *data_ptr_s8 = (int8_t)round(*data_ptr_s8 * scale + bias);
                 data_ptr_s8++;
             }
         }
@@ -1474,7 +1474,7 @@ static void biasScaleTransform(Path* path, VGuint startIndex, VGuint numSegments
             data_ptr_s16 = (int16_t*)(*data_list++);
             VGuint command_size = _commandSize[*seg_ptr++];
             for (VGuint j = 0; j < command_size; ++j) {
-                *data_ptr_s16 = (int16_t)(*data_ptr_s16 * scale + bias);
+                *data_ptr_s16 = (int16_t)round(*data_ptr_s16 * scale + bias);
                 data_ptr_s16++;
             }
         }
@@ -1485,7 +1485,7 @@ static void biasScaleTransform(Path* path, VGuint startIndex, VGuint numSegments
             data_ptr_s32 = (int32_t*)(*data_list++);
             VGuint command_size = _commandSize[*seg_ptr++];
             for (VGuint j = 0; j < command_size; ++j) {
-                *data_ptr_s32 = (int32_t)(*data_ptr_s32 * scale + bias);
+                *data_ptr_s32 = (int32_t)round(*data_ptr_s32 * scale + bias);
                 data_ptr_s32++;
             }
         }
