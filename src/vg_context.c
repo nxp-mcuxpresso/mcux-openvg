@@ -784,12 +784,17 @@ void releasePaint(VGContext* ctx, VGbitfield paintModes)
         if (prev)
         {
             prev->m_referenceCount--;
-
             if (!prev->m_referenceCount)
                 freePaintImpl(prev);
         }
         if (ctx->m_strokePaint == ctx->m_fillPaint)
         {
+            if (prev)
+            {
+                prev->m_referenceCount--;
+                if (!prev->m_referenceCount)
+                    freePaintImpl(prev);
+            }
             ctx->m_strokePaint = VG_INVALID_HANDLE;
         }
         ctx->m_fillPaint = VG_INVALID_HANDLE;
@@ -806,6 +811,12 @@ void releasePaint(VGContext* ctx, VGbitfield paintModes)
         }
         if (ctx->m_fillPaint == ctx->m_strokePaint)
         {
+            if (prev)
+            {
+                prev->m_referenceCount--;
+                if (!prev->m_referenceCount)
+                    freePaintImpl(prev);
+            }
             ctx->m_fillPaint = VG_INVALID_HANDLE;
         }
         ctx->m_strokePaint = VG_INVALID_HANDLE;
@@ -1054,6 +1065,17 @@ void freePaintImpl(Paint* paint)
     {
         paint->m_pattern->m_referenceCount--;
         paint->m_pattern->m_inUse--;
+        if (paint->m_pattern->m_referenceCount == 0)
+        {
+            if (paint->m_pattern->m_vglbuf)
+            {
+                vg_lite_free(paint->m_pattern->m_vglbuf);
+                free(paint->m_pattern->m_vglbuf);
+                paint->m_pattern->m_vglbuf = NULL;
+                paint->m_pattern->m_data = NULL;
+            }
+            free(paint->m_pattern);
+        }
         paint->m_pattern = NULL;
     }
     if (paint->grad_image.handle != NULL)
