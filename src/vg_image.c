@@ -155,7 +155,7 @@ VGuint vgFormatTovgliteFormat(VGImageFormat format)
     }
 }
 
-void get_format_bytes(vg_lite_buffer_format_t format,
+void getFormatBytes(vg_lite_buffer_format_t format,
     uint32_t* mul,
     uint32_t* div,
     uint32_t* bytes_align)
