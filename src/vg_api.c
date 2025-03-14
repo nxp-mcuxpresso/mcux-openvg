@@ -5017,15 +5017,15 @@ void VG_APIENTRY vgMask(VGHandle mask, VGMaskOperation operation, VGint x, VGint
             char* buf2 = (char*)tempbuf.memory;
             for (int i = 0; i < srcbuf->height; i++) {
 
-                for (int j = 1; j <= srcbuf->width; j++) {
+                for (int j = 0; j < srcbuf->width; j++) {
 
-                    if (*(buf1) & (0x1 << (j%8-1))) {
+                    if (*(buf1) & (0x1 << (j % 8))) {
                         *buf2 = 0xFF;
                     }
                     else{
                         *buf2 = 0x0;
                     }
-                    if (j % 8 == 0) {
+                    if ((j + 1) % 8 == 0) {
                         buf1++;
                     }
                     buf2++;
