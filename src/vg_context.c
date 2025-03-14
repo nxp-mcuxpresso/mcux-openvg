@@ -189,6 +189,8 @@ VGContext* createVgContext(VGContext* shareContext)
             goto VgContextErr;
         }
         memset(vgctx->m_paintManager, 0, sizeof(VGPaintManager));
+        vgctx->m_paintManager->m_resources = (VGPaintEntry*)malloc(sizeof(VGPaintEntry));
+        memset(vgctx->m_paintManager->m_resources, 0, sizeof(VGPaintEntry));
 
         vgctx->m_fontManager = (VGFontManager*)malloc(sizeof(VGFontManager));
         if (!vgctx->m_fontManager)
@@ -701,78 +703,111 @@ void destroyPathManager(VGContext* ctx)
 
 VGboolean isValidPaint(VGContext* ctx, VGPaint paint)
 {
-    VGPaintEntry* resptr = NULL;
-
-    if (ctx && ctx->m_paintManager && ctx->m_paintManager->m_resources)
+    if (paint == NULL)
+        return VG_FALSE;
+    VGint index;
+    VGuint handle;
+    Objectptr current;
+    handle = (VGuint)paint;
+    if ((handle < ctx->m_paintManager->lohandle) ||
+        (handle > ctx->m_paintManager->hihandle))
     {
-        resptr = ctx->m_paintManager->m_resources;
-        while (resptr)
-        {
-            if (resptr->resource == (Paint*)paint)
-            {
-                return VG_TRUE;
-            }
-            resptr = resptr->next;
-        }
+        return VG_FALSE;
     }
+    Objectptr object_paint = (Objectptr)paint;
+    /* if ((object_paint->type >= OBJECTTYPE_COUNT) || (object_paint->type != OBJECTTYPE_PAINT))
+         return VG_FALSE;*/
+    index = object_paint->name % VIV_OBJECTS_HASH;
+    current = ctx->m_paintManager->m_resources->m_array[index];
 
-    return VG_FALSE;
+    /* Search teh cache for the object. */
+    while (current != NULL)
+    {
+        if (object_paint == current)
+        {
+            break;
+        }
+        current = current->next;
+    }
+    if (current == NULL)
+        return VG_FALSE;
+    /* Move to the head of teh list. */
+    if (current->prev != NULL)
+    {
+        /*Remove from the chain*/
+        current->prev->next = current->next;
+        if (current->next != NULL)
+        {
+            current->next->prev = current->prev;
+        }
+        /* Insert to the head. */
+        current->prev = NULL;
+        current->next = ctx->m_paintManager->m_resources->m_array[index];
+        ctx->m_paintManager->m_resources->m_array[index]->prev = current;
+        ctx->m_paintManager->m_resources->m_array[index] = current;
+    }
+    return VG_TRUE;
 }
 
 void addPaintResource(VGContext* ctx, Paint* paint)
 {
-    VGPaintEntry* resptr = NULL;
+    VGint index;
+    VGuint handle;
+    Objectptr head;
+    Objectptr object_paint = (Objectptr)paint;
+    ctx->m_paintManager->m_resources->count++;
+    object_paint->name = ctx->m_paintManager->m_resources->count;
+    VG_ASSERT(object_paint->name);
+    VG_ASSERT(object_paint->type < OBJECTTYPE_COUNT);
+    index = object_paint->name % VIV_OBJECTS_HASH;
+    head = ctx->m_paintManager->m_resources->m_array[index];
 
-    if (ctx && ctx->m_paintManager)
+    /* Insert to the head*/
+    object_paint->prev = NULL;
+    if (head == NULL)
     {
-        resptr = ctx->m_paintManager->m_resources;
-        while (resptr)
-        {
-            if (resptr->resource == paint) return;
-            resptr = resptr->next;
-        }
-
-        resptr = (VGPaintEntry*)malloc(sizeof(VGPaintEntry));
-        if (!resptr)
-        {
-            setError(VG_OUT_OF_MEMORY_ERROR);
-            return;
-        }
-        resptr->resource = paint;
-        resptr->next = ctx->m_paintManager->m_resources;
-        ctx->m_paintManager->m_resources = resptr;
-        paint->m_referenceCount++;
+        object_paint->next = NULL;
+    }
+    else
+    {
+        object_paint->next = head;
+        head->prev = object_paint;
+    }
+    ctx->m_paintManager->m_resources->m_array[index] = object_paint;
+    paint->m_referenceCount++;
+    handle = (VGuint)object_paint;
+    if (handle < ctx->m_paintManager->lohandle)
+    {
+        ctx->m_paintManager->lohandle = handle;
+    }
+    if (handle > ctx->m_paintManager->hihandle)
+    {
+        ctx->m_paintManager->hihandle = handle;
     }
 }
 
 void removePaintResource(VGContext* ctx, Paint* paint)
 {
-    VGPaintEntry* resptr, * prep;
-
-    if (ctx && ctx->m_paintManager)
+    VGint index;
+    Objectptr object_paint = (Objectptr)paint;
+    index = object_paint->name % VIV_OBJECTS_HASH;
+    /* Remove from the chain */
+    if (object_paint == ctx->m_paintManager->m_resources->m_array[index])
     {
-        resptr = ctx->m_paintManager->m_resources;
-        prep = resptr;
-
-        while (resptr)
+        ctx->m_paintManager->m_resources->m_array[index] = object_paint->next;
+    }
+    else
+    {
+        if (object_paint->prev)
         {
-            if (resptr->resource == paint)
-            {
-                if (resptr == ctx->m_paintManager->m_resources)
-                {
-                    ctx->m_paintManager->m_resources = resptr->next;
-                }
-                else
-                {
-                    prep->next = resptr->next;
-                }
-                free(resptr);
-                break;
-            }
-            prep = resptr;
-            resptr = resptr->next;
+            object_paint->prev->next = object_paint->next;
         }
     }
+    if (object_paint->next)
+    {
+        object_paint->next->prev = object_paint->prev;
+    }
+    object_paint->prev = object_paint->next = NULL;
 }
 
 void releasePaint(VGContext* ctx, VGbitfield paintModes)
@@ -873,22 +908,41 @@ VGboolean isValidFont(VGContext* ctx, VGFont font)
 
 void destroyPaintManager(VGContext* ctx)
 {
-    VGPaintEntry* resptr;
-
+    VGint index;
+    Objectptr object_paint;
     if (ctx && ctx->m_paintManager)
     {
-        resptr = ctx->m_paintManager->m_resources;
-        while (resptr)
+        for (int i = 0; i < VIV_OBJECTS_HASH; i++)
         {
-            ctx->m_paintManager->m_resources = resptr->next;
-            if (resptr->resource)
-            {
-                freePaintImpl((Paint*)resptr->resource);
-            }
-            free(resptr);
-            resptr = ctx->m_paintManager->m_resources;
-        }
+            if (ctx->m_paintManager->m_resources->m_array[i] != NULL)
+                /* Delete the objects*/
+                while (ctx->m_paintManager->m_resources->m_array[i])
+                {
+                    /* Copy the head object */
+                    object_paint = ctx->m_paintManager->m_resources->m_array[i];
+                    index = object_paint->name % VIV_OBJECTS_HASH;
 
+                    /* Remove from the chain */
+                    if (object_paint == ctx->m_paintManager->m_resources->m_array[i])
+                    {
+                        ctx->m_paintManager->m_resources->m_array[i] = object_paint->next;
+                    }
+                    else
+                    {
+                        if (object_paint->prev)
+                        {
+                            object_paint->prev->next = object_paint->prev;
+                        }
+                    }
+                    if (object_paint->next)
+                    {
+                        object_paint->next->prev = object_paint->prev;
+                    }
+                    object_paint->prev = object_paint->next = NULL;
+                    freePaintImpl((Paint*)object_paint);
+                }
+        }
+        free(ctx->m_paintManager->m_resources);
         free(ctx->m_paintManager);
         ctx->m_paintManager = NULL;
     }
