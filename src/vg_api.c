@@ -4408,7 +4408,7 @@ static void updateRadialGrad(VGContext* context, vg_lite_radial_gradient_t* grad
     vg_lite_float_t color1[4];
     vg_lite_float_t color2[4];
     vg_lite_float_t weight, baseLength;
-    baseLength = (float)width;
+    baseLength = (float)width - 1;
     for (i = 0; i < width; ++i) {
         /* Compute gradient for current color array entry. */
         if (baseLength > VG_FLOAT_EPSILON) {
@@ -4991,6 +4991,7 @@ void VG_APIENTRY vgMask(VGHandle mask, VGMaskOperation operation, VGint x, VGint
             tempbuf.format = VG_sRGBA_8888;
             vg_lite_allocate(&tempbuf);
             vg_lite_blit(&tempbuf, srcbuf, NULL, VG_LITE_BLEND_NONE, 0, filter);
+            vg_lite_flush();
             tempbuf.format = VG_sABGR_8888;
             vg_lite_blend_masklayer(masklayer, &tempbuf, operation, &rect);
         }
@@ -5004,6 +5005,7 @@ void VG_APIENTRY vgMask(VGHandle mask, VGMaskOperation operation, VGint x, VGint
             tempbuf.format = VG_lRGBA_8888;
             vg_lite_allocate(&tempbuf);
             vg_lite_blit(&tempbuf, srcbuf, NULL, VG_LITE_BLEND_NONE, 0, filter);
+            vg_lite_flush();
             tempbuf.format = VG_lABGR_8888;
             vg_lite_blend_masklayer(masklayer, &tempbuf, operation, &rect);
         }
@@ -5160,6 +5162,7 @@ void VG_APIENTRY vgRenderToMask(VGPath path, VGbitfield paintModes, VGMaskOperat
         if (paintModes & VG_FILL_PATH) {
             vglpath->path_type = VG_LITE_DRAW_FILL_PATH;
             vg_lite_draw(drawbuffer, vglpath, fill_rule, (vg_lite_matrix_t*)&context->m_pathUserToSurface, VG_LITE_BLEND_NONE, 0xFF << 24);
+            vg_lite_flush();
             vg_lite_disable_scissor();
             vg_lite_blend_masklayer(masklayer, drawbuffer, operation, &rect);
             vg_lite_finish();
@@ -5182,6 +5185,7 @@ void VG_APIENTRY vgRenderToMask(VGPath path, VGbitfield paintModes, VGMaskOperat
             vglpath->stroke->dash_reset = context->m_strokeDashPhaseReset;
             vg_lite_update_stroke(vglpath);
             vg_lite_draw(drawbuffer, vglpath, fill_rule, (vg_lite_matrix_t*)&context->m_pathUserToSurface, VG_LITE_BLEND_NONE, 0xFF << 24);
+            vg_lite_flush();
             vg_lite_disable_scissor();
             vg_lite_blend_masklayer(masklayer, drawbuffer, operation, &rect);
             vg_lite_finish();
@@ -5240,7 +5244,7 @@ void VG_APIENTRY vgDestroyMaskLayer(VGMaskLayer maskLayer)
 {
     VG_GET_CONTEXT(VG_NO_RETVAL);
     VG_IF_ERROR(!isValidMaskLayer(context, maskLayer), VG_BAD_HANDLE_ERROR, VG_NO_RETVAL);    //invalid handle
-
+    vg_lite_finish();
     removeMaskLayerResource(context, (Surface*)maskLayer);
 
     Surface* layer = (Surface*)maskLayer;
@@ -5300,6 +5304,7 @@ void VG_APIENTRY vgCopyMask(VGMaskLayer maskLayer, VGint dx, VGint dy, VGint sx,
 
     if (descriptorIsPremultiplied(&(srcimg->m_desc)) && descriptorIsPremultiplied(&(dstimg->m_desc))) {
         vg_lite_blit(srcbuf, srcbuf, NULL, OPENVG_BLEND_SRC, 0, VG_LITE_FILTER_POINT);
+        vg_lite_flush();
     }
 
     vg_lite_copy_image(dstbuf, srcbuf, dx, dy, sx, sy, width, height);
@@ -5707,7 +5712,6 @@ static VGboolean drawPath(VGContext* context, VGPath path, const Matrix3x3 userT
                 vg_lite_uint8_t r = VG_FLOAT_TO_UB(paint->m_paintColor.r);
                 fill_color = (a << 24) | (b << 16) | (g << 8) | (r << 0);
                 vg_lite_draw(fbbuf, vglpath, fill_rule, (vg_lite_matrix_t*)&userToSurfaceFill, blend, fill_color);
-                vg_lite_flush();
                 break;
             }
 
@@ -5785,7 +5789,6 @@ static VGboolean drawPath(VGContext* context, VGPath path, const Matrix3x3 userT
                     vg_lite_image_mode_t tmp_image_mode = srcbuf->image_mode;
 
                     vg_lite_draw_pattern(fbbuf, vglpath, fill_rule, (vg_lite_matrix_t*)&(context->m_pathUserToSurface), srcbuf, (vg_lite_matrix_t*)&userToSurfaceFill, VG_LITE_BLEND_NONE, paint->m_patternTilingMode, tile_color, 0xFFFFFFFF, VG_LITE_FILTER_POINT);
-                    vg_lite_flush();
                     srcbuf->image_mode = tmp_image_mode;
                     if (context->m_colorTransform) {
                         vg_lite_disable_color_transform();
@@ -5865,6 +5868,8 @@ static VGboolean drawPath(VGContext* context, VGPath path, const Matrix3x3 userT
         else {
             vg_lite_draw(fbbuf, vglpath, fill_rule, (vg_lite_matrix_t*)&userToSurfaceFill, blend, fill_color);
         }
+
+        vg_lite_flush();
     }
 
     if (paintModes & VG_STROKE_PATH)
@@ -6125,9 +6130,11 @@ static VGboolean drawPath(VGContext* context, VGPath path, const Matrix3x3 userT
 
                 } while (VG_FALSE);
 
-                vg_lite_draw(fbbuf, vglpath, fill_rule, (vg_lite_matrix_t*)&userToSurfaceStroke, blend, stroke_color);
+                vg_lite_draw(fbbuf, vglpath, fill_rule, (vg_lite_matrix_t*)&userToSurfaceStroke, blend, stroke_color);     
             }
         }
+
+        vg_lite_flush();
     }
 
     if (context->m_colorTransform) {
@@ -8078,7 +8085,7 @@ void VG_APIENTRY vgDestroyImage(VGImage image)
     VG_RETURN(VG_NO_RETVAL);
 }
 
-void writePixel(Image* dst, int x, int y, Color c, VGboolean display)
+void writeImgPixel(Image* dst, int x, int y, Color c, VGboolean display)
 {
     int rb = dst->m_desc.redBits;
     int gb = dst->m_desc.greenBits;
@@ -8179,7 +8186,7 @@ static void imgClear(Image* dst, Color c, int x, int y, int w, int h, VGboolean 
     {
         for (int i = 0; i < w; i++)
         {
-            writePixel(dst, x + i, y + j, c, display);
+            writeImgPixel(dst, x + i, y + j, c, display);
         }
     }
 }
@@ -8391,7 +8398,7 @@ void convert(InternalFormat srcFormat, InternalFormat dstFormat, Color* c)
 
 }
 
-Color readPixel(Image* src, int x, int y)
+Color readImgPixel(Image* src, int x, int y)
 {
 
     unsigned int p = 0;
@@ -8504,10 +8511,10 @@ Color readPixel(Image* src, int x, int y)
      {
          for (int i = 0; i < tmp_w; i++)
          {
-             Color c = readPixel(src, tmp_sx + i, tmp_sy + j);
+             Color c = readImgPixel(src, tmp_sx + i, tmp_sy + j);
              convert(src->m_desc.internalFormat, dst->m_desc.internalFormat, &c);
              tmp = c;
-             writePixel(dst, tmp_dx + i, tmp_dy + j, tmp, display);
+             writeImgPixel(dst, tmp_dx + i, tmp_dy + j, tmp, display);
          }
      }
      return;
@@ -8555,10 +8562,10 @@ Color readPixel(Image* src, int x, int y)
              if (dx >= src->m_width || dy >= src->m_height || dx < 0.f || dy < 0.f)
                  continue;
              Color c;
-             c = readPixel(src, dx, dy);
+             c = readImgPixel(src, dx, dy);
              c.m_format = src->m_desc.internalFormat;
 
-             writePixel(dst, dx, dy, c, 1);
+             writeImgPixel(dst, dx, dy, c, 1);
          }
      }
  }
@@ -8586,7 +8593,7 @@ Color readPixel(Image* src, int x, int y)
 
 #define readOnePixel(context, _c, _x, _y) { \
     if ((_x >= 0) && (_y >= 0) && (_x <= sxmax) && (_y <= symax)) { \
-        _c = readPixel(src, _x, _y); \
+        _c = readImgPixel(src, _x, _y); \
         if (context->m_paintType == VG_PAINT_TYPE_COLOR && ((vg_lite_buffer_t*)src->m_vglbuf)->image_mode == VG_DRAW_IMAGE_MULTIPLY) {\
                  _c.r = _c.r * context->m_paintColor.r;\
                  _c.g = _c.g * context->m_paintColor.g;\
@@ -8644,7 +8651,7 @@ Color readPixel(Image* src, int x, int y)
                  c.b = w00 * c00.b + w01 * c01.b + w10 * c10.b + w11 * c11.b;
                  c.m_format = dst->m_desc.format;
 
-                 writePixel(dst, dx, dy, c, display);
+                 writeImgPixel(dst, dx, dy, c, display);
              }
          }
      }
@@ -8664,7 +8671,7 @@ Color readPixel(Image* src, int x, int y)
                      continue;   // out of bound
                  Color c;
                  //readOnePixel(context, c, (int)px, (int)py);
-                 c = readPixel(src, (int)px, (int)py);
+                 c = readImgPixel(src, (int)px, (int)py);
                  if (context->m_paintType == VG_PAINT_TYPE_COLOR && ((vg_lite_buffer_t*)src->m_vglbuf)->image_mode == VG_DRAW_IMAGE_MULTIPLY) {
                      c.r = c.r * context->m_paintColor.r;
                      c.g = c.g * context->m_paintColor.g;
@@ -8680,7 +8687,7 @@ Color readPixel(Image* src, int x, int y)
                      clampColor(context, &c);
                  }
                  convert(c.m_format, dst->m_desc.internalFormat, &c);
-                 writePixel(dst, dx, dy, c, display);
+                 writeImgPixel(dst, dx, dy, c, display);
              }
          }
      }
@@ -8725,7 +8732,7 @@ void VG_APIENTRY vgImageSubData(VGImage image, const void* data, VGint dataStrid
     int tmp_dy = y;
     int tmp_w = width;
     int tmp_h = height;
-    get_format_bytes(dataFormat, &mul, &div, &align);
+    getFormatBytes(dataFormat, &mul, &div, &align);
     computeBlitRegion(&tmp_sx, &tmp_sy, &tmp_dx, &tmp_dy, &tmp_w, &tmp_h, width, height, ((Image*)img)->m_width, ((Image*)img)->m_height);
 
     memset(&srcbuf, 0, sizeof(vg_lite_buffer_t));
@@ -8737,7 +8744,7 @@ void VG_APIENTRY vgImageSubData(VGImage image, const void* data, VGint dataStrid
     srcbuf.image_mode = VG_LITE_NORMAL_IMAGE_MODE;
     srcbuf.compress_mode = VG_LITE_DEC_DISABLE;
     /* Construct a src buffer for blit operation. */
-    get_format_bytes(srcbuf.format, &mul, &div, &align);
+    getFormatBytes(srcbuf.format, &mul, &div, &align);
     byteOneLine = tmp_w * mul / div;
     memset(srcbuf.memory, 0, srcbuf.stride * srcbuf.height);
 
@@ -8753,6 +8760,7 @@ void VG_APIENTRY vgImageSubData(VGImage image, const void* data, VGint dataStrid
 
     if (descriptorIsPremultiplied(&src_desc) && descriptorIsPremultiplied(&(img->m_desc))) {
         vg_lite_blit(&srcbuf, &srcbuf, NULL, OPENVG_BLEND_SRC, 0, VG_LITE_FILTER_POINT);
+        vg_lite_flush();
     }
 
     vg_lite_copy_image(dstbuf, &srcbuf, (VGint)(tmp_dx + img->m_storageOffsetX), (VGint)(tmp_dy + img->m_storageOffsetY), 0, 0, tmp_w, tmp_h);
@@ -8805,7 +8813,7 @@ void VG_APIENTRY vgGetImageSubData(VGImage image, void* data, VGint dataStride, 
         dst.m_vglbuf = &dstbuf;
         dst.m_width = width;
         imgSetPixel(&dst, img, x, y, 0, 0, width, height, VG_TRUE);
-        get_format_bytes(dataFormat, &mul, &div, &align);
+        getFormatBytes(dataFormat, &mul, &div, &align);
         int size = (size_t)ceil((double)(dstbuf.width * mul / div));
         for (int i = 0; i < dstbuf.height; i++) {
             memcpy((uint8_t*)data + i*dataStride, (uint8_t*)dstbuf.memory + i*dst.m_stride, size);
@@ -8814,7 +8822,7 @@ void VG_APIENTRY vgGetImageSubData(VGImage image, void* data, VGint dataStride, 
     else {
         int tmp_sx = x, tmp_sy = y, tmp_dx = 0, tmp_dy = 0, tmp_w = width, tmp_h = height;
 
-        get_format_bytes(dataFormat, &mul, &div, &align);
+        getFormatBytes(dataFormat, &mul, &div, &align);
         computeBlitRegion(&tmp_sx, &tmp_sy, &tmp_dx, &tmp_dy, &tmp_w, &tmp_h, ((Image*)img)->m_width, ((Image*)img)->m_height, width, height);
         vg_lite_identity(&n);
         vg_lite_translate((VGfloat)0, (VGfloat)0, &n);
@@ -8929,6 +8937,7 @@ void VG_APIENTRY vgCopyImage(VGImage dst, VGint dx, VGint dy, VGImage src, VGint
 
         if (descriptorIsPremultiplied(&(((Image*)src)->m_desc)) && descriptorIsPremultiplied(&(((Image*)dst)->m_desc))) {
             vg_lite_blit(srcbuf, srcbuf, NULL, OPENVG_BLEND_SRC, 0, VG_LITE_FILTER_POINT);
+            vg_lite_flush();
         }
 
         vg_lite_copy_image(dstbuf, srcbuf, (VGint)(tmp_dx + ((Image*)dst)->m_storageOffsetX), (VGint)(tmp_dy + ((Image*)dst)->m_storageOffsetX), rect.x, rect.y, rect.width, rect.height);
@@ -9256,10 +9265,18 @@ static VGboolean drawImage(VGContext* context, VGImage image, const Matrix3x3 us
                 source->image_mode = tmp_image_mode;
                 source->paintType = tmp_paintType;
             }
+            vg_lite_flush();
+
+            if (!context->m_colorTransform && blend > OPENVG_BLEND_SRC && (tmpbuf.format == OPENVG_sRGBA_5551_PRE || tmpbuf.format == OPENVG_lRGBA_5551_PRE)) {
+                tmpbuf.image_mode = VG_LITE_NORMAL_IMAGE_MODE;
+                vg_lite_blit(&tmpbuf, &tmpbuf, NULL, OPENVG_BLEND_SRC, 0, VG_LITE_FILTER_POINT);
+                vg_lite_flush();
+            }
         }
 
         if (!context->m_colorTransform && blend > OPENVG_BLEND_SRC && (dstbuf->format == OPENVG_sRGBA_5551_PRE || dstbuf->format == OPENVG_lRGBA_5551_PRE)) {
             vg_lite_blit(dstbuf, dstbuf, NULL, OPENVG_BLEND_SRC, 0, VG_LITE_FILTER_POINT);
+            vg_lite_flush();
         }
         vg_lite_blit(dstbuf, srcbuf, (vg_lite_matrix_t*)&userToSurfaceMatrix_temp, blend, srcColor, filter);
         vg_lite_flush();
@@ -9336,6 +9353,7 @@ void VG_APIENTRY vgSetPixels(VGint dx, VGint dy, VGImage src, VGint sx, VGint sy
 
     if (descriptorIsPremultiplied(&(img->m_desc)) && descriptorIsPremultiplied(&(dstimg->m_desc))) {
         vg_lite_blit(srcbuf, srcbuf, NULL, OPENVG_BLEND_SRC, 0, VG_LITE_FILTER_POINT);
+        vg_lite_flush();
     }
     vg_lite_copy_image(dstbuf, srcbuf, (VGint)tmp_dx, (VGint)tmp_dy, rect.x, rect.y, rect.width, rect.height);
     vg_lite_flush();
@@ -9382,7 +9400,7 @@ void VG_APIENTRY vgWritePixels(const void * data, VGint dataStride, VGImageForma
     int tmp_w = width;
     int tmp_h = height;
     computeBlitRegion(&tmp_sx, &tmp_sy, &tmp_dx, &tmp_dy, &tmp_w, &tmp_h, width, height, dstbuf->width, dstbuf->height);
-    get_format_bytes(dataFormat, &mul, &div, &align);
+    getFormatBytes(dataFormat, &mul, &div, &align);
 
     memset(&srcbuf, 0, sizeof(vg_lite_buffer_t));
     srcbuf.format = dataFormat;
@@ -9393,7 +9411,7 @@ void VG_APIENTRY vgWritePixels(const void * data, VGint dataStride, VGImageForma
     srcbuf.image_mode = VG_LITE_NORMAL_IMAGE_MODE;
     srcbuf.compress_mode = VG_LITE_DEC_DISABLE;
     /* Construct a src buffer for blit operation. */
-    get_format_bytes(srcbuf.format, &mul, &div, &align);
+    getFormatBytes(srcbuf.format, &mul, &div, &align);
     byteOneLine = srcbuf.width * mul / div;
     memset(srcbuf.memory, 0, srcbuf.stride * srcbuf.height);
 
@@ -9407,6 +9425,7 @@ void VG_APIENTRY vgWritePixels(const void * data, VGint dataStride, VGImageForma
 
     if (descriptorIsPremultiplied(&src_desc) && descriptorIsPremultiplied(&(dstimg->m_desc))) {
         vg_lite_blit(&srcbuf, &srcbuf, NULL, OPENVG_BLEND_SRC, 0, VG_LITE_FILTER_POINT);
+        vg_lite_flush();
     }
 
     vg_lite_copy_image(dstbuf, &srcbuf, (VGint)(tmp_dx + drawable->m_color->m_image->m_storageOffsetX), (VGint)(tmp_dy + drawable->m_color->m_image->m_storageOffsetY), rect.x, rect.y, rect.width, rect.height);
@@ -9456,6 +9475,7 @@ void VG_APIENTRY vgGetPixels(VGImage dst, VGint dx, VGint dy, VGint sx, VGint sy
 
     if (descriptorIsPremultiplied(&(srcimg->m_desc)) && descriptorIsPremultiplied(&(img->m_desc))) {
         vg_lite_blit(srcbuf, srcbuf, NULL, OPENVG_BLEND_SRC, 0, VG_LITE_FILTER_POINT);
+        vg_lite_flush();
     }
 
     vg_lite_copy_image(dstbuf, srcbuf, (VGint)(tmp_dx + img->m_storageOffsetX), (VGint)(tmp_dy + img->m_storageOffsetY), rect.x, rect.y, rect.width, rect.height);
@@ -9498,7 +9518,7 @@ void VG_APIENTRY vgReadPixels(void* data, VGint dataStride, VGImageFormat dataFo
     int tmp_w = width;
     int tmp_h = height;
     computeBlitRegion(&tmp_sx, &tmp_sy, &tmp_dx, &tmp_dy, &tmp_w, &tmp_h, srcbuf->width, srcbuf->height, width, height);
-    get_format_bytes(dataFormat, &mul, &div, &align);
+    getFormatBytes(dataFormat, &mul, &div, &align);
 
     memset(&dstbuf, 0, sizeof(vg_lite_buffer_t));
     dstbuf.format = dataFormat;
@@ -9509,7 +9529,7 @@ void VG_APIENTRY vgReadPixels(void* data, VGint dataStride, VGImageFormat dataFo
     dstbuf.image_mode = VG_LITE_NORMAL_IMAGE_MODE;
     dstbuf.compress_mode = VG_LITE_DEC_DISABLE;
     /* Construct a src buffer for blit operation. */
-    get_format_bytes(dstbuf.format, &mul, &div, &align);
+    getFormatBytes(dstbuf.format, &mul, &div, &align);
     byteOneLine = dstbuf.width * mul / div;
     memset(dstbuf.memory, 0, dstbuf.stride * dstbuf.height);
     if (context->m_masking) {
@@ -9523,6 +9543,7 @@ void VG_APIENTRY vgReadPixels(void* data, VGint dataStride, VGImageFormat dataFo
 
     if (descriptorIsPremultiplied(&(srcimage->m_desc)) && descriptorIsPremultiplied(&dst_desc)) {
         vg_lite_blit(srcbuf, srcbuf, NULL, OPENVG_BLEND_SRC, 0, VG_LITE_FILTER_POINT);
+        vg_lite_flush();
     }
 
     vg_lite_copy_image(&dstbuf, srcbuf, (VGint)(tmp_dx), (VGint)(tmp_dy), rect.x, rect.y, rect.width, rect.height);
@@ -9583,6 +9604,7 @@ void VG_APIENTRY vgCopyPixels(VGint dx, VGint dy, VGint sx, VGint sy, VGint widt
     vg_lite_translate((VGfloat)(tmp_dx + drawable->m_color->m_image->m_storageOffsetX), (VGfloat)(tmp_dy + drawable->m_color->m_image->m_storageOffsetY), &n);
 
     vg_lite_blit_rect(&dstbuf, srcbuf, &rect, &n, blend, 0, filter);
+    vg_lite_flush();
 
     vg_lite_rectangle_t rect1 = { tmp_dx + drawable->m_color->m_image->m_storageOffsetX, tmp_dy + drawable->m_color->m_image->m_storageOffsetY, tmp_w, tmp_h };
     vg_lite_identity(&n);
@@ -9627,6 +9649,7 @@ void VG_APIENTRY vgColorMatrix(VGImage dst, VGImage src, const VGfloat * matrix)
 
     if (descriptorIsPremultiplied(&(s->m_desc)) && descriptorIsPremultiplied(&(d->m_desc))) {
         vg_lite_blit(srcbuf, srcbuf, NULL, OPENVG_BLEND_SRC, 0, VG_LITE_FILTER_POINT);
+        vg_lite_flush();
     }
 
     vg_lite_copy_image(dstbuf, srcbuf, 0, 0, rect.x, rect.y, rect.width, rect.height);

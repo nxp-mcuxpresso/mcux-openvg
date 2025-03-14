@@ -112,14 +112,16 @@ typedef struct
 
 typedef struct VGPaintEntryRec
 {
-    Paint*                          resource;
-    struct VGPaintEntryRec*         next;
+    Objectptr m_array[VIV_OBJECTS_HASH];
+    VGint count;
 } VGPaintEntry;
 
 typedef struct
 {
     VGPaintEntry*                   m_resources;
     VGint                           m_referenceCount;
+    VGuint                          lohandle;
+    VGuint                          hihandle;
 } VGPaintManager;
 
 typedef struct VGFontEntryRec
