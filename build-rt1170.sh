@@ -8,24 +8,27 @@ SCRIPTDIR="$(realpath $CWD)"
 export G_MODE='Unix Makefiles'
 
 export ARMGCC_DIR=/home/nxa07475/work/toolchains/gcc-arm-none-eabi-10.3-2021.10/
-export VG_LITE_DIR=/home/nxa07475/work/gpu-vglite/__install_release_rt1170/
-export MCU_SDK_DIR=/home/nxa07475/mcuxpresso/02/SDKPackages/SDK_2_15_000_MIMXRT1170-EVK/
-export MCU_SDK_VER=2.15.x
+export VG_LITE_DIR=/home/nxa07475/work/gpu-vglite/__install_debug_rt1170/
+export MCU_SDK_DIR=/home/nxa07475/mcuxpresso/02/SDKPackages/SDK_2_16_000_MIMXRT1170-EVKB
+export PLATFORM=rt1170
 
-export BUILD_TYPE=SDRAM_RELEASE
+export BUILD_TYPE=debug
+export BUILD_DIR=__build_${BUILD_TYPE}_${PLATFORM}
+export INSTALL_DIR=__install_${BUILD_TYPE}_${PLATFORM}
 
 cd $SCRIPTDIR
 
-rm -rf __build
+rm -rf "${BUILD_DIR}"
+rm -rf "${INSTALL_DIR}"
 
 cmake \
   -G "$G_MODE"                      \
   -DCMAKE_TOOLCHAIN_FILE="$MCU_SDK_DIR/tools/cmake_toolchain_files/armgcc.cmake" \
-  -DCMAKE_BUILD_TYPE=$BUILD_TYPE    \
-  -DMCU_SDK_DIR=$MCU_SDK_DIR        \
-  -DMCU_SDK_VER=$MCU_SDK_VER        \
-  -DVG_LITE_DIR=$VG_LITE_DIR        \
-  -B __build
+  -DCMAKE_BUILD_TYPE=${BUILD_TYPE}    \
+  -DOPENVG_PLATFORM=${PLATFORM}       \
+  -DMCU_SDK_DIR=${MCU_SDK_DIR}        \
+  -DVG_LITE_DIR=${VG_LITE_DIR}        \
+  -B ${BUILD_DIR}
 
-make -C __build
-
+cmake --build ${BUILD_DIR}
+cmake --install ${BUILD_DIR} --prefix ${INSTALL_DIR}

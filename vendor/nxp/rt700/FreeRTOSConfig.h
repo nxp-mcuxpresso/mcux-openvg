@@ -1,6 +1,7 @@
 /*
  * FreeRTOS Kernel V10.4.3
  * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
+ * Copyright 2024 NXP
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -58,11 +59,11 @@
 #define configUSE_QUEUE_SETS                    0
 #define configUSE_TIME_SLICING                  0
 
-#ifdef __GNUC__
-#define configUSE_NEWLIB_REENTRANT              1
-#else
+#define configENABLE_FPU                        0
+#define configENABLE_MPU                        0
+#define configENABLE_TRUSTZONE                  0
+
 #define configUSE_NEWLIB_REENTRANT              0
-#endif
 
 #define configENABLE_BACKWARD_COMPATIBILITY     0
 #define configNUM_THREAD_LOCAL_STORAGE_POINTERS 5
@@ -77,7 +78,7 @@
 #define configSUPPORT_DYNAMIC_ALLOCATION        1
 
 // this is for pvPortMalloc()
-#define configTOTAL_HEAP_SIZE           (90*0xF000) //((size_t)(0x3000*20 + 6*0xF000))
+#define configTOTAL_HEAP_SIZE                   1950000
 #define configAPPLICATION_ALLOCATED_HEAP        0
 
 /* Hook function related definitions. */
