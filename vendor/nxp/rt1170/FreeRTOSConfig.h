@@ -1,6 +1,7 @@
 /*
  * FreeRTOS Kernel V10.4.3
  * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
+ * Copyright 2024 NXP
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -58,11 +59,7 @@
 #define configUSE_QUEUE_SETS                    0
 #define configUSE_TIME_SLICING                  0
 
-#ifdef __GNUC__
-#define configUSE_NEWLIB_REENTRANT              1
-#else
 #define configUSE_NEWLIB_REENTRANT              0
-#endif
 
 #define configENABLE_BACKWARD_COMPATIBILITY     0
 #define configNUM_THREAD_LOCAL_STORAGE_POINTERS 5
