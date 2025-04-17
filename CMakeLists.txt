@@ -43,7 +43,8 @@ target_include_directories(
     ${PROJ_DIR}/include/VG
 
     ${VG_LITE_DIR}/include
-
+	${VG_LITE_DIR}/include/inc
+	
     ${MCU_SDK_DIR}/rtos/freertos/freertos-kernel/include
     ${MCU_SDK_DIR}/rtos/freertos/freertos-kernel/portable/GCC/ARM_CM4F
     ${MCU_SDK_DIR}/CMSIS/Core/Include/
