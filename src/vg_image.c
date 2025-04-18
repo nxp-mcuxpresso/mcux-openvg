@@ -1081,8 +1081,6 @@ void resizeDrawable(Drawable* draw, VGint newWidth, VGint newHeight)
 {
     Surface* oldcolor = draw->m_color;
     Surface* oldmask = draw->m_mask;
-    int oldWidth = draw->m_color->m_width;
-    int oldHeight = draw->m_color->m_height;
 
     //TODO check that image is not a proxy
     draw->m_color = createSurface(&draw->m_color->m_image->m_desc, newWidth, newHeight, draw->m_color->m_numSamples);
@@ -1105,9 +1103,6 @@ void resizeDrawable(Drawable* draw, VGint newWidth, VGint newHeight)
             return;
         }
     }
-
-    VGint wmin = VG_INT_MIN(newWidth,oldWidth);
-    VGint hmin = VG_INT_MIN(newHeight,oldHeight);
 
     oldcolor->m_referenceCount--; VG_ASSERT(oldcolor->m_referenceCount >= 0);
     if (!oldcolor->m_referenceCount)
@@ -1333,8 +1328,8 @@ void colorUnpack(Color* color, unsigned int inputData, const ColorDescriptor* in
     int as = inputDesc->alphaShift;
     int ls = inputDesc->luminanceShift;
 
-    if (inputDesc->format == OPENVG_lRGBX_8888 || inputDesc->format == OPENVG_sRGBX_8888 ||
-        inputDesc->format == OPENVG_lRGBX_8888_PRE || inputDesc->format == OPENVG_sRGBX_8888_PRE)
+    if (inputDesc->format == (VGImageFormat)OPENVG_lRGBX_8888 || inputDesc->format == (VGImageFormat)OPENVG_sRGBX_8888 ||
+        inputDesc->format == (VGImageFormat)OPENVG_lRGBX_8888_PRE || inputDesc->format == (VGImageFormat)OPENVG_sRGBX_8888_PRE)
     {
         ab = 8;
         lb = inputDesc->luminanceBits;
@@ -1378,8 +1373,8 @@ unsigned int colorPack(Color* color, const ColorDescriptor* outputDesc)
     int as = outputDesc->alphaShift;
     int ls = outputDesc->luminanceShift;
 
-    if (outputDesc->format == OPENVG_lRGBX_8888 || outputDesc->format == OPENVG_sRGBX_8888 ||
-        outputDesc->format == OPENVG_lRGBX_8888_PRE || outputDesc->format == OPENVG_sRGBX_8888_PRE)
+    if (outputDesc->format == (VGImageFormat)OPENVG_lRGBX_8888 || outputDesc->format == (VGImageFormat)OPENVG_sRGBX_8888 ||
+        outputDesc->format == (VGImageFormat)OPENVG_lRGBX_8888_PRE || outputDesc->format == (VGImageFormat)OPENVG_sRGBX_8888_PRE)
     {
         ab = 8;
         lb = outputDesc->luminanceBits;
@@ -1756,11 +1751,8 @@ void gaussianBlur(VGImage dst, VGImage src, VGfloat stdDeviationX, VGfloat stdDe
 {
     Image* dstImage = (Image*)dst;
     Image* srcImage = (Image*)src;
-    vg_lite_buffer_t* dstbuf = (vg_lite_buffer_t*)dstImage->m_vglbuf;
-    vg_lite_buffer_t* srcbuf = (vg_lite_buffer_t*)srcImage->m_vglbuf;
     VGint height = srcImage->m_height;
     VGint width = srcImage->m_width;
-    vg_lite_uint32_t* image_src = (vg_lite_uint32_t*)srcImage->m_data;
     VGint x, y, yk, xk;
     VGint halfKernelX, halfKernelY, kernelWidth, kernelHeight;
     VGfloat scaleX, scaleY, expScaleX, expScaleY;
@@ -2151,7 +2143,6 @@ void maskSurface(Drawable* drawable, const Surface* src, VGMaskOperation operati
     vg_lite_buffer_t* dst_masklayer = (vg_lite_buffer_t*)drawable->m_mask->m_image->m_vglbuf;
     if (operation == VG_CLEAR_MASK || operation == VG_FILL_MASK)
     {
-        vg_lite_uint8_t m = 0;
         vg_lite_color_t color = 0;
         vg_lite_rectangle_t rect;
         if (operation == VG_FILL_MASK)

@@ -1099,11 +1099,10 @@ static int getFBFunctions(struct _FBDisplay* display)
 
 int fbdev_GetDisplayByIndex(int display_id, NativeDisplayType* display_type)
 {
-    char *dev, *p;
+    char *dev;
     char fbDevName[256];
     struct _FBDisplay* display = NULL;
     int error = -1;
-    int i = 0;
 
     pthread_once(&onceControl, onceInit);
     pthread_mutex_lock(&displayMutex);
@@ -2088,7 +2087,6 @@ void OSBlitToWindow(void* context, const Drawable* drawable)
 {
     OSWindowContext* ctx = (OSWindowContext*)context;
     Image * im = drawable->m_color->m_image;
-    struct _FBWindow* win = ctx->window;
     struct _FBDisplay* display = ctx->display;
     pthread_mutex_lock(&displayMutex);
 
@@ -2097,8 +2095,6 @@ void OSBlitToWindow(void* context, const Drawable* drawable)
         int width = drawable->m_color->m_width;
         int height = drawable->m_color->m_height;
         vg_lite_buffer_t tmpbuf = {0};
-        char *dpy_mem;
-        char *buf_ptr;
         tmpbuf.width = display->width;
         tmpbuf.height = height ;
         tmpbuf.format = display->format;
