@@ -120,8 +120,6 @@ static const uint8_t _vglOpcodes[] = {
 #define CMD_TO_SEGMENT(cmd) (cmd & 0xFE)
 #define CMD_IS_ABS(cmd) ((cmd & 0x01) == 0x00) 
 
-static vg_lite_buffer_t tmpbuf;
-
 static VG_INLINE VGboolean isAligned(const void* ptr, int alignment)
 {
     VG_ASSERT(alignment == 1 || alignment == 2 || alignment == 4);
@@ -3837,7 +3835,7 @@ static __inline char ptInBound(const float* pt, float* bound) {
 }
 
 static void findQuadBound(float* bound, const float* curve) {
-    char i;
+    int i;
     double n, d, t, t2, mt, mt2, b;
     const float* v0 = &curve[0];
     const float* v1 = &curve[2];
@@ -3870,7 +3868,7 @@ static void findQuadBound(float* bound, const float* curve) {
 }
 
 static void findCubicBound(float* bound, const float* curve) {
-    char i, j, count;
+    int i, j, count;
     double roots[2], a, b, c, b2ac, t, v, mt;
     const float* v0 = &curve[0];
     const float* v1 = &curve[2];
@@ -4431,7 +4429,7 @@ static void updateRadialGrad(VGContext* context, vg_lite_radial_gradient_t* grad
     uint32_t common, stop;
     uint32_t i, width;
     uint8_t* bits;
-    vg_lite_float_t r, fx, fy;
+    vg_lite_float_t r;
     vg_lite_matrix_t* grad_m;
     vg_lite_radial_gradient_parameter_t* grad_param;
     vg_lite_matrix_t tmp_m;
@@ -4442,8 +4440,6 @@ static void updateRadialGrad(VGContext* context, vg_lite_radial_gradient_t* grad
     grad_m = &grad->matrix;
     grad_param = &grad->radial_grad;
     r = grad_param->r;
-    fx = grad_param->fx;
-    fy = grad_param->fy;
 
     // TODO: free old color ramp surface buffer.
 
@@ -5104,7 +5100,6 @@ void VG_APIENTRY vgMask(VGHandle mask, VGMaskOperation operation, VGint x, VGint
     }
 
     vg_lite_filter_t filter = VG_LITE_FILTER_POINT;
-    vg_lite_blend_t blend = context->m_blendMode;
     vg_lite_rectangle_t rect;
     rect.x = x;
     rect.y = y;
@@ -5115,13 +5110,13 @@ void VG_APIENTRY vgMask(VGHandle mask, VGMaskOperation operation, VGint x, VGint
     if (isImage) {      
         vg_lite_buffer_t* srcbuf = (vg_lite_buffer_t*)((Image*)mask)->m_vglbuf;
         temp_format = srcbuf->format;
-        if (srcbuf->format == VG_sRGBX_8888) {
+        if (srcbuf->format == (vg_lite_buffer_format_t)VG_sRGBX_8888) {
             srcbuf->format = VG_sARGB_8888;
             vg_lite_blend_masklayer(masklayer, srcbuf, operation, &rect);
             srcbuf->format = temp_format;
         }
         /* RGB565 format convert to RGBA8888 ,so 5bit R channel convert to 8bit,modify swizzle to blit R channel to A8 channel. */
-        else if (srcbuf->format == VG_sRGB_565 || srcbuf->format == VG_sL_8) {
+        else if (srcbuf->format == (vg_lite_buffer_format_t)VG_sRGB_565 || srcbuf->format == (vg_lite_buffer_format_t)VG_sL_8) {
             vg_lite_buffer_t tempbuf = *srcbuf;
             tempbuf.format = VG_sRGBA_8888;
             vg_lite_allocate(&tempbuf);
@@ -5130,12 +5125,12 @@ void VG_APIENTRY vgMask(VGHandle mask, VGMaskOperation operation, VGint x, VGint
             tempbuf.format = VG_sABGR_8888;
             vg_lite_blend_masklayer(masklayer, &tempbuf, operation, &rect);
         }
-        else if (srcbuf->format == VG_lRGBX_8888) {
+        else if (srcbuf->format == (vg_lite_buffer_format_t)VG_lRGBX_8888) {
             srcbuf->format = VG_lARGB_8888;
             vg_lite_blend_masklayer(masklayer, srcbuf, operation, &rect);
             srcbuf->format = temp_format;
         }
-        else if (srcbuf->format == VG_lL_8) {
+        else if (srcbuf->format == (vg_lite_buffer_format_t)VG_lL_8) {
             vg_lite_buffer_t tempbuf = *srcbuf;
             tempbuf.format = VG_lRGBA_8888;
             vg_lite_allocate(&tempbuf);
@@ -5144,7 +5139,7 @@ void VG_APIENTRY vgMask(VGHandle mask, VGMaskOperation operation, VGint x, VGint
             tempbuf.format = VG_lABGR_8888;
             vg_lite_blend_masklayer(masklayer, &tempbuf, operation, &rect);
         }
-        else if (srcbuf->format == VG_A_1 || srcbuf->format == VG_BW_1) {
+        else if (srcbuf->format == (vg_lite_buffer_format_t)VG_A_1 || srcbuf->format == (vg_lite_buffer_format_t)VG_BW_1) {
             vg_lite_buffer_t tempbuf = *srcbuf;
             char* buf1 = (char*)srcbuf->memory;
 
@@ -5220,8 +5215,6 @@ void VG_APIENTRY vgRenderToMask(VGPath path, VGbitfield paintModes, VGMaskOperat
     if (context->m_scissoring == VG_TRUE) {
         vg_lite_disable_scissor();
     }
-    Matrix3x3 userToSurface;
-    userToSurface = context->m_pathUserToSurface;
 
     Path* p = (Path*)path;
     vg_lite_path_t* vglpath = (vg_lite_path_t*)((Path*)path)->m_vglPath;
@@ -5641,7 +5634,7 @@ void VG_APIENTRY vgAppendPathData(VGPath dstPath, VGint numSegments, const VGuby
     VGuint size = 0;
     for (VGint i = 0; i < numSegments; ++i) {
         VGPathSegment c = (VGPathSegment)(pathSegments[i] & 0x1f);
-        if (c < VG_CLOSE_PATH || c > VG_LCWARC_TO_REL || (c & ~0x1f)) {
+        if (c < (VGPathSegment)VG_CLOSE_PATH || c > (VGPathSegment)VG_LCWARC_TO_REL || (c & ~0x1f)) {
             setError(VG_ILLEGAL_ARGUMENT_ERROR);
             numSegments = i;
             break;
@@ -5818,7 +5811,6 @@ static VGboolean drawPath(VGContext* context, VGPath path, const Matrix3x3 userT
     Matrix3x3 userToSurfaceStroke = userToSurfaceMatrix;
     vg_lite_color_t fill_color = 0xFF000000;
     vg_lite_color_t stroke_color = 0xFF000000;
-    vg_lite_color_t input_color = 0xFFFFFFFF;
 
     if (context->m_masking) {
         vg_lite_enable_masklayer();
@@ -6036,8 +6028,8 @@ static VGboolean drawPath(VGContext* context, VGPath path, const Matrix3x3 userT
 
             if ((vglpath->stroke->line_width != context->m_strokeLineWidth) ||
                 (vglpath->stroke->miter_limit != context->m_strokeMiterLimit) ||
-                (vglpath->stroke->cap_style != context->m_strokeCapStyle) ||
-                (vglpath->stroke->join_style != context->m_strokeJoinStyle)) {
+                (vglpath->stroke->cap_style != (vg_lite_cap_style_t)context->m_strokeCapStyle) ||
+                (vglpath->stroke->join_style != (vg_lite_join_style_t)context->m_strokeJoinStyle)) {
                 break;
             }
 
@@ -6337,7 +6329,7 @@ VGfloat VG_APIENTRY vgPathLength(VGPath path, VGint startSegment, VGint numSegme
     VGubyte** data_list = p_fp32->m_data;
     float* data_ptr, px = 0, py = 0, ox = 0, oy = 0, sx = 0, sy = 0, x0 = 0, y0 = 0, x1 = 0, y1 = 0, x2 = 0, y2 = 0,
         t, x_old, y_old, x_new, y_new, seg_len;
-    VGboolean is_large, is_clockwise, is_relative;
+    VGboolean is_large = VG_FALSE, is_clockwise = VG_FALSE, is_relative = VG_FALSE;
     VGPathCommand cmd;
     for (int i = 0; i < startSegment + numSegments; ++i) {
         data_ptr = (float*)(*data_list++);
@@ -6684,16 +6676,10 @@ void VG_APIENTRY vgPointAlongPath(VGPath path, VGint startSegment, VGint numSegm
     VG_IF_ERROR(startSegment < 0 || numSegments <= 0 || VG_INT_ADDSATURATE(startSegment, numSegments) > p->m_numSegments, VG_ILLEGAL_ARGUMENT_ERROR, VG_NO_RETVAL);
     VG_IF_ERROR(!isAligned(x, 4) || !isAligned(y, 4) || !isAligned(tangentX, 4) || !isAligned(tangentY, 4), VG_ILLEGAL_ARGUMENT_ERROR, VG_NO_RETVAL);
     VGfloat factor = 0;
-    VGfloat o_tangentX = 0;
-    VGfloat o_tangentY = 0;
     VGfloat incomingTangentX = 0;
     VGfloat incomingTangentY = 0;
     VGfloat incomingX = 0;
     VGfloat incomingY = 0;
-    VGfloat tangentX1 = 0;
-    VGfloat tangentY1 = 0;
-    VGfloat tangentX2 = 0;
-    VGfloat tangentY2 = 0;
 
     /* Clamp distance. */
     VGfloat distance_max = vgPathLength(path, startSegment, numSegments);
@@ -7226,7 +7212,7 @@ void VG_APIENTRY vgPathBounds(VGPath path, VGfloat* minx, VGfloat* miny, VGfloat
     /* Calculate bounds. */
     float px = 0, py = 0, ox = 0, oy = 0, sx = 0, sy = 0, x0 = 0, y0 = 0, x1 = 0, y1 = 0, x2 = 0, y2 = 0,
         x, y;
-    VGboolean is_large, is_clockwise, is_relative;
+    VGboolean is_large = VG_FALSE, is_clockwise = VG_FALSE, is_relative = VG_FALSE;
     VGPathCommand cmd;
     for (int i = 0; i < p_fp32->m_numSegments; ++i) {
         data_ptr = (float*)(*data_list++);
@@ -8257,8 +8243,8 @@ void writeImgPixel(Image* dst, int x, int y, Color c, VGboolean display)
     int as = dst->m_desc.alphaShift;
     int ls = dst->m_desc.luminanceShift;
     unsigned int p;
-    if (dst->m_desc.format == OPENVG_lRGBX_8888 || dst->m_desc.format == OPENVG_sRGBX_8888 ||
-        dst->m_desc.format == OPENVG_lRGBX_8888_PRE || dst->m_desc.format == OPENVG_sRGBX_8888_PRE)
+    if (dst->m_desc.format == (VGImageFormat)OPENVG_lRGBX_8888 || dst->m_desc.format == (VGImageFormat)OPENVG_sRGBX_8888 ||
+        dst->m_desc.format == (VGImageFormat)OPENVG_lRGBX_8888_PRE || dst->m_desc.format == (VGImageFormat)OPENVG_sRGBX_8888_PRE)
     {
         ab = 8;
         lb = dst->m_desc.luminanceBits;
@@ -8617,8 +8603,8 @@ Color readImgPixel(Image* src, int x, int y)
     int bs = src->m_desc.blueShift;
     int as = src->m_desc.alphaShift;
     int ls = src->m_desc.luminanceShift;
-    if (src->m_desc.format == OPENVG_lRGBX_8888 || src->m_desc.format == OPENVG_sRGBX_8888 ||
-        src->m_desc.format == OPENVG_lRGBX_8888_PRE || src->m_desc.format == OPENVG_sRGBX_8888_PRE)
+    if (src->m_desc.format == (VGImageFormat)OPENVG_lRGBX_8888 || src->m_desc.format == (VGImageFormat)OPENVG_sRGBX_8888 ||
+        src->m_desc.format == (VGImageFormat)OPENVG_lRGBX_8888_PRE || src->m_desc.format == (VGImageFormat)OPENVG_sRGBX_8888_PRE)
     {
         ab = 0;
         lb = src->m_desc.luminanceBits;
@@ -8753,7 +8739,7 @@ Color readImgPixel(Image* src, int x, int y)
 #define readOnePixel(context, _c, _x, _y) { \
     if ((_x >= 0) && (_y >= 0) && (_x <= sxmax) && (_y <= symax)) { \
         _c = readImgPixel(src, _x, _y); \
-        if (context->m_paintType == VG_PAINT_TYPE_COLOR && ((vg_lite_buffer_t*)src->m_vglbuf)->image_mode == VG_DRAW_IMAGE_MULTIPLY) {\
+        if (context->m_paintType == (VGPaintType)VG_PAINT_TYPE_COLOR && ((vg_lite_buffer_t*)src->m_vglbuf)->image_mode == (vg_lite_image_mode_t)VG_DRAW_IMAGE_MULTIPLY) {\
                  _c.r = _c.r * context->m_paintColor.r;\
                  _c.g = _c.g * context->m_paintColor.g;\
                  _c.b = _c.b * context->m_paintColor.b;\
@@ -8831,7 +8817,7 @@ Color readImgPixel(Image* src, int x, int y)
                  Color c;
                  //readOnePixel(context, c, (int)px, (int)py);
                  c = readImgPixel(src, (int)px, (int)py);
-                 if (context->m_paintType == VG_PAINT_TYPE_COLOR && ((vg_lite_buffer_t*)src->m_vglbuf)->image_mode == VG_DRAW_IMAGE_MULTIPLY) {
+                 if (context->m_paintType == (VGPaintType)VG_PAINT_TYPE_COLOR && ((vg_lite_buffer_t*)src->m_vglbuf)->image_mode == (vg_lite_image_mode_t)VG_DRAW_IMAGE_MULTIPLY) {
                      c.r = c.r * context->m_paintColor.r;
                      c.g = c.g * context->m_paintColor.g;
                      c.b = c.b * context->m_paintColor.b;
@@ -9223,7 +9209,7 @@ static VGboolean drawImage(VGContext* context, VGImage image, const Matrix3x3 us
     if ((!isSupportFormat(context, srcbuf->format)) || (!isSupportFormat(context, dstbuf->format))) {
         if (isSupportFormat(context, dstbuf->format)) {
             vg_lite_buffer_format_t format;
-            if (srcbuf->format == VG_sL_8) {
+            if (srcbuf->format == (vg_lite_buffer_format_t)VG_sL_8) {
                 format = VG_sRGBA_8888;
             }
             else {
@@ -9250,7 +9236,7 @@ static VGboolean drawImage(VGContext* context, VGImage image, const Matrix3x3 us
 
     if (flag) {
         if (srcbuf->image_mode == VG_LITE_MULTIPLY_IMAGE_MODE || srcbuf->image_mode == VG_LITE_STENCIL_MODE) {
-            if (srcbuf->paintType == VG_PAINT_TYPE_LINEAR_GRADIENT) {
+            if (srcbuf->paintType == (vg_lite_paint_type_t)VG_PAINT_TYPE_LINEAR_GRADIENT) {
                 vg_lite_ext_linear_gradient_t grad;
                 vg_lite_linear_gradient_parameter_t linear_gradient;
                 vg_lite_color_ramp_t vg_color_ramp[VIV_MAX_COLOR_RAMP_STOPS];
@@ -9320,7 +9306,7 @@ static VGboolean drawImage(VGContext* context, VGImage image, const Matrix3x3 us
                 }
 
             }
-            else if (srcbuf->paintType == VG_PAINT_TYPE_RADIAL_GRADIENT) {
+            else if (srcbuf->paintType == (vg_lite_paint_type_t)VG_PAINT_TYPE_RADIAL_GRADIENT) {
                 vg_lite_radial_gradient_t grad;
                 vg_lite_radial_gradient_parameter_t radialGradient;
                 vg_lite_color_ramp_t vg_color_ramp[VIV_MAX_COLOR_RAMP_STOPS];
@@ -9391,7 +9377,7 @@ static VGboolean drawImage(VGContext* context, VGImage image, const Matrix3x3 us
                 }
 
             }
-            else if (srcbuf->paintType == VG_PAINT_TYPE_PATTERN)
+            else if (srcbuf->paintType == (vg_lite_paint_type_t)VG_PAINT_TYPE_PATTERN)
             {
                 VGint m_width = context->m_pattern->m_width;
                 VGint m_height = context->m_pattern->m_height;
@@ -9867,7 +9853,6 @@ void VG_APIENTRY vgGaussianBlur(VGImage dst, VGImage src, VGfloat stdDeviationX,
     VGfloat sy = inputFloat(stdDeviationY);
     VG_IF_ERROR(sx <= 0.0f || sy <= 0.0f || sx > (VGfloat)VIV_MAX_GAUSSIAN_DEVIATION || sy > (VGfloat)VIV_MAX_GAUSSIAN_DEVIATION, VG_ILLEGAL_ARGUMENT_ERROR, VG_NO_RETVAL);
     VG_IF_ERROR(tilingMode < VG_TILE_FILL || tilingMode > VG_TILE_REFLECT, VG_ILLEGAL_ARGUMENT_ERROR, VG_NO_RETVAL);
-    unsigned int channelMask = context->m_filterChannelMask & (VG_RED | VG_GREEN | VG_BLUE | VG_ALPHA);    //undefined bits are ignored
     vg_lite_buffer_t* dstbuf = (vg_lite_buffer_t*)d->m_vglbuf;
     vg_lite_buffer_t* srcbuf = (vg_lite_buffer_t*)s->m_vglbuf;
     vg_lite_filter_t filter = VG_LITE_FILTER_GAUSSIAN;
@@ -9876,8 +9861,6 @@ void VG_APIENTRY vgGaussianBlur(VGImage dst, VGImage src, VGfloat stdDeviationX,
     Matrix3x3 n;
     initMatrix3x3(&n, 1, 0, 0, 0, 1, 0, 0, 0, 1);
     VGfloat expX = -1.0f / (2.0f * sx * sx);
-    VGfloat expY = -1.0f / (2.0f * sy * sy);
-    VGfloat expXY = -1.0f / (2.0f * sx * sy);
     vg_lite_error_t state;
     VGboolean flag = VG_TRUE;
 
@@ -10038,7 +10021,6 @@ void VG_APIENTRY vgSetGlyphToPath(VGFont font, VGuint glyphIndex, VGPath path, V
     VG_IF_ERROR(!isValidFont(context, font), VG_BAD_HANDLE_ERROR, VG_NO_RETVAL);    //invalid font handle
     VG_IF_ERROR((!isValidPath(context, path) && path != VG_INVALID_HANDLE), VG_BAD_HANDLE_ERROR, VG_NO_RETVAL);    //invalid path handle
     VG_IF_ERROR(!glyphOrigin || !escapement || !isAligned(glyphOrigin,sizeof(VGfloat)) || !isAligned(escapement,sizeof(VGfloat)), VG_ILLEGAL_ARGUMENT_ERROR, VG_NO_RETVAL);
-    Font* f = (Font*)font;
     Vector2 tmp_glyphorigin, tmp_escapment;
     tmp_glyphorigin.x = inputFloat(glyphOrigin[0]);
     tmp_glyphorigin.y = inputFloat(glyphOrigin[1]);
@@ -10097,7 +10079,6 @@ void VG_APIENTRY vgSetGlyphToImage(VGFont font, VGuint glyphIndex, VGImage image
         VG_IF_ERROR(isEglVgInUse((Image*)image), VG_IMAGE_IN_USE_ERROR, VG_NO_RETVAL); //image in use
     }
     VG_IF_ERROR(!glyphOrigin || !escapement || !isAligned(glyphOrigin,sizeof(VGfloat)) || !isAligned(escapement,sizeof(VGfloat)), VG_ILLEGAL_ARGUMENT_ERROR, VG_NO_RETVAL);
-    Font* f = (Font*)font;
     Vector2 tmp_origin, tmp_escapement;
     tmp_origin.x = inputFloat(glyphOrigin[0]);
     tmp_origin.y = inputFloat(glyphOrigin[1]);
