@@ -5542,7 +5542,6 @@ void VG_APIENTRY vgClearPath(VGPath path, VGbitfield capabilities)
 {
     VG_GET_CONTEXT(VG_NO_RETVAL);
     VG_IF_ERROR(!isValidPath(context, path), VG_BAD_HANDLE_ERROR, VG_NO_RETVAL);    //invalid path handle
-    vg_lite_finish();
     capabilities &= VG_PATH_CAPABILITY_ALL;    //undefined bits are ignored
     Path* p = (Path*)path;
     p->m_capabilities = capabilities;
