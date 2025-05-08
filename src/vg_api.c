@@ -1510,31 +1510,6 @@ static void biasScaleTransform(Path* path, VGuint startIndex, VGuint numSegments
     }
 }
 
-static VGfloat __calAngle(VGfloat x, VGfloat y) {
-    VGfloat ml;
-    if (y >= 0) {
-        ml = sqrtf(x * x + y * y);
-        return acosf(x / ml);
-    }
-    else {
-        ml = sqrtf(x * x + y * y);
-        return 2 * PI - acosf(x / ml);
-    }
-}
-
-static VGfloat __calTrigonomatricAngle(VGfloat SIN, VGfloat COS) {
-    if (COS > 0.f)
-        return asinf(SIN);
-    else if (SIN > 0.f)
-        return acosf(COS);
-    else if (COS == 0.f)
-        return PI / 3.f * 2.f;
-    else if (SIN == 0.f)
-        return PI;
-    else
-        return PI - atanf(SIN / COS);
-}
-
 static void pathTransformImpl(Path* d, VGint startIndex, VGint numSegments, Matrix3x3 matrix) {
     VGubyte* seg_ptr = d->m_segments + startIndex;
     VGubyte** data_list = d->m_data + startIndex;
@@ -5183,15 +5158,6 @@ void VG_APIENTRY vgMask(VGHandle mask, VGMaskOperation operation, VGint x, VGint
     }
     vg_lite_set_masklayer((vg_lite_buffer_t*)drawable->m_mask->m_image->m_vglbuf);
     VG_RETURN(VG_NO_RETVAL);
-}
-
-static void renderStroke(const VGContext* context, int w, int h, int numSamples, Path* path, Rasterizer* rasterizer, const PixelPipe* pixelPipe, const Matrix3x3 userToSurface)
-{
-    VG_ASSERT(context);
-    VG_ASSERT(w > 0 && h > 0 && numSamples >= 1 && numSamples <= 32);
-    VGuint* covBuffer = (VGuint*)malloc(w*h);
-    memset(covBuffer, 0, w * h * sizeof(VGuint));
-    setupRasterizer(rasterizer, 0, 0, w, h, VG_NON_ZERO, NULL, covBuffer);
 }
 
 void VG_APIENTRY vgRenderToMask(VGPath path, VGbitfield paintModes, VGMaskOperation operation)
