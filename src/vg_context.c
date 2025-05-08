@@ -550,7 +550,7 @@ void removeMaskLayerResource(VGContext* ctx, Surface* layer)
 
 void destroyMaskLayerManager(VGContext* ctx)
 {
-    VGint index;
+    //VGint index;
     Objectptr object_mask;
     if (ctx && ctx->m_maskLayerManager)
     {
@@ -562,7 +562,7 @@ void destroyMaskLayerManager(VGContext* ctx)
                 {
                     /* Copy the head object */
                     object_mask = ctx->m_maskLayerManager->m_resources->m_array[i];
-                    index = object_mask->name % VIV_OBJECTS_HASH;
+                    //index = object_mask->name % VIV_OBJECTS_HASH;
 
                     /* Remove from the chain */
                     if (object_mask == ctx->m_maskLayerManager->m_resources->m_array[i])
@@ -945,7 +945,7 @@ VGboolean isValidFont(VGContext* ctx, VGFont font)
 
 void destroyPaintManager(VGContext* ctx)
 {
-    VGint index;
+    //VGint index;
     Objectptr object_paint;
     if (ctx && ctx->m_paintManager)
     {
@@ -957,7 +957,7 @@ void destroyPaintManager(VGContext* ctx)
                 {
                     /* Copy the head object */
                     object_paint = ctx->m_paintManager->m_resources->m_array[i];
-                    index = object_paint->name % VIV_OBJECTS_HASH;
+                    //index = object_paint->name % VIV_OBJECTS_HASH;
 
                     /* Remove from the chain */
                     if (object_paint == ctx->m_paintManager->m_resources->m_array[i])
