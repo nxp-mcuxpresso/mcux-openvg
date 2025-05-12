@@ -158,6 +158,7 @@ static VG_INLINE void clampColor(VGContext* context, Color* c)
     c->b = VG_CLAMP(c->b, 0.0f, u);
 }
 
+#if 0
 static VG_INLINE void premultiplyColor(Color* c)
 {
     if (!(c->m_format & PREMULTIPLIED))
@@ -168,6 +169,7 @@ static VG_INLINE void premultiplyColor(Color* c)
         c->m_format = (InternalFormat)(c->m_format | PREMULTIPLIED);
     }
 }
+#endif
 
 static VG_INLINE void initMatrix3x3(Matrix3x3* mtx, VGfloat m00, VGfloat m01, VGfloat m02, VGfloat m10, VGfloat m11, VGfloat m12, VGfloat m20, VGfloat m21, VGfloat m22)
 {
@@ -200,6 +202,7 @@ static VG_INLINE void multMatrix3x3(Matrix3x3* matrix, Matrix3x3* mult)
     memcpy(matrix, &temp, sizeof(temp));
 }
 
+#if 0
 static VG_INLINE void multVector3ByMatrix3x3(Vector3* vector, Matrix3x3* mult)
 {
     Vector3 temp;
@@ -211,6 +214,7 @@ static VG_INLINE void multVector3ByMatrix3x3(Vector3* vector, Matrix3x3* mult)
     vector->y = temp.y;
     vector->z = temp.z;
 }
+#endif
 
 static VG_INLINE void RoundMatrix3x3(Matrix3x3* target_matrix, const Matrix3x3* source_matrix)
 {
@@ -276,6 +280,7 @@ static VG_INLINE Vector2 inputVector2(const Vector2 v)
     return outV2;
 }
 
+#if 0
 static VG_INLINE Color inputColor(const Color c)
 {
     Color r = c;
@@ -285,6 +290,7 @@ static VG_INLINE Color inputColor(const Color c)
     r.a = inputFloat(r.a);
     return r;
 }
+#endif
 
 static VG_INLINE int inputFloatToInt(VGfloat value)
 {
@@ -1428,7 +1434,7 @@ static void getFontParameterifv(VGContext* context, Font* font, VGFontParamType 
 
 static void vglMatrixMultiply(vg_lite_matrix_t* matrix, vg_lite_matrix_t* mult)
 {
-    vg_lite_matrix_t temp;
+    vg_lite_matrix_t temp = {0};
     int row, column;
 
     /* Process all rows. */
@@ -2997,7 +3003,12 @@ static void appendPathImpl(Path* dst, Path* src) {
     VG_IF_ERROR(src_segments_copy == NULL, VG_OUT_OF_MEMORY_ERROR, VG_NO_RETVAL);
     memcpy(src_segments_copy, src->m_segments, src->m_numSegments * sizeof(VGubyte));
     void* tmp = realloc(dst->m_segments, (dst->m_numSegments + src->m_numSegments) * sizeof(VGubyte));
-    VG_IF_ERROR(tmp == NULL, VG_OUT_OF_MEMORY_ERROR, VG_NO_RETVAL);
+    if (tmp == NULL) {
+        free(src_segments_copy);
+        setError(VG_OUT_OF_MEMORY_ERROR);
+        OSReleaseMutex();
+        return VG_NO_RETVAL;
+    }
     dst->m_segments = tmp;
     memcpy(dst->m_segments + dst->m_numSegments, src_segments_copy, src->m_numSegments * sizeof(VGubyte));
     free(src_segments_copy);
@@ -3005,9 +3016,13 @@ static void appendPathImpl(Path* dst, Path* src) {
     void* src_data_list_copy = malloc(src->m_numSegments * sizeof(VGubyte*));
     VG_IF_ERROR(src_data_list_copy == NULL, VG_OUT_OF_MEMORY_ERROR, VG_NO_RETVAL);
     memcpy(src_data_list_copy, src->m_data, src->m_numSegments * sizeof(VGubyte*));
-
     tmp = realloc(dst->m_data, sizeof(VGubyte*) * (dst->m_numSegments + src->m_numSegments));
-    VG_IF_ERROR(tmp == NULL, VG_OUT_OF_MEMORY_ERROR, VG_NO_RETVAL);
+    if (tmp == NULL) {
+        free(src_data_list_copy);
+        setError(VG_OUT_OF_MEMORY_ERROR);
+        OSReleaseMutex();
+        return VG_NO_RETVAL;
+    }
     dst->m_data = tmp;
 
     VGuint grid_size = _dataSize[dst->m_datatype];
@@ -3028,8 +3043,15 @@ static void appendPathImpl(Path* dst, Path* src) {
             /* src_s8, dst_s8 */
             for (VGint i = 0; i < src->m_numSegments; ++i) {
                 bytes = grid_size * _commandSize[*dst_seg_ptr++];
-                *dst_data_list_ptr = malloc(bytes);
-                VG_IF_ERROR(*dst_data_list_ptr == NULL, VG_OUT_OF_MEMORY_ERROR, VG_NO_RETVAL);
+                if (bytes == 0)
+                {
+                    *dst_data_list_ptr = malloc(1);
+                }
+                else
+                {
+                    *dst_data_list_ptr = malloc(bytes);
+                }
+                if (*dst_data_list_ptr == NULL) goto out_of_memory;
                 memcpy(*dst_data_list_ptr++, *src_data_list_ptr++, bytes);
             }
             break;
@@ -3038,8 +3060,15 @@ static void appendPathImpl(Path* dst, Path* src) {
             /* src_s16, dst_s8 */
             for (VGint i = 0; i < src->m_numSegments; ++i) {
                 commandSize = _commandSize[*dst_seg_ptr++];
-                *dst_data_list_ptr = malloc(commandSize * grid_size);
-                VG_IF_ERROR(*dst_data_list_ptr == NULL, VG_OUT_OF_MEMORY_ERROR, VG_NO_RETVAL);
+                if (commandSize == 0)
+                {
+                    *dst_data_list_ptr = malloc(grid_size);
+                }
+                else
+                {
+                    *dst_data_list_ptr = malloc(commandSize * grid_size);
+                }
+                if (*dst_data_list_ptr == NULL) goto out_of_memory;
                 dst_data_s8_ptr = (int8_t*)(*dst_data_list_ptr++);
                 src_data_s16_ptr = (int16_t*)(*src_data_list_ptr++);
                 for (VGuint j = 0; j < commandSize; ++j) {
@@ -3052,8 +3081,15 @@ static void appendPathImpl(Path* dst, Path* src) {
             /* src_s32, dst_s8 */
             for (VGint i = 0; i < src->m_numSegments; ++i) {
                 commandSize = _commandSize[*dst_seg_ptr++];
-                *dst_data_list_ptr = malloc(commandSize * grid_size);
-                VG_IF_ERROR(*dst_data_list_ptr == NULL, VG_OUT_OF_MEMORY_ERROR, VG_NO_RETVAL);
+                if (commandSize == 0)
+                {
+                    *dst_data_list_ptr = malloc(grid_size);
+                }
+                else
+                {
+                    *dst_data_list_ptr = malloc(commandSize * grid_size);
+                }
+                if (*dst_data_list_ptr == NULL) goto out_of_memory;
                 dst_data_s8_ptr = (int8_t*)(*dst_data_list_ptr++);
                 src_data_s32_ptr = (int32_t*)(*src_data_list_ptr++);
                 for (VGuint j = 0; j < commandSize; ++j) {
@@ -3066,8 +3102,15 @@ static void appendPathImpl(Path* dst, Path* src) {
             /* src_f32, dst_s8 */
             for (VGint i = 0; i < src->m_numSegments; ++i) {
                 commandSize = _commandSize[*dst_seg_ptr++];
-                *dst_data_list_ptr = malloc(commandSize * grid_size);
-                VG_IF_ERROR(*dst_data_list_ptr == NULL, VG_OUT_OF_MEMORY_ERROR, VG_NO_RETVAL);
+                if (commandSize == 0)
+                {
+                    *dst_data_list_ptr = malloc(grid_size);
+                }
+                else
+                {
+                    *dst_data_list_ptr = malloc(commandSize * grid_size);
+                }
+                if (*dst_data_list_ptr == NULL) goto out_of_memory;
                 dst_data_s8_ptr = (int8_t*)(*dst_data_list_ptr++);
                 src_data_fp32_ptr = (float*)(*src_data_list_ptr++);
                 for (VGuint j = 0; j < commandSize; ++j) {
@@ -3088,8 +3131,15 @@ static void appendPathImpl(Path* dst, Path* src) {
             /* src_s8, dst_s16 */
             for (VGint i = 0; i < src->m_numSegments; ++i) {
                 commandSize = _commandSize[*dst_seg_ptr++];
-                *dst_data_list_ptr = malloc(commandSize * grid_size);
-                VG_IF_ERROR(*dst_data_list_ptr == NULL, VG_OUT_OF_MEMORY_ERROR, VG_NO_RETVAL);
+                if (commandSize == 0)
+                {
+                    *dst_data_list_ptr = malloc(grid_size);
+                }
+                else
+                {
+                    *dst_data_list_ptr = malloc(commandSize * grid_size);
+                }
+                if (*dst_data_list_ptr == NULL) goto out_of_memory;
                 dst_data_s16_ptr = (int16_t*)(*dst_data_list_ptr++);
                 src_data_s8_ptr = (int8_t*)(*src_data_list_ptr++);
                 for (VGuint j = 0; j < commandSize; ++j) {
@@ -3102,8 +3152,15 @@ static void appendPathImpl(Path* dst, Path* src) {
             /* src_s16, dst_s16 */
             for (VGint i = 0; i < src->m_numSegments; ++i) {
                 bytes = grid_size * _commandSize[*dst_seg_ptr++];
-                *dst_data_list_ptr = malloc(bytes);
-                VG_IF_ERROR(*dst_data_list_ptr == NULL, VG_OUT_OF_MEMORY_ERROR, VG_NO_RETVAL);
+                if (bytes == 0)
+                {
+                    *dst_data_list_ptr = malloc(1);
+                }
+                else
+                {
+                    *dst_data_list_ptr = malloc(bytes);
+                }
+                if (*dst_data_list_ptr == NULL) goto out_of_memory;
                 memcpy(*dst_data_list_ptr++, *src_data_list_ptr++, bytes);
             }
             break;
@@ -3112,8 +3169,15 @@ static void appendPathImpl(Path* dst, Path* src) {
             /* src_s32, dst_s16 */
             for (VGint i = 0; i < src->m_numSegments; ++i) {
                 commandSize = _commandSize[*dst_seg_ptr++];
-                *dst_data_list_ptr = malloc(commandSize * grid_size);
-                VG_IF_ERROR(*dst_data_list_ptr == NULL, VG_OUT_OF_MEMORY_ERROR, VG_NO_RETVAL);
+                if (commandSize == 0)
+                {
+                    *dst_data_list_ptr = malloc(grid_size);
+                }
+                else
+                {
+                    *dst_data_list_ptr = malloc(commandSize * grid_size);
+                }
+                if (*dst_data_list_ptr == NULL) goto out_of_memory;
                 dst_data_s16_ptr = (int16_t*)(*dst_data_list_ptr++);
                 src_data_s32_ptr = (int32_t*)(*src_data_list_ptr++);
                 for (VGuint j = 0; j < commandSize; ++j) {
@@ -3126,8 +3190,15 @@ static void appendPathImpl(Path* dst, Path* src) {
             /* src_f32, dst_s16 */
             for (VGint i = 0; i < src->m_numSegments; ++i) {
                 commandSize = _commandSize[*dst_seg_ptr++];
-                *dst_data_list_ptr = malloc(commandSize * grid_size);
-                VG_IF_ERROR(*dst_data_list_ptr == NULL, VG_OUT_OF_MEMORY_ERROR, VG_NO_RETVAL);
+                if (commandSize == 0)
+                {
+                    *dst_data_list_ptr = malloc(grid_size);
+                }
+                else
+                {
+                    *dst_data_list_ptr = malloc(commandSize * grid_size);
+                }
+                if (*dst_data_list_ptr == NULL) goto out_of_memory;
                 dst_data_s16_ptr = (int16_t*)(*dst_data_list_ptr++);
                 src_data_fp32_ptr = (float*)(*src_data_list_ptr++);
                 for (VGuint j = 0; j < commandSize; ++j) {
@@ -3148,8 +3219,15 @@ static void appendPathImpl(Path* dst, Path* src) {
             /* src_s8, dst_s32 */
             for (VGint i = 0; i < src->m_numSegments; ++i) {
                 commandSize = _commandSize[*dst_seg_ptr++];
-                *dst_data_list_ptr = malloc(commandSize * grid_size);
-                VG_IF_ERROR(*dst_data_list_ptr == NULL, VG_OUT_OF_MEMORY_ERROR, VG_NO_RETVAL);
+                if (commandSize == 0)
+                {
+                    *dst_data_list_ptr = malloc(grid_size);
+                }
+                else
+                {
+                    *dst_data_list_ptr = malloc(commandSize * grid_size);
+                }
+                if (*dst_data_list_ptr == NULL) goto out_of_memory;
                 dst_data_s32_ptr = (int32_t*)(*dst_data_list_ptr++);
                 src_data_s8_ptr = (int8_t*)(*src_data_list_ptr++);
                 for (VGuint j = 0; j < commandSize; ++j) {
@@ -3162,8 +3240,15 @@ static void appendPathImpl(Path* dst, Path* src) {
             /* src_s16, dst_s32 */
             for (VGint i = 0; i < src->m_numSegments; ++i) {
                 commandSize = _commandSize[*dst_seg_ptr++];
-                *dst_data_list_ptr = malloc(commandSize * grid_size);
-                VG_IF_ERROR(*dst_data_list_ptr == NULL, VG_OUT_OF_MEMORY_ERROR, VG_NO_RETVAL);
+                if (commandSize == 0)
+                {
+                    *dst_data_list_ptr = malloc(grid_size);
+                }
+                else
+                {
+                    *dst_data_list_ptr = malloc(commandSize * grid_size);
+                }
+                if (*dst_data_list_ptr == NULL) goto out_of_memory;
                 dst_data_s32_ptr = (int32_t*)(*dst_data_list_ptr++);
                 src_data_s16_ptr = (int16_t*)(*src_data_list_ptr++);
                 for (VGuint j = 0; j < commandSize; ++j) {
@@ -3176,8 +3261,15 @@ static void appendPathImpl(Path* dst, Path* src) {
             /* src_s32, dst_s32 */
             for (VGint i = 0; i < src->m_numSegments; ++i) {
                 bytes = grid_size * _commandSize[*dst_seg_ptr++];
-                *dst_data_list_ptr = malloc(bytes);
-                VG_IF_ERROR(*dst_data_list_ptr == NULL, VG_OUT_OF_MEMORY_ERROR, VG_NO_RETVAL);
+                if (bytes == 0)
+                {
+                    *dst_data_list_ptr = malloc(1);
+                }
+                else
+                {
+                    *dst_data_list_ptr = malloc(bytes);
+                }
+                if (*dst_data_list_ptr == NULL) goto out_of_memory;
                 memcpy(*dst_data_list_ptr++, *src_data_list_ptr++, bytes);
             }
             break;
@@ -3186,8 +3278,15 @@ static void appendPathImpl(Path* dst, Path* src) {
             /* src_f32, dst_s32 */
             for (VGint i = 0; i < src->m_numSegments; ++i) {
                 commandSize = _commandSize[*dst_seg_ptr++];
-                *dst_data_list_ptr = malloc(commandSize * grid_size);
-                VG_IF_ERROR(*dst_data_list_ptr == NULL, VG_OUT_OF_MEMORY_ERROR, VG_NO_RETVAL);
+                if (commandSize == 0)
+                {
+                    *dst_data_list_ptr = malloc(grid_size);
+                }
+                else
+                {
+                    *dst_data_list_ptr = malloc(commandSize * grid_size);
+                }
+                if (*dst_data_list_ptr == NULL) goto out_of_memory;
                 dst_data_s32_ptr = (int32_t*)(*dst_data_list_ptr++);
                 src_data_fp32_ptr = (float*)(*src_data_list_ptr++);
                 for (VGuint j = 0; j < commandSize; ++j) {
@@ -3208,8 +3307,15 @@ static void appendPathImpl(Path* dst, Path* src) {
             /* src_s8, dst_fp32 */
             for (VGint i = 0; i < src->m_numSegments; ++i) {
                 commandSize = _commandSize[*dst_seg_ptr++];
-                *dst_data_list_ptr = malloc(commandSize * grid_size);
-                VG_IF_ERROR(*dst_data_list_ptr == NULL, VG_OUT_OF_MEMORY_ERROR, VG_NO_RETVAL);
+                if (commandSize == 0)
+                {
+                    *dst_data_list_ptr = malloc(grid_size);
+                }
+                else
+                {
+                    *dst_data_list_ptr = malloc(commandSize * grid_size);
+                }
+                if (*dst_data_list_ptr == NULL) goto out_of_memory;
                 dst_data_fp32_ptr = (float*)(*dst_data_list_ptr++);
                 src_data_s8_ptr = (int8_t*)(*src_data_list_ptr++);
                 for (VGuint j = 0; j < commandSize; ++j) {
@@ -3222,8 +3328,15 @@ static void appendPathImpl(Path* dst, Path* src) {
             /* src_s16, dst_fp32 */
             for (VGint i = 0; i < src->m_numSegments; ++i) {
                 commandSize = _commandSize[*dst_seg_ptr++];
-                *dst_data_list_ptr = malloc(commandSize * grid_size);
-                VG_IF_ERROR(*dst_data_list_ptr == NULL, VG_OUT_OF_MEMORY_ERROR, VG_NO_RETVAL);
+                if (commandSize == 0)
+                {
+                    *dst_data_list_ptr = malloc(grid_size);
+                }
+                else
+                {
+                    *dst_data_list_ptr = malloc(commandSize * grid_size);
+                }
+                if (*dst_data_list_ptr == NULL) goto out_of_memory;
                 dst_data_fp32_ptr = (float*)(*dst_data_list_ptr++);
                 src_data_s16_ptr = (int16_t*)(*src_data_list_ptr++);
                 for (VGuint j = 0; j < commandSize; ++j) {
@@ -3236,8 +3349,15 @@ static void appendPathImpl(Path* dst, Path* src) {
             /* src_s32, dst_fp32 */
             for (VGint i = 0; i < src->m_numSegments; ++i) {
                 commandSize = _commandSize[*dst_seg_ptr++];
-                *dst_data_list_ptr = malloc(commandSize * grid_size);
-                VG_IF_ERROR(*dst_data_list_ptr == NULL, VG_OUT_OF_MEMORY_ERROR, VG_NO_RETVAL);
+                if (commandSize == 0)
+                {
+                    *dst_data_list_ptr = malloc(1);
+                }
+                else
+                {
+                    *dst_data_list_ptr = malloc(commandSize * grid_size);
+                }
+                if (*dst_data_list_ptr == NULL) goto out_of_memory;
                 dst_data_fp32_ptr = (float*)(*dst_data_list_ptr++);
                 src_data_s32_ptr = (int32_t*)(*src_data_list_ptr++);
                 for (VGuint j = 0; j < commandSize; ++j) {
@@ -3250,8 +3370,15 @@ static void appendPathImpl(Path* dst, Path* src) {
             /* src_f32, dst_s32 */
             for (VGint i = 0; i < src->m_numSegments; ++i) {
                 bytes = grid_size * _commandSize[*dst_seg_ptr++];
-                *dst_data_list_ptr = malloc(bytes);
-                VG_IF_ERROR(*dst_data_list_ptr == NULL, VG_OUT_OF_MEMORY_ERROR, VG_NO_RETVAL);
+                if (bytes == 0)
+                {
+                    *dst_data_list_ptr = malloc(1);
+                }
+                else
+                {
+                    *dst_data_list_ptr = malloc(bytes);
+                }
+                if (*dst_data_list_ptr == NULL) goto out_of_memory;
                 memcpy(*dst_data_list_ptr++, *src_data_list_ptr++, bytes);
             }
             break;
@@ -3265,6 +3392,13 @@ static void appendPathImpl(Path* dst, Path* src) {
         break;
     }
 
+    goto done;
+
+out_of_memory:
+    setError(VG_OUT_OF_MEMORY_ERROR);
+    OSReleaseMutex();
+
+done:
     free(src_data_list_copy);
 }
 
@@ -5162,7 +5296,7 @@ void VG_APIENTRY vgRenderToMask(VGPath path, VGbitfield paintModes, VGMaskOperat
         vg_lite_fill_t fill_rule = context->m_fillRule;
         if (paintModes & VG_FILL_PATH) {
             vglpath->path_type = VG_LITE_DRAW_FILL_PATH;
-            vg_lite_draw(drawbuffer, vglpath, fill_rule, (vg_lite_matrix_t*)&context->m_pathUserToSurface, VG_LITE_BLEND_NONE, 0xFF << 24);
+            vg_lite_draw(drawbuffer, vglpath, fill_rule, (vg_lite_matrix_t*)&context->m_pathUserToSurface, VG_LITE_BLEND_NONE, (vg_lite_color_t)(0xFF << 24));
             vg_lite_flush();
             vg_lite_disable_scissor();
             vg_lite_blend_masklayer(masklayer, drawbuffer, operation, &rect);
@@ -5185,7 +5319,7 @@ void VG_APIENTRY vgRenderToMask(VGPath path, VGbitfield paintModes, VGMaskOperat
                 0XFFFFFFFF);
             vglpath->stroke->dash_reset = context->m_strokeDashPhaseReset;
             vg_lite_update_stroke(vglpath);
-            vg_lite_draw(drawbuffer, vglpath, fill_rule, (vg_lite_matrix_t*)&context->m_pathUserToSurface, VG_LITE_BLEND_NONE, 0xFF << 24);
+            vg_lite_draw(drawbuffer, vglpath, fill_rule, (vg_lite_matrix_t*)&context->m_pathUserToSurface, VG_LITE_BLEND_NONE, (vg_lite_color_t)(0xFF << 24));
             vg_lite_flush();
             vg_lite_disable_scissor();
             vg_lite_blend_masklayer(masklayer, drawbuffer, operation, &rect);
@@ -5512,7 +5646,14 @@ void VG_APIENTRY vgAppendPathData(VGPath dstPath, VGint numSegments, const VGuby
             break;
         }
         size = _commandSize[c] * dataSize;
-        tmp = malloc(size);
+        if (size == 0)
+        {
+            tmp = malloc(1);
+        }
+        else
+        {
+            tmp = malloc(size);
+        }
         if (tmp == NULL) {
             setError(VG_OUT_OF_MEMORY_ERROR);
             numSegments = i;
@@ -5624,7 +5765,12 @@ static VGboolean drawPath(VGContext* context, VGPath path, const Matrix3x3 userT
         VGubyte* dst_data = malloc(data_num * grid_size);
         VG_IF_ERROR(dst_data == NULL, VG_OUT_OF_MEMORY_ERROR, VG_FALSE);
         uint8_t* vgl_opcodes = malloc(sizeof(uint8_t) * p->m_numSegments);
-        VG_IF_ERROR(vgl_opcodes == NULL, VG_OUT_OF_MEMORY_ERROR, VG_FALSE);
+        if (vgl_opcodes == NULL) {
+            free(dst_data);
+            setError(VG_OUT_OF_MEMORY_ERROR);
+            OSReleaseMutex();
+            return VG_FALSE;
+        }
 
         VGuint bytes;
         seg_ptr = p->m_segments;
@@ -6173,7 +6319,12 @@ VGfloat VG_APIENTRY vgPathLength(VGPath path, VGint startSegment, VGint numSegme
     memcpy(p_cpy, p, sizeof(Path));
     p_cpy->m_numSegments = startSegment + numSegments;
     Path* p_fp32 = calloc(1, sizeof(Path));
-    VG_IF_ERROR(p_fp32 == NULL, VG_OUT_OF_MEMORY_ERROR, -1.0f);
+    if (p_fp32 == NULL) {
+        free(p_cpy);
+        setError(VG_OUT_OF_MEMORY_ERROR);
+        OSReleaseMutex();
+        return -1.0f;
+    }
     p_fp32->m_datatype = VG_PATH_DATATYPE_F;
     appendPathImpl(p_fp32, p_cpy);
     p_fp32->m_numSegments = p_cpy->m_numSegments;
@@ -6567,7 +6718,7 @@ void VG_APIENTRY vgPointAlongPath(VGPath path, VGint startSegment, VGint numSegm
         t, x_old, y_old, x_new, y_new, seg_length;
     VGint endSegment = startSegment + numSegments - 1;
     VGPathCommand cmd, next_cmd;
-    VGboolean is_large, is_clockwise, is_relative;
+    VGboolean is_large = VG_FALSE, is_clockwise = VG_FALSE, is_relative = VG_FALSE;
     for (VGint i = 0; i <= endSegment; ++i) {
         data_ptr = (float*)(*data_list++);
         cmd = *seg_ptr++;
@@ -7028,6 +7179,7 @@ void VG_APIENTRY vgPointAlongPath(VGPath path, VGint startSegment, VGint numSegm
         }
     }
 
+    freePathImpl(p_fp32);
     VG_RETURN(VG_NO_RETVAL);
 }
 
@@ -7433,7 +7585,7 @@ void VG_APIENTRY vgPathTransformedBounds(VGPath path, VGfloat* minx, VGfloat* mi
     /* Calculate bounds. */
     float px = 0, py = 0, ox = 0, oy = 0, sx = 0, sy = 0, x0 = 0, y0 = 0, x1 = 0, y1 = 0, x2 = 0, y2 = 0,
         x, y;
-    VGboolean is_large, is_clockwise, is_relative;
+    VGboolean is_large = VG_FALSE, is_clockwise = VG_FALSE, is_relative = VG_FALSE;
     VGPathCommand cmd;
     for (int i = 0; i < p_fp32->m_numSegments; ++i) {
         data_ptr = (float*)(*data_list++);
@@ -7770,9 +7922,14 @@ VGboolean VG_APIENTRY vgInterpolatePath(VGPath dstPath, VGPath startPath, VGPath
 
     /* Convert startPath and endPath to float format. */
     Path* s_fp32 = calloc(1, sizeof(Path));
-    Path* e_fp32 = calloc(1, sizeof(Path));
     VG_IF_ERROR(s_fp32 == NULL, VG_OUT_OF_MEMORY_ERROR, VG_FALSE);
-    VG_IF_ERROR(e_fp32 == NULL, VG_OUT_OF_MEMORY_ERROR, VG_FALSE);
+    Path* e_fp32 = calloc(1, sizeof(Path));
+    if (e_fp32 == NULL) {
+        free(s_fp32);
+        setError(VG_OUT_OF_MEMORY_ERROR);
+        OSReleaseMutex();
+        return VG_FALSE;
+    }
     s_fp32->m_datatype = VG_PATH_DATATYPE_F;
     e_fp32->m_datatype = VG_PATH_DATATYPE_F;
     appendPathImpl(s_fp32, s);
@@ -8468,7 +8625,7 @@ Color readImgPixel(Image* src, int x, int y)
         gs = 16;
         bs = 8;
     }
-    Color c;
+    Color c = {0};
     if (lb)
     {   //luminance
         c.r = c.g = c.b = intToColor(p >> ls, (1 << lb) - 1);
