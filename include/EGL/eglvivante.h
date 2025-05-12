@@ -228,7 +228,7 @@ typedef struct _platEvent
 }
 platEvent;
 
-#if defined(LINUX)||defined(__FREERTOS__)
+#if defined(LINUX)||defined(SDK_OS_FREE_RTOS)
 
 void *fbGetDisplay(void *context);
 void *fbGetDisplayByIndex(int DisplayIndex);
@@ -247,7 +247,7 @@ void fbGetPixmapGeometry(void *Pixmap, int *Width, int *Height);
 void fbGetPixmapInfo(void *Pixmap, int *Width, int *Height, int *BitsPerPixel, int *Stride, void **Bits);
 void fbDestroyPixmap(void *Pixmap);
 
-#endif /* defined(LINUX)||defined(__FREERTOS__) */
+#endif /* defined(LINUX)||defined(SDK_OS_FREE_RTOS) */
 
 #ifdef __cplusplus
 }

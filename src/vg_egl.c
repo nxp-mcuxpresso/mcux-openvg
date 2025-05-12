@@ -528,7 +528,7 @@ VGEGLDisplay* getEglDisplay(EGLDisplay display)
     return NULL; //error: the display hasn't been eglInitialized
 }
 
-const EGLDisplay findEglDisplay(EGLContext ctx)
+EGLDisplay findEglDisplay(EGLContext ctx)
 {
     VGEGL* egl = getEGL();
     VGEGLDisplay* dpy = egl->m_displays;
@@ -1464,6 +1464,7 @@ EGLAPI EGLSurface EGLAPIENTRY eglCreateWindowSurface(EGLDisplay dpy, EGLConfig c
         if (vg_lite_init(windowWidth, windowHeight) != VG_LITE_SUCCESS)
         {
             printf("OpenVG driver fails to initialize VGLite API!\n");
+            OSDestroyWindowContext(wc);
             EGL_RETURN(EGL_NOT_INITIALIZED, EGL_NO_SURFACE);
         }
 
