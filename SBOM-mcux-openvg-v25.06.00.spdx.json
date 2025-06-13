@@ -1,0 +1,198 @@
+{
+  "SPDXID": "SPDXRef-DOCUMENT",
+  "spdxVersion": "SPDX-2.3",
+  "creationInfo": {
+    "created": "2025-05-21T03:38:24Z",
+    "creators": [
+      "Organization: NXP"
+    ],
+    "licenseListVersion": "3.20"
+  },
+  "name": "mcux-openvg-v25.06.00",
+  "dataLicense": "CC0-1.0",
+  "hasExtractedLicensingInfos": [
+    {
+      "licenseId": "LicenseRef-3eca8fb9-fca4-4b49-b4bd-189ba8efd691",
+      "extractedText": "NONE",
+      "name": "Basic Proprietary Commercial License"
+    }
+  ],
+  "documentNamespace": "https://nxp.com/spdx/c5411208-0895-41f0-946e-1c13d56cbb8a",
+  "packages": [
+    {
+      "SPDXID": "SPDXRef-package-c5411208-0895-41f0-946e-1c13d56cbb8a",
+      "name": "mcux-openvg",
+      "versionInfo": "v25.06.00",
+      "licenseConcluded": "(MIT)",
+      "licenseDeclared": "(MIT)",
+      "downloadLocation": "https://github.com/nxp-mcuxpresso/mcux-openvg",
+      "originator": "Organization: NXP",
+      "supplier": "NOASSERTION",
+      "externalRefs": [],
+      "filesAnalyzed": false
+    },
+    {
+      "SPDXID": "SPDXRef-package-8056e53a-289c-48eb-9376-b56b41a14e85",
+      "name": "FreeRTOS Real Time Kernel",
+      "versionInfo": "V10.4.3",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "homepage": "https://github.com/FreeRTOS/FreeRTOS",
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:amazon:freertos:10.4.3:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:amazon:aws-freertos-kernel:10.4.3:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:o:amazon:freertos:10.4.3:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:o:amazon:freertos:10.4.3:*:*:*:-:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "supplier": "NOASSERTION"
+    },
+    {
+      "SPDXID": "SPDXRef-package-2b311d36-00bd-43ce-a7b9-88678e6891cc",
+      "name": "Freescale/kernel-module-imx-gpu-viv",
+      "versionInfo": "upstream/6.4.11.p1.0",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "GPL-2.0-only",
+      "downloadLocation": "NOASSERTION",
+      "originator": "Organization: freescale",
+      "supplier": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:github/Freescale/kernel-module-imx-gpu-viv@upstream/6.4.11.p1.0",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "0dcec58c-108b-42f2-a87e-6506a73441e6",
+          "referenceType": "BlackDuck-ComponentOrigin"
+        }
+      ],
+      "filesAnalyzed": false
+    },
+    {
+      "SPDXID": "SPDXRef-package-70de2145-1c6d-47c6-9088-a9754761137f",
+      "name": "gpu-viv-bin-mx6q-dev",
+      "versionInfo": "3.5.7-1.0.0-alpha.2-hfp",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "LicenseRef-3eca8fb9-fca4-4b49-b4bd-189ba8efd691",
+      "downloadLocation": "http://mirrors.kernel.org/yocto/yocto/yocto/yocto-1.5/ipk/cortexa9hf-vfp-neon-mx6",
+      "originator": "Organization: yocto",
+      "supplier": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:yocto/gpu-viv-bin-mx6q-dev@3.5.7-1.0.0-alpha.2-hfp-r0?arch=cortexa9hf-vfp-neon-mx6&epoch=1",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "8ab67eb3-822e-436a-8977-1bfa8e91a128",
+          "referenceType": "BlackDuck-ComponentOrigin"
+        }
+      ],
+      "filesAnalyzed": false
+    },
+    {
+      "SPDXID": "SPDXRef-package-31a756bc-e26c-4dd9-92c3-884348ed69c7",
+      "name": "Khronos EGL Headers",
+      "versionInfo": "1.4",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "homepage": "http://www.khronos.org/registry/egl/",
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [],
+      "filesAnalyzed": false,
+      "supplier": "NOASSERTION"
+    },
+    {
+      "SPDXID": "SPDXRef-package-0f90f27f-2c40-4a53-9ee5-e1e7afa052e7",
+      "name": "Khronos Group - OpenVG",
+      "versionInfo": "1.1",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "homepage": "http://www.khronos.org/openvg/",
+      "downloadLocation": "https://www.khronos.org/registry/vg/",
+      "externalRefs": [],
+      "filesAnalyzed": false,
+      "supplier": "NOASSERTION"
+    },
+    {
+      "SPDXID": "SPDXRef-package-a22bd73b-8c39-4935-81ac-959f094c0a2b",
+      "name": "libvdk-mx6-dev",
+      "versionInfo": "3.5.7-1.0.0-alpha.2-hfp",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "LicenseRef-3eca8fb9-fca4-4b49-b4bd-189ba8efd691",
+      "downloadLocation": "http://mirrors.kernel.org/yocto/yocto/yocto/yocto-1.5/ipk/cortexa9hf-vfp-neon-mx6",
+      "originator": "Organization: yocto",
+      "supplier": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:yocto/libvdk-mx6-dev@3.5.7-1.0.0-alpha.2-hfp-r0?arch=cortexa9hf-vfp-neon-mx6&epoch=1",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "651c730e-175f-4a9e-bbbd-d4901258dcd1",
+          "referenceType": "BlackDuck-ComponentOrigin"
+        }
+      ],
+      "filesAnalyzed": false
+    }
+  ],
+  "relationships": [
+    {
+      "spdxElementId": "SPDXRef-DOCUMENT",
+      "relationshipType": "DESCRIBES",
+      "relatedSpdxElement": "SPDXRef-package-c5411208-0895-41f0-946e-1c13d56cbb8a"
+    },
+    {
+      "spdxElementId": "SPDXRef-package-c5411208-0895-41f0-946e-1c13d56cbb8a",
+      "relationshipType": "CONTAINS",
+      "relatedSpdxElement": "SPDXRef-package-2b311d36-00bd-43ce-a7b9-88678e6891cc"
+    },
+    {
+      "spdxElementId": "SPDXRef-package-c5411208-0895-41f0-946e-1c13d56cbb8a",
+      "relationshipType": "CONTAINS",
+      "relatedSpdxElement": "SPDXRef-package-0f90f27f-2c40-4a53-9ee5-e1e7afa052e7"
+    },
+    {
+      "spdxElementId": "SPDXRef-package-c5411208-0895-41f0-946e-1c13d56cbb8a",
+      "relationshipType": "CONTAINS",
+      "relatedSpdxElement": "SPDXRef-package-70de2145-1c6d-47c6-9088-a9754761137f"
+    },
+    {
+      "spdxElementId": "SPDXRef-package-c5411208-0895-41f0-946e-1c13d56cbb8a",
+      "relationshipType": "CONTAINS",
+      "relatedSpdxElement": "SPDXRef-package-a22bd73b-8c39-4935-81ac-959f094c0a2b"
+    },
+    {
+      "spdxElementId": "SPDXRef-package-c5411208-0895-41f0-946e-1c13d56cbb8a",
+      "relationshipType": "CONTAINS",
+      "relatedSpdxElement": "SPDXRef-package-31a756bc-e26c-4dd9-92c3-884348ed69c7"
+    },
+    {
+      "spdxElementId": "SPDXRef-package-c5411208-0895-41f0-946e-1c13d56cbb8a",
+      "relationshipType": "CONTAINS",
+      "relatedSpdxElement": "SPDXRef-package-8056e53a-289c-48eb-9376-b56b41a14e85"
+    }
+  ]
+}
