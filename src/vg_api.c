@@ -6656,7 +6656,12 @@ void VG_APIENTRY vgPointAlongPath(VGPath path, VGint startSegment, VGint numSegm
     memcpy(p_cpy, p, sizeof(Path));
     p_cpy->m_numSegments = startSegment + numSegments;
     Path* p_fp32 = calloc(1, sizeof(Path));
-    VG_IF_ERROR(p_fp32 == NULL, VG_OUT_OF_MEMORY_ERROR, VG_NO_RETVAL);
+    if (p_fp32 == NULL) {
+        free(p_cpy);
+        setError(VG_OUT_OF_MEMORY_ERROR);
+        OSReleaseMutex();
+        return VG_NO_RETVAL;
+    }
     p_fp32->m_datatype = VG_PATH_DATATYPE_F;
     appendPathImpl(p_fp32, p_cpy);
     p_fp32->m_numSegments = p_cpy->m_numSegments;
