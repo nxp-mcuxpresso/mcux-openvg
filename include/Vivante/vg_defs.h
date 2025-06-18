@@ -40,7 +40,7 @@
 
 #if defined (_MSC_VER)
 #    define VG_INLINE __forceinline
-#elif defined __APPLE__ || defined (__GNUC__) || defined (__GCC32__)
+#elif defined __APPLE__ || defined (__GNUC__) || defined (__GCC32__) || defined (__ICCARM__)
 #    define VG_INLINE inline
 #endif
 
