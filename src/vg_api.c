@@ -3940,10 +3940,54 @@ static void setLinearGrad(vg_lite_ext_linear_gradient_t* grad,
     grad->pre_multiplied = pre_multiplied;
     grad->spread_mode = spread_mode;
 
-    if (!count || count > VLC_MAX_COLOR_RAMP_STOPS || color_ramp == NULL) {
-        memcpy(grad->converted_ramp, default_ramp, sizeof(default_ramp));
-        grad->converted_length = sizeof(default_ramp) / 5;
-        return;
+    if (count > 0 && count <= VLC_MAX_COLOR_RAMP_STOPS && color_ramp != NULL)
+    {
+        if (count > grad->m_count)
+        {
+            if (grad->color_ramp != NULL)
+            {
+                free(grad->color_ramp);
+                grad->color_ramp = NULL;
+            }
+            grad->color_ramp = malloc(sizeof(vg_lite_color_ramp_t) * count);
+            if (grad->color_ramp == NULL)
+            {
+                setError(VG_OUT_OF_MEMORY_ERROR);
+            }
+            if (grad->converted_ramp != NULL)
+            {
+                free(grad->converted_ramp);
+                grad->converted_ramp = NULL;
+            }
+            grad->converted_ramp = malloc(sizeof(vg_lite_color_ramp_t) * (count + 2));
+            if (grad->converted_ramp == NULL)
+            {
+                setError(VG_OUT_OF_MEMORY_ERROR);
+            }
+            grad->m_count = count;
+        }
+        else
+        {
+            if (grad->color_ramp != NULL)
+                memset(grad->color_ramp, 0, sizeof(vg_lite_color_ramp_t) * grad->m_count);
+            if (grad->converted_ramp != NULL)
+                memset(grad->converted_ramp, 0, sizeof(vg_lite_color_ramp_t) * (grad->m_count + 2));
+        }
+    }
+    else if (!count || count > VLC_MAX_COLOR_RAMP_STOPS || color_ramp == NULL)
+    {
+
+        if (grad->converted_ramp != NULL)
+        {
+            free(grad->converted_ramp);
+            grad->converted_ramp = NULL;
+        }
+        grad->converted_ramp = malloc(sizeof(vg_lite_color_ramp_t) * 2);
+        if (grad->converted_ramp == NULL)
+        {
+            setError(VG_OUT_OF_MEMORY_ERROR);
+        }
+        goto Empty_sequence_handler;
     }
 
     for (i = 0; i < count; i++)
@@ -3964,7 +4008,7 @@ static void setLinearGrad(vg_lite_ext_linear_gradient_t* grad,
     /* Walk through the source ramp. */
     for (
         src_ramp = grad->color_ramp, trg_ramp = grad->converted_ramp;
-        (src_ramp < src_ramp_last) && (trg_count < VLC_MAX_COLOR_RAMP_STOPS + 2);
+        (src_ramp < src_ramp_last) && (trg_count < count + 2);
         src_ramp += 1
         )
     {
@@ -4048,6 +4092,10 @@ static void setLinearGrad(vg_lite_ext_linear_gradient_t* grad,
         /* Set new length. */
         grad->converted_length = trg_count;
     }
+    return;
+Empty_sequence_handler:
+    memcpy(grad->converted_ramp, default_ramp, sizeof(default_ramp));
+    grad->converted_length = sizeof(default_ramp) / 5;
 }
 
 static void updateLinearGrad(VGContext* context, vg_lite_ext_linear_gradient_t* grad, Matrix3x3* user_m) {
@@ -4253,6 +4301,22 @@ static void updateLinearGrad(VGContext* context, vg_lite_ext_linear_gradient_t* 
     }
 }
 
+static void clearLinearGrad(vg_lite_ext_linear_gradient_t* grad)
+{
+    grad->count = 0;
+    grad->m_count = 0;
+    if (grad->color_ramp != NULL)
+    {
+        free(grad->color_ramp);
+        grad->color_ramp = NULL;
+    }
+    if (grad->converted_ramp != NULL)
+    {
+        free(grad->converted_ramp);
+        grad->converted_ramp = NULL;
+    }
+}
+
 static void setRadialGrad(vg_lite_radial_gradient_t* grad,
     vg_lite_uint32_t count,
     vg_lite_color_ramp_t* color_ramp,
@@ -4285,11 +4349,52 @@ static void setRadialGrad(vg_lite_radial_gradient_t* grad,
     grad->pre_multiplied = pre_multiplied;
     grad->spread_mode = spread_mode;
 
-    if (!count || count > VLC_MAX_COLOR_RAMP_STOPS || color_ramp == NULL)
+    if (count > 0 && count <= VLC_MAX_COLOR_RAMP_STOPS && color_ramp != NULL)
     {
-        memcpy(grad->converted_ramp, defaultRamp, sizeof(defaultRamp));
-        grad->converted_length = sizeof(defaultRamp) / 5;
-        return;
+        if (count > grad->m_count)
+        {
+            if (grad->color_ramp != NULL)
+            {
+                free(grad->color_ramp);
+                grad->color_ramp = NULL;
+            }
+            grad->color_ramp = malloc(sizeof(vg_lite_color_ramp_t) * count);
+            if (grad->color_ramp == NULL)
+            {
+                setError(VG_OUT_OF_MEMORY_ERROR);
+            }
+            if (grad->converted_ramp != NULL)
+            {
+                free(grad->converted_ramp);
+                grad->converted_ramp = NULL;
+            }
+            grad->converted_ramp = malloc(sizeof(vg_lite_color_ramp_t) * (count + 2));
+            if (grad->converted_ramp == NULL)
+            {
+                setError(VG_OUT_OF_MEMORY_ERROR);
+            }
+        }
+        else
+        {
+            if (grad->color_ramp != NULL)
+                memset(grad->color_ramp, 0, sizeof(vg_lite_color_ramp_t) * grad->m_count);
+            if (grad->converted_ramp != NULL)
+                memset(grad->converted_ramp, 0, sizeof(vg_lite_color_ramp_t) * (grad->m_count + 2));
+        }
+    }
+    else if (!count || count > VLC_MAX_COLOR_RAMP_STOPS || color_ramp == NULL)
+    {
+        if (grad->converted_ramp != NULL)
+        {
+            free(grad->converted_ramp);
+            grad->converted_ramp = NULL;
+        }
+        grad->converted_ramp = malloc(sizeof(vg_lite_color_ramp_t) * 2);
+        if (grad->converted_ramp == NULL)
+        {
+            setError(VG_OUT_OF_MEMORY_ERROR);
+        }
+        goto Empty_sequence_handler;
     }
 
     for (i = 0; i < count; i++)
@@ -4310,7 +4415,7 @@ static void setRadialGrad(vg_lite_radial_gradient_t* grad,
     /* Walk through the source ramp. */
     for (
         srcRamp = grad->color_ramp, trgRamp = grad->converted_ramp;
-        (srcRamp < srcRampLast) && (trgCount < VLC_MAX_COLOR_RAMP_STOPS + 2);
+        (srcRamp < srcRampLast) && (trgCount < count + 2);
         srcRamp += 1
         )
     {
@@ -4394,6 +4499,10 @@ static void setRadialGrad(vg_lite_radial_gradient_t* grad,
         /* Set new length. */
         grad->converted_length = trgCount;
     }
+    return;
+Empty_sequence_handler:
+    memcpy(grad->converted_ramp, defaultRamp, sizeof(defaultRamp));
+    grad->converted_length = sizeof(defaultRamp) / 5;
 }
 
 static void updateRadialGrad(VGContext* context, vg_lite_radial_gradient_t* grad, Matrix3x3* user_m) {
@@ -4602,6 +4711,22 @@ static void updateRadialGrad(VGContext* context, vg_lite_radial_gradient_t* grad
         *bits++ = PackColorComponent(color[2]);
         *bits++ = PackColorComponent(color[1]);
         *bits++ = PackColorComponent(color[0]);
+    }
+}
+
+static void clearRadialGrad(vg_lite_radial_gradient_t* grad)
+{
+    grad->count = 0;
+    grad->m_count = 0;
+    if (grad->color_ramp != NULL)
+    {
+        free(grad->color_ramp);
+        grad->color_ramp = NULL;
+    }
+    if (grad->converted_ramp != NULL)
+    {
+        free(grad->converted_ramp);
+        grad->converted_ramp = NULL;
     }
 }
 
@@ -5849,7 +5974,7 @@ static VGboolean drawPath(VGContext* context, VGPath path, const Matrix3x3 userT
                     setLinearGrad(&grad, paint->m_colorRampStopsCount, vg_color_ramp, linear_gradient, paint->m_colorRampSpreadMode, paint->m_colorRampPremultiplied);
                     updateLinearGrad(context, &grad, &userToSurfaceFill);
                     vg_lite_draw_linear_grad(fbbuf, vglpath, fill_rule, (vg_lite_matrix_t*)&(context->m_pathUserToSurface), &grad, 0, blend, VG_LITE_FILTER_LINEAR);
-                    grad.count = 0;
+                    clearLinearGrad(&grad);
                     paint->grad_image = grad.image;                
                 }
                 else {
@@ -5941,7 +6066,7 @@ static VGboolean drawPath(VGContext* context, VGPath path, const Matrix3x3 userT
                     setRadialGrad(&grad, paint->m_colorRampStopsCount, vg_color_ramp, radialGradient, paint->m_colorRampSpreadMode, paint->m_colorRampPremultiplied);
                     updateRadialGrad(context, &grad, &userToSurfaceFill);
                     vg_lite_draw_radial_grad(fbbuf, vglpath, fill_rule, (vg_lite_matrix_t*)&(context->m_pathUserToSurface), &grad, 0, blend, VG_LITE_FILTER_LINEAR);
-                    grad.count = 0;
+                    clearRadialGrad(&grad);
                     paint->grad_image = grad.image;
                 }
                 else {
@@ -6107,7 +6232,7 @@ static VGboolean drawPath(VGContext* context, VGPath path, const Matrix3x3 userT
                         setLinearGrad(&grad, paint->m_colorRampStopsCount, vg_color_ramp, linear_gradient, paint->m_colorRampSpreadMode, paint->m_colorRampPremultiplied);
                         updateLinearGrad(context, &grad, &userToSurfaceFill);
                         vg_lite_draw_linear_grad(fbbuf, vglpath, fill_rule, (vg_lite_matrix_t*)&(context->m_pathUserToSurface), &grad, 0, blend, VG_LITE_FILTER_LINEAR);
-                        grad.count = 0;
+                        clearLinearGrad(&grad);
                         paint->grad_image = grad.image;
                     }
                     else {
@@ -6184,7 +6309,7 @@ static VGboolean drawPath(VGContext* context, VGPath path, const Matrix3x3 userT
                         setRadialGrad(&grad, paint->m_colorRampStopsCount, vg_color_ramp, radialGradient, paint->m_colorRampSpreadMode, paint->m_colorRampPremultiplied);
                         updateRadialGrad(context, &grad, &userToSurfaceFill);
                         vg_lite_draw_radial_grad(fbbuf, vglpath, fill_rule, (vg_lite_matrix_t*)&(context->m_pathUserToSurface), &grad, 0, blend, VG_LITE_FILTER_LINEAR);
-                        grad.count = 0;
+                        clearRadialGrad(&grad);
                         paint->grad_image = grad.image;
                     }
                     else {
