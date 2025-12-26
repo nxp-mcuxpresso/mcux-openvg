@@ -9517,7 +9517,7 @@ static VGboolean drawImage(VGContext* context, VGImage image, const Matrix3x3 us
             vg_lite_flush();
         }
         vg_lite_blit(dstbuf, srcbuf, (vg_lite_matrix_t*)&userToSurfaceMatrix_temp, blend, srcColor, filter);
-        vg_lite_flush();
+        vg_lite_finish();
     }
 
     context->m_image = VG_FALSE;
