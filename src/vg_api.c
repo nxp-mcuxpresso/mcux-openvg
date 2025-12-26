@@ -9876,7 +9876,7 @@ void VG_APIENTRY vgColorMatrix(VGImage dst, VGImage src, const VGfloat * matrix)
     {
         m[i] = inputFloat(matrix[i]);
     }
-    state = vg_lite_set_pixel_matrix(m, (vg_lite_pixel_channel_enable_t*)&channelMask);
+    state = VG_LITE_NOT_SUPPORT;
     if (state == VG_LITE_NOT_SUPPORT)
     {
         vg_lite_finish();
