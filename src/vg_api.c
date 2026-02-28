@@ -5842,7 +5842,7 @@ static VGboolean drawPath(VGContext* context, VGPath path, const Matrix3x3 userT
     Path* p = (Path*)path;
     vg_lite_path_t* vglpath = (vg_lite_path_t*)((Path*)path)->m_vglPath;
     if (vglpath == NULL) return VG_FALSE;
-    if (p->m_pathChanged) {
+    if (p->m_pathChanged || (vglpath && vglpath->stroke_path == NULL)) {
         if (vglpath)
             vg_lite_clear_path(vglpath);
 
@@ -5881,6 +5881,7 @@ static VGboolean drawPath(VGContext* context, VGPath path, const Matrix3x3 userT
         }
 
         vglpath->format = (vg_lite_format_t)p->m_datatype;
+        vg_lite_set_path_type(vglpath, paintModes);
         vg_lite_append_path(vglpath, vgl_opcodes, (vg_lite_pointer)dst_data, (vg_lite_uint32_t)p->m_numSegments);
 
         free(dst_data);
@@ -6106,6 +6107,11 @@ static VGboolean drawPath(VGContext* context, VGPath path, const Matrix3x3 userT
 
     if (paintModes & VG_STROKE_PATH)
     {
+        // skip empty paths (G20602)
+        if (p->m_numSegments == 0) {
+            return VG_TRUE;
+        }
+
         vg_lite_int8_t status = 0;
         vg_lite_int8_t cmp = 0;
         do 
@@ -6178,6 +6184,15 @@ static VGboolean drawPath(VGContext* context, VGPath path, const Matrix3x3 userT
                             stroke_color);
                         vglpath->stroke->dash_reset = (vg_lite_uint8_t)context->m_strokeDashPhaseReset;
                         vg_lite_update_stroke(vglpath);
+
+                        /*
+                        * If the VG path is not a drawable shape (ex: G30228 path is just a point)
+                        * then the stroke generator will create a NULL stroke_path.
+                        * In this case, skip drawing this path.
+                        */
+                        if (vglpath->stroke_path == NULL) {
+                            return VG_TRUE;
+                        }
                         vglpath->stroke_valid = 1;
                     } while (VG_FALSE);
 
