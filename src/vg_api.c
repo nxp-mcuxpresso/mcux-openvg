@@ -5281,7 +5281,7 @@ void VG_APIENTRY vgMask(VGHandle mask, VGMaskOperation operation, VGint x, VGint
     if (context->m_scissoring == VG_TRUE) {
         vg_lite_enable_scissor();
     }
-    vg_lite_set_masklayer((vg_lite_buffer_t*)drawable->m_mask->m_image->m_vglbuf);
+    vg_lite_set_masklayer((vg_lite_buffer_t*)drawable->m_mask->m_image->m_vglbuf, 0, 0);
     VG_RETURN(VG_NO_RETVAL);
 }
 
