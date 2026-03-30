@@ -28,6 +28,12 @@
 #include "vg_context.h"
 
 
+static VG_INLINE VGint vgHandleHashIndex(VGuint handle)
+{
+    /* Shift to reduce impact of aligment/allocator low bits */
+    return (VGint)((handle >> 4) % VIV_OBJECTS_HASH);
+}
+
 VGContext* createVgContext(VGContext* shareContext)
 {
     VGContext* vgctx = (VGContext*)malloc(sizeof(VGContext));
@@ -305,22 +311,22 @@ VGboolean isValidImage(VGContext* ctx, VGImage image)
     {
         return VG_FALSE;
     }
-    Objectptr object_image = (Objectptr)image;
-     if ((object_image->type >= OBJECTTYPE_COUNT) || (object_image->type != OBJECTTYPE_IMAGE))
-         return VG_FALSE;
-    index = object_image->name % VIV_OBJECTS_HASH;
+
+    index = vgHandleHashIndex(handle);
     current = ctx->m_imageManager->m_resources->m_array[index];
 
     /* Search teh cache for the object. */
     while (current != NULL)
     {
-        if (object_image == current)
+        if ((Objectptr)image == current)
         {
             break;
         }
         current = current->next;
     }
     if (current == NULL)
+        return VG_FALSE;
+    if ((current->type >= OBJECTTYPE_COUNT) || (current->type != OBJECTTYPE_IMAGE))
         return VG_FALSE;
     /* Move to the head of teh list. */
     if (current->prev != NULL)
@@ -350,7 +356,8 @@ void addImageResource(VGContext* ctx, Image* image)
     object_image->name = ctx->m_imageManager->m_resources->count;
     VG_ASSERT(object_image->name);
     VG_ASSERT(object_image->type < OBJECTTYPE_COUNT);
-    index = object_image->name % VIV_OBJECTS_HASH;
+    handle = (VGuint)object_image;
+    index = vgHandleHashIndex(handle);
     head = ctx->m_imageManager->m_resources->m_array[index];
 
     /* Insert to the head*/
@@ -366,7 +373,6 @@ void addImageResource(VGContext* ctx, Image* image)
     }
     ctx->m_imageManager->m_resources->m_array[index] = object_image;
     image->m_referenceCount++;
-    handle = (VGuint)object_image;
     if (handle < ctx->m_imageManager->lohandle)
     {
         ctx->m_imageManager->lohandle = handle;
@@ -381,7 +387,7 @@ void removeImageResource(VGContext* ctx, Image* image)
 {
     VGint index;
     Objectptr object_image = (Objectptr)image;
-    index = object_image->name % VIV_OBJECTS_HASH;
+    index = vgHandleHashIndex((VGuint)object_image);
     /* Remove from the chain */
     if (object_image == ctx->m_imageManager->m_resources->m_array[index])
     {
@@ -424,7 +430,7 @@ void destroyImageManager(VGContext* ctx)
                     {
                         if (object_image->prev)
                         {
-                            object_image->prev->next = object_image->prev;
+                            object_image->prev->next = object_image->next;
                         }
                     }
                     if (object_image->next)
@@ -453,22 +459,21 @@ VGboolean isValidMaskLayer(VGContext* ctx, VGHandle mask)
     {
         return VG_FALSE;
     }
-    Objectptr object_mask = (Objectptr)mask;
-    if ((object_mask->type >= OBJECTTYPE_COUNT) || (object_mask->type != OBJECTTYPE_MASK))
-          return VG_FALSE;
-    index = object_mask->name % VIV_OBJECTS_HASH;
+    index = vgHandleHashIndex(handle);
     current = ctx->m_maskLayerManager->m_resources->m_array[index];
 
     /* Search teh cache for the object. */
     while (current != NULL)
     {
-        if (object_mask == current)
+        if((Objectptr)mask == current)
         {
             break;
         }
         current = current->next;
     }
     if (current == NULL)
+        return VG_FALSE;
+    if ((current->type >= OBJECTTYPE_COUNT) || (current->type != OBJECTTYPE_MASK))
         return VG_FALSE;
     /* Move to the head of teh list. */
     if (current->prev != NULL)
@@ -498,7 +503,8 @@ void addMaskLayerResource(VGContext* ctx, Surface* layer)
     object_mask->name = ctx->m_maskLayerManager->m_resources->count;
     VG_ASSERT(object_mask->name);
     VG_ASSERT(object_mask->type < OBJECTTYPE_COUNT);
-    index = object_mask->name % VIV_OBJECTS_HASH;
+    handle = (VGuint)object_mask;
+    index = vgHandleHashIndex(handle);
     head = ctx->m_maskLayerManager->m_resources->m_array[index];
 
     /* Insert to the head*/
@@ -513,7 +519,6 @@ void addMaskLayerResource(VGContext* ctx, Surface* layer)
         head->prev = object_mask;
     }
     ctx->m_maskLayerManager->m_resources->m_array[index] = object_mask;
-    handle = (VGuint)object_mask;
     if (handle < ctx->m_maskLayerManager->lohandle)
     {
         ctx->m_maskLayerManager->lohandle = handle;
@@ -528,7 +533,7 @@ void removeMaskLayerResource(VGContext* ctx, Surface* layer)
 {
     VGint index;
     Objectptr object_mask = (Objectptr)layer;
-    index = object_mask->name % VIV_OBJECTS_HASH;
+    index = vgHandleHashIndex((VGuint)object_mask);
     /* Remove from the chain */
     if (object_mask == ctx->m_maskLayerManager->m_resources->m_array[index])
     {
@@ -573,7 +578,7 @@ void destroyMaskLayerManager(VGContext* ctx)
                     {
                         if (object_mask->prev)
                         {
-                            object_mask->prev->next = object_mask->prev;
+                            object_mask->prev->next = object_mask->next;
                         }
                     }
                     if (object_mask->next)
@@ -602,22 +607,22 @@ VGboolean isValidPath(VGContext* ctx, VGPath path)
     {
         return VG_FALSE;
     }
-    Objectptr object_path = (Objectptr)path;
-     if ((object_path->type >= OBJECTTYPE_COUNT) || (object_path->type != OBJECTTYPE_PATH))
-         return VG_FALSE;
-    index = object_path->name % VIV_OBJECTS_HASH;
+   
+    index = vgHandleHashIndex(handle);
     current = ctx->m_pathManager->m_resources->m_array[index];
 
     /* Search teh cache for the object. */
     while (current != NULL)
     {
-        if (object_path == current)
+        if ((Objectptr)path == current)
         {
             break;
         }
         current = current->next;
     }
     if (current == NULL)
+        return VG_FALSE;
+    if ((current->type >= OBJECTTYPE_COUNT) || (current->type != OBJECTTYPE_PATH))
         return VG_FALSE;
     /* Move to the head of teh list. */
     if (current->prev != NULL)
@@ -647,7 +652,8 @@ void addPathResource(VGContext* ctx, Path* path)
     object_path->name = ctx->m_pathManager->m_resources->count;
     VG_ASSERT(object_path->name);
     VG_ASSERT(object_path->type < OBJECTTYPE_COUNT);
-    index = object_path->name % VIV_OBJECTS_HASH;
+    handle = (VGuint)object_path;
+    index = vgHandleHashIndex(handle);
     head = ctx->m_pathManager->m_resources->m_array[index];
 
     /* Insert to the head*/
@@ -662,7 +668,6 @@ void addPathResource(VGContext* ctx, Path* path)
         head->prev = object_path;
     }
     ctx->m_pathManager->m_resources->m_array[index] = object_path;
-    handle = (VGuint)object_path;
     if (handle < ctx->m_pathManager->lohandle)
     {
         ctx->m_pathManager->lohandle = handle;
@@ -678,7 +683,7 @@ void removePathResource(VGContext* ctx, Path* path)
 {
     VGint index;
     Objectptr object_path = (Objectptr)path;
-    index = object_path->name % VIV_OBJECTS_HASH;
+    index = vgHandleHashIndex((VGuint)object_path);
     /* Remove from the chain */
     if (object_path == ctx->m_pathManager->m_resources->m_array[index])
     {
@@ -721,7 +726,7 @@ void destroyPathManager(VGContext* ctx)
                     {
                         if (object_path->prev)
                         {
-                            object_path->prev->next = object_path->prev;
+                            object_path->prev->next = object_path->next;
                         }
                     }
                     if (object_path->next)
@@ -751,16 +756,14 @@ VGboolean isValidPaint(VGContext* ctx, VGPaint paint)
     {
         return VG_FALSE;
     }
-    Objectptr object_paint = (Objectptr)paint;
-    /* if ((object_paint->type >= OBJECTTYPE_COUNT) || (object_paint->type != OBJECTTYPE_PAINT))
-         return VG_FALSE;*/
-    index = object_paint->name % VIV_OBJECTS_HASH;
+
+    index = vgHandleHashIndex(handle);
     current = ctx->m_paintManager->m_resources->m_array[index];
 
     /* Search teh cache for the object. */
     while (current != NULL)
     {
-        if (object_paint == current)
+        if ((Objectptr)paint == current)
         {
             break;
         }
@@ -768,6 +771,8 @@ VGboolean isValidPaint(VGContext* ctx, VGPaint paint)
     }
     if (current == NULL)
         return VG_FALSE;
+     if ((current->type >= OBJECTTYPE_COUNT) || (current->type != OBJECTTYPE_PAINT))
+         return VG_FALSE;
     /* Move to the head of teh list. */
     if (current->prev != NULL)
     {
@@ -796,7 +801,8 @@ void addPaintResource(VGContext* ctx, Paint* paint)
     object_paint->name = ctx->m_paintManager->m_resources->count;
     VG_ASSERT(object_paint->name);
     VG_ASSERT(object_paint->type < OBJECTTYPE_COUNT);
-    index = object_paint->name % VIV_OBJECTS_HASH;
+    handle = (VGuint)object_paint;
+    index = vgHandleHashIndex(handle);
     head = ctx->m_paintManager->m_resources->m_array[index];
 
     /* Insert to the head*/
@@ -812,7 +818,6 @@ void addPaintResource(VGContext* ctx, Paint* paint)
     }
     ctx->m_paintManager->m_resources->m_array[index] = object_paint;
     paint->m_referenceCount++;
-    handle = (VGuint)object_paint;
     if (handle < ctx->m_paintManager->lohandle)
     {
         ctx->m_paintManager->lohandle = handle;
@@ -827,7 +832,7 @@ void removePaintResource(VGContext* ctx, Paint* paint)
 {
     VGint index;
     Objectptr object_paint = (Objectptr)paint;
-    index = object_paint->name % VIV_OBJECTS_HASH;
+    index = vgHandleHashIndex((VGuint)object_paint);
     /* Remove from the chain */
     if (object_paint == ctx->m_paintManager->m_resources->m_array[index])
     {
@@ -908,22 +913,22 @@ VGboolean isValidFont(VGContext* ctx, VGFont font)
     {
         return VG_FALSE;
     }
-    Objectptr object_font = (Objectptr)font;
-    if ((object_font->type >= OBJECTTYPE_COUNT) || (object_font->type != OBJECTTYPE_FONT))
-          return VG_FALSE;
-    index = object_font->name % VIV_OBJECTS_HASH;
+
+    index = vgHandleHashIndex(handle);
     current = ctx->m_fontManager->m_resources->m_array[index];
 
     /* Search teh cache for the object. */
     while (current != NULL)
     {
-        if (object_font == current)
+        if ((Objectptr)font == current)
         {
             break;
         }
         current = current->next;
     }
     if (current == NULL)
+        return VG_FALSE;
+    if ((current->type >= OBJECTTYPE_COUNT) || (current->type != OBJECTTYPE_FONT))
         return VG_FALSE;
     /* Move to the head of teh list. */
     if (current->prev != NULL)
@@ -968,7 +973,7 @@ void destroyPaintManager(VGContext* ctx)
                     {
                         if (object_paint->prev)
                         {
-                            object_paint->prev->next = object_paint->prev;
+                            object_paint->prev->next = object_paint->next;
                         }
                     }
                     if (object_paint->next)
@@ -995,7 +1000,8 @@ void addFontResource(VGContext* ctx, Font* font)
     object_font->name = ctx->m_fontManager->m_resources->count;
     VG_ASSERT(object_font->name);
     VG_ASSERT(object_font->type < OBJECTTYPE_COUNT);
-    index = object_font->name % VIV_OBJECTS_HASH;
+    handle = (VGuint)object_font;
+    index = vgHandleHashIndex(handle);
     head = ctx->m_fontManager->m_resources->m_array[index];
 
     /* Insert to the head*/
@@ -1011,7 +1017,6 @@ void addFontResource(VGContext* ctx, Font* font)
     }
     ctx->m_fontManager->m_resources->m_array[index] = object_font;
     font->m_referenceCount++;
-    handle = (VGuint)object_font;
     if (handle < ctx->m_fontManager->lohandle)
     {
         ctx->m_fontManager->lohandle = handle;
@@ -1026,7 +1031,7 @@ void removeFontResource(VGContext* ctx, Font* font)
 {
     VGint index;
     Objectptr object_font = (Objectptr)font;
-    index = object_font->name % VIV_OBJECTS_HASH;
+    index = vgHandleHashIndex((VGuint)object_font);
     /* Remove from the chain */
     if (object_font == ctx->m_fontManager->m_resources->m_array[index])
     {
@@ -1069,7 +1074,7 @@ void destroyFontManager(VGContext* ctx)
                     {
                         if (object_font->prev)
                         {
-                            object_font->prev->next = object_font->prev;
+                            object_font->prev->next = object_font->next;
                         }
                     }
                     if (object_font->next)
