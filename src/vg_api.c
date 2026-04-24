@@ -1042,6 +1042,7 @@ static void setPaintParameterifv(VGContext* context, Paint* paint, VGPaintParamT
             }
             if (!valid || j == 0)
             {    //there are no valid stops, add implicit stops
+                j = 0;
                 GradientStop gs;
                 gs.offset = 0.0f;
                 gs.color.r = 0;
