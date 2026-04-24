@@ -4073,7 +4073,7 @@ static void setLinearGrad(vg_lite_ext_linear_gradient_t* grad,
     if (trg_count == 0)
     {
         memcpy(grad->converted_ramp, default_ramp, sizeof(default_ramp));
-        grad->converted_length = sizeof(default_ramp) / 5;
+        grad->converted_length = sizeof(default_ramp) / sizeof(vg_lite_color_ramp_t);
     }
     else
     {
@@ -4096,7 +4096,7 @@ static void setLinearGrad(vg_lite_ext_linear_gradient_t* grad,
     return;
 Empty_sequence_handler:
     memcpy(grad->converted_ramp, default_ramp, sizeof(default_ramp));
-    grad->converted_length = sizeof(default_ramp) / 5;
+    grad->converted_length = sizeof(default_ramp) / sizeof(vg_lite_color_ramp_t);
 }
 
 static void updateLinearGrad(VGContext* context, vg_lite_ext_linear_gradient_t* grad, Matrix3x3* user_m) {
@@ -4480,7 +4480,7 @@ static void setRadialGrad(vg_lite_radial_gradient_t* grad,
     if (trgCount == 0)
     {
         memcpy(grad->converted_ramp, defaultRamp, sizeof(defaultRamp));
-        grad->converted_length = sizeof(defaultRamp) / 5;
+        grad->converted_length = sizeof(defaultRamp) / sizeof(vg_lite_color_ramp_t);
     }
     else
     {
@@ -4503,7 +4503,7 @@ static void setRadialGrad(vg_lite_radial_gradient_t* grad,
     return;
 Empty_sequence_handler:
     memcpy(grad->converted_ramp, defaultRamp, sizeof(defaultRamp));
-    grad->converted_length = sizeof(defaultRamp) / 5;
+    grad->converted_length = sizeof(defaultRamp) / sizeof(vg_lite_color_ramp_t);
 }
 
 static void updateRadialGrad(VGContext* context, vg_lite_radial_gradient_t* grad, Matrix3x3* user_m) {
