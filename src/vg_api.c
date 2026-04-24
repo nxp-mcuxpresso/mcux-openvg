@@ -5967,11 +5967,8 @@ static VGboolean drawPath(VGContext* context, VGPath path, const Matrix3x3 userT
                 if((linear_gradient.X0 != linear_gradient.X1) || (linear_gradient.Y0 != linear_gradient.Y1))
                 {
                     memset(&grad, 0, sizeof(grad));
-                    if (paint->grad_image.handle != NULL)
-                    {
-                        vg_lite_finish();
-                        vg_lite_free(&paint->grad_image);
-                    }
+                    vg_lite_finish();
+                    vg_lite_free(&paint->grad_image);
                     setLinearGrad(&grad, paint->m_colorRampStopsCount, vg_color_ramp, linear_gradient, paint->m_colorRampSpreadMode, paint->m_colorRampPremultiplied);
                     updateLinearGrad(context, &grad, &userToSurfaceFill);
                     vg_lite_draw_linear_grad(fbbuf, vglpath, fill_rule, (vg_lite_matrix_t*)&(context->m_pathUserToSurface), &grad, 0, blend, VG_LITE_FILTER_LINEAR);
@@ -6059,11 +6056,8 @@ static VGboolean drawPath(VGContext* context, VGPath path, const Matrix3x3 userT
                 if (radialGradient.r > 0)
                 {
                     memset(&grad, 0, sizeof(grad));
-                    if (paint->grad_image.handle != NULL)
-                    {
-                        vg_lite_finish();
-                        vg_lite_free(&paint->grad_image);
-                    }
+                    vg_lite_finish();
+                    vg_lite_free(&paint->grad_image);
                     setRadialGrad(&grad, paint->m_colorRampStopsCount, vg_color_ramp, radialGradient, paint->m_colorRampSpreadMode, paint->m_colorRampPremultiplied);
                     updateRadialGrad(context, &grad, &userToSurfaceFill);
                     vg_lite_draw_radial_grad(fbbuf, vglpath, fill_rule, (vg_lite_matrix_t*)&(context->m_pathUserToSurface), &grad, 0, blend, VG_LITE_FILTER_LINEAR);
@@ -6225,11 +6219,8 @@ static VGboolean drawPath(VGContext* context, VGPath path, const Matrix3x3 userT
                     if ((linear_gradient.X0 != linear_gradient.X1) || (linear_gradient.Y0 != linear_gradient.Y1))
                     {
                         memset(&grad, 0, sizeof(grad));
-                        if (paint->grad_image.handle != NULL)
-                        {
-                            vg_lite_finish();
-                            vg_lite_free(&paint->grad_image);
-                        }
+                        vg_lite_finish();
+                        vg_lite_free(&paint->grad_image);
                         setLinearGrad(&grad, paint->m_colorRampStopsCount, vg_color_ramp, linear_gradient, paint->m_colorRampSpreadMode, paint->m_colorRampPremultiplied);
                         updateLinearGrad(context, &grad, &userToSurfaceFill);
                         vg_lite_draw_linear_grad(fbbuf, vglpath, fill_rule, (vg_lite_matrix_t*)&(context->m_pathUserToSurface), &grad, 0, blend, VG_LITE_FILTER_LINEAR);
@@ -6302,11 +6293,8 @@ static VGboolean drawPath(VGContext* context, VGPath path, const Matrix3x3 userT
                     if (radialGradient.r > 0)
                     {
                         memset(&grad, 0, sizeof(grad));
-                        if (paint->grad_image.handle != NULL)
-                        {
-                            vg_lite_finish();
-                            vg_lite_free(&paint->grad_image);
-                        }
+                        vg_lite_finish();
+                        vg_lite_free(&paint->grad_image);
                         setRadialGrad(&grad, paint->m_colorRampStopsCount, vg_color_ramp, radialGradient, paint->m_colorRampSpreadMode, paint->m_colorRampPremultiplied);
                         updateRadialGrad(context, &grad, &userToSurfaceFill);
                         vg_lite_draw_radial_grad(fbbuf, vglpath, fill_rule, (vg_lite_matrix_t*)&(context->m_pathUserToSurface), &grad, 0, blend, VG_LITE_FILTER_LINEAR);
@@ -9368,11 +9356,8 @@ static VGboolean drawImage(VGContext* context, VGImage image, const Matrix3x3 us
                 if ((linear_gradient.X0 != linear_gradient.X1) || (linear_gradient.Y0 != linear_gradient.Y1))
                 {
                     memset(&grad, 0, sizeof(grad));
-                    if (paint->grad_image.handle != NULL)
-                    {
-                        vg_lite_finish();
-                        vg_lite_free(&paint->grad_image);
-                    }
+                    vg_lite_finish();
+                    vg_lite_free(&paint->grad_image);
                     setLinearGrad(&grad, paint->m_colorRampStopsCount, vg_color_ramp, linear_gradient, paint->m_colorRampSpreadMode, paint->m_colorRampPremultiplied);
                     updateLinearGrad(context, &grad, (Matrix3x3*)&userToSurfaceMatrix_temp);
                     tmpbuf.image_mode = srcbuf->image_mode;
@@ -9439,11 +9424,8 @@ static VGboolean drawImage(VGContext* context, VGImage image, const Matrix3x3 us
                 if (radialGradient.r > 0)
                 {
                     memset(&grad, 0, sizeof(grad));
-                    if (paint->grad_image.handle != NULL)
-                    {
-                        vg_lite_finish();
-                        vg_lite_free(&paint->grad_image);
-                    }
+                    vg_lite_finish();
+                    vg_lite_free(&paint->grad_image);
                     setRadialGrad(&grad, paint->m_colorRampStopsCount, vg_color_ramp, radialGradient, paint->m_colorRampSpreadMode, paint->m_colorRampPremultiplied);
                     updateRadialGrad(context, &grad, (Matrix3x3*)&userToSurfaceMatrix_temp);
                     tmpbuf.image_mode = srcbuf->image_mode;
@@ -9525,13 +9507,8 @@ static VGboolean drawImage(VGContext* context, VGImage image, const Matrix3x3 us
     if (context->m_colorTransform)
         vg_lite_disable_color_transform();
 
-    if (child.handle) {
         vg_lite_free(&child);
-    }
-
-    if (tmpbuf.handle) {
         vg_lite_free(&tmpbuf);
-    }
 
     if (tmpImage) {
         vgDestroyImage(tmpImage);

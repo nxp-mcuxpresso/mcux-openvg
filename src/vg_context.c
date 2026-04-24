@@ -1172,10 +1172,7 @@ void freePaintImpl(Paint* paint)
         }
         paint->m_pattern = NULL;
     }
-    if (paint->grad_image.handle != NULL)
-    {
-        vg_lite_free(&paint->grad_image);
-    }
+    vg_lite_free(&paint->grad_image);
     free(paint);
 
 }
