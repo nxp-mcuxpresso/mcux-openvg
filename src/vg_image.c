@@ -2160,8 +2160,8 @@ void maskSurface(Drawable* drawable, const Surface* src, VGMaskOperation operati
         vg_lite_buffer_t* src_masklayer = (vg_lite_buffer_t*)(src->m_image)->m_vglbuf;
         rect.x = 0;
         rect.y = 0;
-        rect.width = w;
-        rect.height = h;
+        rect.width = w > src_masklayer->width  ? src_masklayer->width : w;
+        rect.height = h > src_masklayer->height ? src_masklayer->height : h;
         vg_lite_identity(&matrix);
         vg_lite_translate((VGfloat)x, (VGfloat)y, &matrix);
         switch (operation)
