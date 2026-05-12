@@ -8598,8 +8598,12 @@ static void imgClear(Image* dst, Color c, int x, int y, int w, int h, VGboolean 
 {
     if (x < 0)
         w += x;
+    else
+        w = (x + w > dst->m_width) ? dst->m_width - x : w;
     if (y < 0)
         h += y;
+    else
+        h = (y + h > dst->m_height) ? dst->m_height - y : h;
     x = max(0, x);
     y = max(0, y);
     w = min(w, dst->m_width);
@@ -9157,7 +9161,6 @@ void VG_APIENTRY vgImageSubData(VGImage image, const void* data, VGint dataStrid
     int tmp_dy = y;
     int tmp_w = width;
     int tmp_h = height;
-    getFormatBytes(dataFormat, &mul, &div, &align);
     computeBlitRegion(&tmp_sx, &tmp_sy, &tmp_dx, &tmp_dy, &tmp_w, &tmp_h, width, height, ((Image*)img)->m_width, ((Image*)img)->m_height);
 
     memset(&srcbuf, 0, sizeof(vg_lite_buffer_t));
@@ -9170,7 +9173,19 @@ void VG_APIENTRY vgImageSubData(VGImage image, const void* data, VGint dataStrid
     srcbuf.compress_mode = VG_LITE_DEC_DISABLE;
     /* Construct a src buffer for blit operation. */
     getFormatBytes(srcbuf.format, &mul, &div, &align);
-    byteOneLine = tmp_w * mul / div;
+    if (div == 1)
+    {
+        byteOneLine = tmp_w * mul;
+    }
+    else
+    {
+        byteOneLine = tmp_w * mul / div;
+        if ((tmp_w * mul) % div)
+        {
+            // there is data on next byte
+            byteOneLine++;
+        }
+    }
     memset(srcbuf.memory, 0, srcbuf.stride * srcbuf.height);
 
     temp_memory = srcbuf.memory;
@@ -9234,7 +9249,7 @@ void VG_APIENTRY vgGetImageSubData(VGImage image, void* data, VGint dataStride, 
         dst.m_referenceCount = 0;
         dst.m_storageOffsetX = 0;
         dst.m_storageOffsetY = 0;
-        dst.m_stride = dataStride;
+        dst.m_stride = dstbuf.stride;
         dst.m_vglbuf = &dstbuf;
         dst.m_width = width;
         imgSetPixel(&dst, img, x, y, 0, 0, width, height, VG_TRUE);
@@ -9255,7 +9270,8 @@ void VG_APIENTRY vgGetImageSubData(VGImage image, void* data, VGint dataStride, 
         vg_lite_blit_rect(&dstbuf, srcbuf, &rect, &n, blend, 0, filter);
         vg_lite_finish();
         for (int i = 0; i < dstbuf.height; i++) {
-            memcpy((uint8_t*)data + i*dataStride, (uint8_t*)dstbuf.memory + i*dstbuf.stride, dstbuf.width* mul / div);
+            /* Use ceiling division so sub-byte formats (e.g. VG_A4 packs 2 pixels/byte, mul=1 div=2) do not drop the trailing pixel of a line. For width=3 this yields (3*1 + 2-1)/2 = 2 bytes instead of 1. */
+            memcpy((uint8_t*)data + i*dataStride, (uint8_t*)dstbuf.memory + i*dstbuf.stride, (dstbuf.width * mul + div - 1) / div);
         }
     }
     vg_lite_free(&dstbuf);
@@ -9365,7 +9381,7 @@ void VG_APIENTRY vgCopyImage(VGImage dst, VGint dx, VGint dy, VGImage src, VGint
             vg_lite_flush();
         }
 
-        vg_lite_copy_image(dstbuf, srcbuf, (VGint)(tmp_dx + ((Image*)dst)->m_storageOffsetX), (VGint)(tmp_dy + ((Image*)dst)->m_storageOffsetX), rect.x, rect.y, rect.width, rect.height);
+        vg_lite_copy_image(dstbuf, srcbuf, (VGint)(tmp_dx + ((Image*)dst)->m_storageOffsetX), (VGint)(tmp_dy + ((Image*)dst)->m_storageOffsetY), rect.x, rect.y, rect.width, rect.height);
         vg_lite_flush();
     }
 
@@ -9705,6 +9721,9 @@ static VGboolean drawImage(VGContext* context, VGImage image, const Matrix3x3 us
     if (context->m_colorTransform)
         vg_lite_disable_color_transform();
 
+        // call finish before freeing buffers
+        vg_lite_finish();
+
         vg_lite_free(&child);
         vg_lite_free(&tmpbuf);
 
@@ -9826,7 +9845,8 @@ void VG_APIENTRY vgWritePixels(const void * data, VGint dataStride, VGImageForma
     srcbuf.compress_mode = VG_LITE_DEC_DISABLE;
     /* Construct a src buffer for blit operation. */
     getFormatBytes(srcbuf.format, &mul, &div, &align);
-    byteOneLine = srcbuf.width * mul / div;
+    /* Use ceiling division so sub-byte formats (e.g. VG_A4 packs 2 pixels/byte, mul=1 div=2) do not drop the trailing pixel of a line. For width=3 this yields (3*1 + 2-1)/2 = 2 bytes instead of 1. */
+    byteOneLine = (srcbuf.width * mul + div - 1) / div;
     memset(srcbuf.memory, 0, srcbuf.stride * srcbuf.height);
 
     for (int j = 0; j < height; j++) {
@@ -9944,7 +9964,8 @@ void VG_APIENTRY vgReadPixels(void* data, VGint dataStride, VGImageFormat dataFo
     dstbuf.compress_mode = VG_LITE_DEC_DISABLE;
     /* Construct a src buffer for blit operation. */
     getFormatBytes(dstbuf.format, &mul, &div, &align);
-    byteOneLine = dstbuf.width * mul / div;
+    /* Use ceiling division so sub-byte formats (e.g. VG_A4 packs 2 pixels/byte, mul=1 div=2) do not drop the trailing pixel of a line. For width=3 this yields (3*1 + 2-1)/2 = 2 bytes instead of 1. */
+    byteOneLine = (dstbuf.width * mul + div - 1) / div;
     memset(dstbuf.memory, 0, dstbuf.stride * dstbuf.height);
     if (context->m_masking) {
         vg_lite_disable_masklayer();
