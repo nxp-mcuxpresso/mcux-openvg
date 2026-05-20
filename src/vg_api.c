@@ -5216,7 +5216,10 @@ void VG_APIENTRY vgMask(VGHandle mask, VGMaskOperation operation, VGint x, VGint
         }
         /* RGB565 format convert to RGBA8888 ,so 5bit R channel convert to 8bit,modify swizzle to blit R channel to A8 channel. */
         else if (srcbuf->format == (vg_lite_buffer_format_t)VG_sRGB_565 || srcbuf->format == (vg_lite_buffer_format_t)VG_sL_8) {
-            vg_lite_buffer_t tempbuf = *srcbuf;
+            vg_lite_buffer_t tempbuf;
+            memset(&tempbuf, 0, sizeof(tempbuf));
+            tempbuf.width = srcbuf->width;
+            tempbuf.height = srcbuf->height;
             tempbuf.format = VG_sRGBA_8888;
             vg_lite_allocate(&tempbuf);
             vg_lite_blit(&tempbuf, srcbuf, NULL, VG_LITE_BLEND_NONE, 0, filter);
@@ -5230,7 +5233,10 @@ void VG_APIENTRY vgMask(VGHandle mask, VGMaskOperation operation, VGint x, VGint
             srcbuf->format = temp_format;
         }
         else if (srcbuf->format == (vg_lite_buffer_format_t)VG_lL_8) {
-            vg_lite_buffer_t tempbuf = *srcbuf;
+            vg_lite_buffer_t tempbuf;
+            memset(&tempbuf, 0, sizeof(tempbuf));
+            tempbuf.width = srcbuf->width;
+            tempbuf.height = srcbuf->height;
             tempbuf.format = VG_lRGBA_8888;
             vg_lite_allocate(&tempbuf);
             vg_lite_blit(&tempbuf, srcbuf, NULL, VG_LITE_BLEND_NONE, 0, filter);
@@ -5239,9 +5245,12 @@ void VG_APIENTRY vgMask(VGHandle mask, VGMaskOperation operation, VGint x, VGint
             vg_lite_blend_masklayer(masklayer, &tempbuf, operation, &rect);
         }
         else if (srcbuf->format == (vg_lite_buffer_format_t)VG_A_1 || srcbuf->format == (vg_lite_buffer_format_t)VG_BW_1) {
-            vg_lite_buffer_t tempbuf = *srcbuf;
+            vg_lite_buffer_t tempbuf;
             char* buf1 = (char*)srcbuf->memory;
 
+            memset(&tempbuf, 0, sizeof(tempbuf));
+            tempbuf.width = srcbuf->width;
+            tempbuf.height = srcbuf->height;
             tempbuf.format = VG_A_8;
             vg_lite_allocate(&tempbuf);
             char* buf2 = (char*)tempbuf.memory;
