@@ -6764,6 +6764,8 @@ void VG_APIENTRY vgPointAlongPath(VGPath path, VGint startSegment, VGint numSegm
     VGfloat factor = 0;
     VGfloat incomingTangentX = 0;
     VGfloat incomingTangentY = 0;
+    VGfloat tangentX2 = 0;
+    VGfloat tangentY2 = 0;
     VGfloat incomingX = 0;
     VGfloat incomingY = 0;
 
@@ -7000,6 +7002,36 @@ void VG_APIENTRY vgPointAlongPath(VGPath path, VGint startSegment, VGint numSegm
                 y2 = data_ptr[5] + oy;
             }
 
+            /* Compute initial incoming tangent for the cubic. 
+             * Handle degenerate cases matching the reference implementation:
+             * P1 == P0 -> use diretion to P2
+             * P1 == P2 == P0  -> use direction to P3 */
+            {
+                VGfloat idxt = x0 - ox;
+                VGfloat idyt = y0 - oy;
+                VGfloat idlen = sqrtf(idxt * idxt + idyt * idyt);
+                if (idlen <= 0.f) {
+                    /* P1 == P0: degenerate first control point, try P2 - P0 */
+                    idxt = x1 - ox;
+                    idyt = y1 - oy;
+                    idlen = sqrtf(idxt * idxt + idyt * idyt);
+                }
+                if (idlen <= 0.f) {
+                    /* P1 == P2 == P0: try P3 - P0 */
+                    idxt = x2 - ox;
+                    idyt = y2 - oy;
+                    idlen = sqrtf(idxt * idxt + idyt * idyt);
+                }
+                if (idlen > 0.f) {
+                    incomingTangentX = idxt / idlen;
+                    incomingTangentY = idyt / idlen;
+                }
+                else {
+                    incomingTangentX = 1.f;
+                    incomingTangentY = 0.f;
+                }
+            }
+
             if (i >= startSegment) {
                 x_old = ox;
                 y_old = oy;
@@ -7014,11 +7046,40 @@ void VG_APIENTRY vgPointAlongPath(VGPath path, VGint startSegment, VGint numSegm
                         + 3 * y1 * (1.f - t) * t * t
                         + y2 * t * t * t;
                     seg_length = sqrtf((x_new - x_old) * (x_new - x_old) + (y_new - y_old) * (y_new - y_old));
+                    /* Cubic Bezier tangent at t = j/256, normalized. */
+                    {
+                        VGfloat dt = 1.f - t;
+                        VGfloat tdx = 3.f * dt * dt * (x0 - ox) + 6.f * dt * t * (x1 - x0) + 3.f * t * t * (x2 - x1);
+                        VGfloat tdy = 3.f * dt * dt * (y0 - oy) + 6.f * dt * t * (y1 - y0) + 3.f * t * t * (y2 - y1);
+                        VGfloat tlen = sqrtf(tdx * tdx + tdy * tdy);
+                        if (tlen > 0.f) {
+                            tangentX2 = tdx / tlen;
+                            tangentY2 = tdy / tlen;
+                        }
+                        else {
+                            tangentX2 = incomingTangentX;
+                            tangentY2 = incomingTangentY;
+                        }
+                    }
                     if (path_length + seg_length >= distance || (i == endSegment && j == 255)) {
-                        pointAlongLine(x_old, y_old, x_new, y_new, distance - path_length, x, y, tangentX, tangentY, &factor);
+                        if (seg_length == 0.f) {
+                            if (x) *x = x_old;
+                            if (y) *y = y_old;
+                            if (tangentX) *tangentX = 1.f;
+                            if (tangentY) *tangentY = 0.f;
+                        }
+                        else {
+                            VGfloat factor = (distance - path_length) / seg_length;
+                            if (x) *x = x_old + (x_new - x_old) * factor;
+                            if (y) *y = y_old + (y_new - y_old) * factor;
+                            if (tangentX) *tangentX = incomingTangentX + (tangentX2 - incomingTangentX) * factor;
+                            if (tangentY) *tangentY = incomingTangentY + (tangentY2 - incomingTangentY) * factor;
+                        }
                         freePathImpl(p_fp32);
                         VG_RETURN(VG_NO_RETVAL);
                     }
+                    incomingTangentX = tangentX2;
+                    incomingTangentY = tangentY2;
                     path_length += seg_length;
                     x_old = x_new;
                     y_old = y_new;
@@ -7104,6 +7165,36 @@ void VG_APIENTRY vgPointAlongPath(VGPath path, VGint startSegment, VGint numSegm
                 y2 = data_ptr[3] + oy;
             }
 
+            /* Compute initial incoming tangent for the smooth cubic. 
+             * Handle degenerate cases matching the reference implementation:
+             * P1 == P0 -> use diretion to P2
+             * P1 == P2 == P0  -> use direction to P3 */
+            {
+                VGfloat idxt = x0 - ox;
+                VGfloat idyt = y0 - oy;
+                VGfloat idlen = sqrtf(idxt * idxt + idyt * idyt);
+                if (idlen <= 0.f) {
+                    /* P1 == P0: degenerate first control point, try P2 - P0 */
+                    idxt = x1 - ox;
+                    idyt = y1 - oy;
+                    idlen = sqrtf(idxt * idxt + idyt * idyt);
+                }
+                if (idlen <= 0.f) {
+                    /* P1 == P2 == P0: try P3 - P0 */
+                    idxt = x2 - ox;
+                    idyt = y2 - oy;
+                    idlen = sqrtf(idxt * idxt + idyt * idyt);
+                }
+                if (idlen > 0.f) {
+                    incomingTangentX = idxt / idlen;
+                    incomingTangentY = idyt / idlen;
+                }
+                else {
+                    incomingTangentX = 1.f;
+                    incomingTangentY = 0.f;
+                }
+            }
+
             if (i >= startSegment) {
                 x_old = ox;
                 y_old = oy;
@@ -7118,11 +7209,40 @@ void VG_APIENTRY vgPointAlongPath(VGPath path, VGint startSegment, VGint numSegm
                         + 3 * y1 * (1.f - t) * t * t
                         + y2 * t * t * t;
                     seg_length = sqrtf((x_new - x_old) * (x_new - x_old) + (y_new - y_old) * (y_new - y_old));
+                    /* Cubic Bezier tangent at t = j/256, normalized. */
+                    {
+                        VGfloat dt = 1.f - t;
+                        VGfloat tdx = 3.f * dt * dt * (x0 - ox) + 6.f * dt * t * (x1 - x0) + 3.f * t * t * (x2 - x1);
+                        VGfloat tdy = 3.f * dt * dt * (y0 - oy) + 6.f * dt * t * (y1 - y0) + 3.f * t * t * (y2 - y1);
+                        VGfloat tlen = sqrtf(tdx * tdx + tdy * tdy);
+                        if (tlen > 0.f) {
+                            tangentX2 = tdx / tlen;
+                            tangentY2 = tdy / tlen;
+                        }
+                        else {
+                            tangentX2 = incomingTangentX;
+                            tangentY2 = incomingTangentY;
+                        }
+                    }
                     if (path_length + seg_length >= distance || (i == endSegment && j == 255)) {
-                        pointAlongLine(x_old, y_old, x_new, y_new, distance - path_length, x, y, tangentX, tangentY, &factor);
+                        if (seg_length == 0.f) {
+                            if (x) *x = x_old;
+                            if (y) *y = y_old;
+                            if (tangentX) *tangentX = 1.f;
+                            if (tangentY) *tangentY = 0.f;
+                        }
+                        else {
+                            VGfloat factor = (distance - path_length) / seg_length;
+                            if (x) *x = x_old + (x_new - x_old) * factor;
+                            if (y) *y = y_old + (y_new - y_old) * factor;
+                            if (tangentX) *tangentX = incomingTangentX + (tangentX2 - incomingTangentX) * factor;
+                            if (tangentY) *tangentY = incomingTangentY + (tangentY2 - incomingTangentY) * factor;
+                        }
                         freePathImpl(p_fp32);
                         VG_RETURN(VG_NO_RETVAL);
                     }
+                    incomingTangentX = tangentX2;
+                    incomingTangentY = tangentY2;
                     path_length += seg_length;
                     x_old = x_new;
                     y_old = y_new;
@@ -7222,15 +7342,66 @@ void VG_APIENTRY vgPointAlongPath(VGPath path, VGint startSegment, VGint numSegm
                         }
                         VGfloat seg_length;
                         VGfloat x_old = ox, y_old = oy, x_new, y_new;
+                        /* Quadratic Bezier incoming tangent at t=0 for this arc segment. */
+                        VGfloat inTanX_q, inTanY_q;
+                        {
+                            VGfloat tdx = 2.f * (controlX - ox);
+                            VGfloat tdy = 2.f * (controlY - oy);
+                            VGfloat tlen = sqrtf(tdx * tdx + tdy * tdy);
+                            if (tlen > 0.f) {
+                                inTanX_q = tdx / tlen;
+                                inTanY_q = tdy / tlen;
+                            }
+                            else {
+                                inTanX_q = 1.f;
+                                inTanY_q = 0.f;
+                            }
+                        }
                         for (VGuint j = 0; j < 256; ++j) {
                             t = (VGfloat)j / 256.f;
                             x_new = ox * (1.f - t) * (1.f - t) + 2 * controlX * (1.f - t) * t + anchorX * t * t;
                             y_new = oy * (1.f - t) * (1.f - t) + 2 * controlY * (1.f - t) * t + anchorY * t * t;
                             seg_length = sqrtf((x_new - x_old) * (x_new - x_old) + (y_new - y_old) * (y_new - y_old));
+                            /* Quadratic Bezier tangent at t = j/256. */
+                            VGfloat tanX_q, tanY_q;
+                            if (j == 0) {
+                                tanX_q = inTanX_q;
+                                tanY_q = inTanY_q;
+                            }
+                            else {
+                                VGfloat dt = 1.f - t;
+                                VGfloat tdx = 2.f * dt * (controlX - ox) + 2.f * t * (anchorX - controlX);
+                                VGfloat tdy = 2.f * dt * (controlY - oy) + 2.f * t * (anchorY - controlY);
+                                VGfloat tlen = sqrtf(tdx * tdx + tdy * tdy);
+                                if (tlen > 0.f) {
+                                    tanX_q = tdx / tlen;
+                                    tanY_q = tdy / tlen;
+                                }
+                                else {
+                                    tanX_q = inTanX_q;
+                                    tanY_q = inTanY_q;
+                                }
+                            }
                             if (path_length + seg_length >= distance || (i == endSegment && j == 255)) {
-                                pointAlongLine(x_old, y_old, x_new, y_new, distance - path_length, x, y, tangentX, tangentY, &factor);
+                                if (seg_length == 0.f) {
+                                    if (x) *x = x_old;
+                                    if (y) *y = y_old;
+                                    if (tangentX) *tangentX = 1.f;
+                                    if (tangentY) *tangentY = 0.f;
+                                }
+                                else {
+                                    VGfloat factor = (distance - path_length) / seg_length;
+                                    if (x) *x = x_old + (x_new - x_old) * factor;
+                                    if (y) *y = y_old + (y_new - y_old) * factor;
+                                    if (tangentX) *tangentX = inTanX_q + (tanX_q - inTanX_q) * factor;
+                                    if (tangentY) *tangentY = inTanY_q + (tanY_q - inTanY_q) * factor;
+                                }
                                 freePathImpl(p_fp32);
                                 VG_RETURN(VG_NO_RETVAL);
+                            }
+                            if (j > 0) {
+                                inTanX_q = tanX_q;
+                                inTanY_q = tanY_q;
                             }
                             path_length += seg_length;
                             x_old = x_new;
