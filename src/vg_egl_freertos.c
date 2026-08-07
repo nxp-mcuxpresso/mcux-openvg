@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: MIT
  */
 
+#include <limits.h>
 #include "vg_context.h"
 #include "EGL/eglplatform.h"
 #include "fsl_fbdev.h"
@@ -239,17 +240,17 @@ int CreateWindow(NativeDisplayType display, int x, int y, int width,
 
     win->bufferCount = FREERTOS_EGL_BACKBUFFERS;
     win->display = disp;
-    win->width = width;
-    win->height = height;
+    win->width = (width < 0) ? 0 : width;
+    win->height = (height < 0) ? 0 : height;
 
     FBDEV_GetFrameBufferInfo(g_fbdev, g_fbInfo);
 
-    g_fbInfo->bufInfo.startX = x;
-    g_fbInfo->bufInfo.startY = y;
-    g_fbInfo->bufInfo.width = win->width;
-    g_fbInfo->bufInfo.height = win->height;
+    g_fbInfo->bufInfo.startX = (x < 0) ? 0 : (uint16_t)x;
+    g_fbInfo->bufInfo.startY = (y < 0) ? 0 : (uint16_t)y;
+    g_fbInfo->bufInfo.width = (uint16_t)win->width;
+    g_fbInfo->bufInfo.height = (uint16_t)win->height;
     g_fbInfo->bufInfo.pixelFormat = DEMO_BUFFER_PIXEL_FORMAT;
-    g_fbInfo->bufInfo.strideBytes = win->width * DEMO_BUFFER_BYTE_PER_PIXEL;
+    g_fbInfo->bufInfo.strideBytes = g_fbInfo->bufInfo.width * DEMO_BUFFER_BYTE_PER_PIXEL;
     g_fbInfo->bufferCount = win->bufferCount;
 
     for (uint8_t i = 0; i < win->bufferCount; i++)
@@ -267,6 +268,7 @@ int CreateWindow(NativeDisplayType display, int x, int y, int width,
     status = FBDEV_SetFrameBufferInfo(g_fbdev, g_fbInfo);
     if (status != kStatus_Success)
     {
+        // coverity[infinite_loop]
         while (1)
             ;
     }
@@ -389,7 +391,7 @@ static int GetPixmapInfo(NativeDisplayType display, NativePixmapType pixmap,
 {
     struct fr_pixmap *pmap = (struct fr_pixmap*)pixmap;
 
-    if (pmap == NULL)
+    if (pmap == NULL || pmap->imgbuf == NULL)
     {
         printf("%s: invalid pixmap\n", __func__);
         return -1;
@@ -428,8 +430,6 @@ static int DestroyPixmap(NativeDisplayType display, NativePixmapType pixmap)
     }
 
     free(pmap);
-    pmap = NULL;
-    pixmap = NULL;
 
     return 0;
 }
@@ -630,9 +630,20 @@ void OSAcquireMutex(void)
     error = xSemaphoreTakeRecursive(mutex, portMAX_DELAY);
 
     if (error == pdTRUE)
-        mutex_locked += 1;
+    {
+        if (mutex_locked < INT_MAX)
+        {
+            mutex_locked += 1;
+        }
+        else
+        {
+            printf("%s: mutex overflow\n", __func__);
+        }
+    }
     else
+    {
         printf("%s: timeout\n", __func__);
+    }
 }
 
 void OSReleaseMutex(void)
@@ -647,12 +658,20 @@ void OSReleaseMutex(void)
     error = xSemaphoreGiveRecursive(mutex);
 
     if (error == pdTRUE)
-        mutex_locked -= 1;
+    {
+        if (mutex_locked > 0)
+        {
+            mutex_locked -= 1;
+        }
+        else
+        {
+            printf("%s: Trying to free an unlocked mutex\n", __func__);
+        }
+    }
     else
+    {
         printf("%s: Trying to free a mutex not locked by itself\n", __func__);
-
-    if (mutex_locked < 0)
-        printf("%s: Trying to free an unlocked mutex\n", __func__);
+    }
 }
 
 void OSDeinitMutex(void)
@@ -745,16 +764,22 @@ void OSBlitToWindow(void *context, const Drawable *drawable)
 {
     vg_lite_buffer_t *vglbuf = drawable->m_color->m_image->m_vglbuf;
     OSWindowContext *ctx = (OSWindowContext*)context;
-    struct fr_window *win = ctx->window;
+    struct fr_window *win;
+
+    if (!ctx || !ctx->window || !ctx->window->display)
+        return;
+
+    win = ctx->window;
 
     vgFinish();
+
     FBDEV_SetFrameBuffer(&win->display->g_fbdev, vglbuf->memory, 0);
 }
 
 VGuint OSGetPixmapInfo(NativePixmapType pixmap, VGuint *width, VGuint *height,
                         VGuint *bitsPerPixel,VGuint *stride, VGubyte **bits)
 {
-    fbGetPixmapInfo(pixmap, (int*)width, (int*)height, (int*)bitsPerPixel, 
+    fbGetPixmapInfo(pixmap, (int*)width, (int*)height, (int*)bitsPerPixel,
                     (int*)stride, (void**)bits);
     return 0;
 }
