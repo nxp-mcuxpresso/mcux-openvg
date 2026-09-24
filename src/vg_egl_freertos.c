@@ -250,7 +250,7 @@ int CreateWindow(NativeDisplayType display, int x, int y, int width,
     g_fbInfo->bufInfo.width = (uint16_t)win->width;
     g_fbInfo->bufInfo.height = (uint16_t)win->height;
     g_fbInfo->bufInfo.pixelFormat = DEMO_BUFFER_PIXEL_FORMAT;
-    g_fbInfo->bufInfo.strideBytes = g_fbInfo->bufInfo.width * DEMO_BUFFER_BYTE_PER_PIXEL;
+    g_fbInfo->bufInfo.strideBytes =  (uint16_t)(g_fbInfo->bufInfo.width * DEMO_BUFFER_BYTE_PER_PIXEL);
     g_fbInfo->bufferCount = win->bufferCount;
 
     for (uint8_t i = 0; i < win->bufferCount; i++)
